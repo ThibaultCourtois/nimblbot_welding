@@ -1,1 +1,0 @@
-ament_cmake_symlink_install_targets("TARGET_FILES" "/home/thibault/ros2_ws/src/nimblbot-welding/telesoud_msgs/build/telesoud_msgs/rosidl_generator_py/telesoud_msgs/telesoud_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so" "TARGETS" "telesoud_msgs__rosidl_typesupport_c__pyext" "DESTINATION" "lib/python3.10/site-packages/telesoud_msgs")

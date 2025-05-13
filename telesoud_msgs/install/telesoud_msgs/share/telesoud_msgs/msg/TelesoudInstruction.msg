@@ -1,1 +1,0 @@
-/home/thibault/ros2_ws/src/nimblbot-welding/telesoud_msgs/msg/TelesoudInstruction.msg

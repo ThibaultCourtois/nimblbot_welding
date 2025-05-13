@@ -1,6 +1,0 @@
-{
-  "package_name": "telesoud_msgs",
-  "non_idl_tuples": [
-    "/home/thibault/ros2_ws/src/nimblbot-welding/telesoud_msgs:msg/TelesoudInstruction.msg"
-  ]
-}
