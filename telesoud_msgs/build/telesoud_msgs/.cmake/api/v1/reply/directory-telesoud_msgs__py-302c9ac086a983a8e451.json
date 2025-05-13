@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "telesoud_msgs__py",
+		"source" : "build/telesoud_msgs/telesoud_msgs__py"
+	}
+}

@@ -1,0 +1,6 @@
+setup.py
+telesoud_msgs/__init__.py
+telesoud_msgs.egg-info/PKG-INFO
+telesoud_msgs.egg-info/SOURCES.txt
+telesoud_msgs.egg-info/dependency_links.txt
+telesoud_msgs.egg-info/top_level.txt

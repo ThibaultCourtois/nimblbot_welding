@@ -1,0 +1,9 @@
+<library path="weez_touch_teleop_rviz_panel">
+  <class name="weez_touch_teleop_rviz_panel/TeleopGainPanel"
+         type="weez_touch_teleop_rviz_panel::TeleopGainPanel"
+         base_class_type="rviz_common::Panel">
+    <description>
+      A panel for adjusting teleop gains in RViz.
+    </description>
+  </class>
+</library>
