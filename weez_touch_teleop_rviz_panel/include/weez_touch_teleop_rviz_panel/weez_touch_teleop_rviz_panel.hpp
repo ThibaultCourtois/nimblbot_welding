@@ -40,6 +40,9 @@ private Q_SLOTS:
   // Slots for slider value changes
   void updatePosGain(int value);
   void updateQuatGain(int value);
+  void updateModularGain(int value);
+  
+  void modularVelocityIndicatorCallback(const std_msgs::msg::Float64::SharedPtr msg);
 
   // Slots for \"clear TCP button\"
   void clearTcpTrace();
@@ -50,8 +53,9 @@ private Q_SLOTS:
   // Slots for \"set zeros button\"
   void setZeros();
 
-  //Slot for \"modular commadn button\"
+  //Slot for \"modular command button\"
   void toggleModularCommand();
+
 
 private:
   // Setup UI components
@@ -60,7 +64,8 @@ private:
   // ROS publishers
   void publishPosGain();
   void publishQuatGain();
-
+  void publishModularGain();
+  
   // ROS subscribers
   void robotStateCallback(const std_msgs::msg::String::SharedPtr msg);
   void modularModeCallback(const std_msgs::msg::String::SharedPtr msg);
@@ -76,13 +81,18 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr quat_gain_publisher_;
   rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr clear_tcp_trace_publisher_; 
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr modular_command_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr modular_gain_publisher_;
+
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_state_subscriber_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr modular_mode_subscriber_;
+  rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr modular_velocity_indicator_subscriber_;
   
+
   // UI components
   QSlider* pos_slider_;
   QSlider* quat_slider_;
+  QSlider* modular_gain_slider_;
   QLabel* pos_value_label_;
   QLabel* pos_label_;
   QLabel* quat_value_label_;
@@ -90,15 +100,19 @@ private:
   QLabel* robot_state_label_;
   QLabel* modular_mode_label_;
   QLabel* cartesian_mode_label_;
+  QLabel* modular_gain_label_;
+  QLabel* modular_gain_value_label_;
+  QLabel* modular_velocity_indicator_label_;
   QPushButton* clear_tcp_trace_button_; 
   QPushButton* set_zeros_button_;
   QPushButton* modular_command_button_;
 
   bool modular_command_active_;
 
-  // Current gain values
   double pos_gain_;
   double quat_gain_;
+  double modular_gain_;
+  double current_modular_velocity_;
 
   // command mode
   std::string current_modular_mode_;

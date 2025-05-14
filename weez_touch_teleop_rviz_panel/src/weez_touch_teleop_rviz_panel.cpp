@@ -8,6 +8,8 @@ TeleopGainPanel::TeleopGainPanel(QWidget* parent)
   : rviz_common::Panel(parent)
   , pos_gain_(1.0)
   , quat_gain_(1000.0)
+  , modular_gain_(1.0)
+  , current_modular_velocity_(0.0)
   , current_robot_state_("idle")
   , modular_command_active_(false)
   , current_modular_mode_("AZIMUTH")
@@ -21,6 +23,9 @@ TeleopGainPanel::TeleopGainPanel(QWidget* parent)
   
   quat_gain_publisher_ = node_->create_publisher<std_msgs::msg::Float64>(
     "/rviz_plugin/quat_gain", 10);
+
+  modular_gain_publisher_ = node_->create_publisher<std_msgs::msg::Float64>(
+    "/rviz_plugin/modular_gain", 10);
   
   clear_tcp_trace_publisher_ = node_->create_publisher<std_msgs::msg::Empty>(
     "/rviz_plugin/clear_tcp_trace", 10);
@@ -33,6 +38,12 @@ TeleopGainPanel::TeleopGainPanel(QWidget* parent)
 		  "/welding_command_handler/robotState", 
 		  10, 
 		  std::bind(&TeleopGainPanel::robotStateCallback, this, std::placeholders::_1)
+		  );
+  
+  modular_velocity_indicator_subscriber_ = node_->create_subscription<std_msgs::msg::Float64>(
+    		  "/welding_command_handler/modular_velocity_indicator", 
+    		  10,
+    		  std::bind(&TeleopGainPanel::modularVelocityIndicatorCallback, this, std::placeholders::_1)
 		  );
   
   modular_mode_subscriber_ = node_->create_subscription<std_msgs::msg::String>(
@@ -55,6 +66,7 @@ TeleopGainPanel::TeleopGainPanel(QWidget* parent)
   // Publish initial values
   publishPosGain();
   publishQuatGain();
+  publishModularGain();
 }
 
 TeleopGainPanel::~TeleopGainPanel()
@@ -105,10 +117,26 @@ void TeleopGainPanel::setupUi()
   quat_layout->addWidget(quat_label_);
   quat_layout->addWidget(quat_slider_);
   quat_layout->addWidget(quat_value_label_);
+
+  // Modular Gain Slider
+  auto modular_gain_layout = new QVBoxLayout;
+  modular_gain_label_ = new QLabel("Modular Gain:");
+  modular_gain_label_->setAlignment(Qt::AlignCenter);
+  modular_gain_slider_ = new QSlider(Qt::Horizontal);
+  modular_gain_slider_->setMinimum(10);   // 1.0
+  modular_gain_slider_->setMaximum(100);  // 10.0
+  modular_gain_slider_->setValue(static_cast<int>(modular_gain_ * 10.0));
+  modular_gain_value_label_ = new QLabel(QString::number(modular_gain_, 'f', 1));
+  modular_gain_value_label_->setAlignment(Qt::AlignCenter);
+  
+  modular_gain_layout->addWidget(modular_gain_label_);
+  modular_gain_layout->addWidget(modular_gain_slider_);
+  modular_gain_layout->addWidget(modular_gain_value_label_);
   
   sliders_container->addLayout(pos_layout);
   sliders_container->addLayout(quat_layout);
-  
+  sliders_container->addLayout(modular_gain_layout);
+
   // Modular command button 
   auto modular_command_layout = new QVBoxLayout;
   modular_command_button_ = new QPushButton("Modular Command");
@@ -120,8 +148,15 @@ void TeleopGainPanel::setupUi()
   modular_mode_label_ = new QLabel("Current mode: AZIMUTH");
   modular_mode_label_->setAlignment(Qt::AlignCenter);
   modular_mode_label_->setVisible(modular_command_active_); 
+  
+  // Modular velocity indicator 
+  modular_velocity_indicator_label_ = new QLabel("Current speed: 0.00");
+  modular_velocity_indicator_label_->setAlignment(Qt::AlignCenter);
+  modular_velocity_indicator_label_->setVisible(modular_command_active_);
+  
   modular_command_layout->addWidget(modular_command_button_);
   modular_command_layout->addWidget(modular_mode_label_);
+  modular_command_layout->addWidget(modular_velocity_indicator_label_);
   
   // Clear TCP trace et Set Zeros boutons
   auto buttons_layout = new QHBoxLayout;
@@ -133,7 +168,7 @@ void TeleopGainPanel::setupUi()
   
   buttons_layout->addWidget(clear_tcp_trace_button_);
   buttons_layout->addWidget(set_zeros_button_);
-  
+
   // Add all elements to the main layout
   layout->addWidget(robot_state_label_);
   layout->addLayout(sliders_container);  // Les sliders côte à côte
@@ -144,8 +179,8 @@ void TeleopGainPanel::setupUi()
   
   connect(pos_slider_, &QSlider::valueChanged, this, &TeleopGainPanel::updatePosGain);
   connect(quat_slider_, &QSlider::valueChanged, this, &TeleopGainPanel::updateQuatGain);
+  connect(modular_gain_slider_, &QSlider::valueChanged, this, &TeleopGainPanel::updateModularGain);
 }
-
 
 void TeleopGainPanel::setZeros()
 {
@@ -155,6 +190,14 @@ void TeleopGainPanel::setZeros()
   }
   
   auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+
+  if (modular_command_active_) {
+    modular_command_active_ = false;
+    modular_command_button_->setChecked(false);
+    modular_command_button_->setStyleSheet("");
+    modular_mode_label_->setVisible(false);
+    modular_velocity_indicator_label_->setVisible(false);
+  }
   
   set_zeros_client_->async_send_request(
     request,
@@ -249,6 +292,7 @@ void TeleopGainPanel::save(rviz_common::Config config) const
   Panel::save(config);
   config.mapSetValue("pos_gain", pos_gain_);
   config.mapSetValue("quat_gain", quat_gain_);
+  config.mapSetValue("modular_gain", modular_gain_); 
   config.mapSetValue("modular_command_active", modular_command_active_);
 }
 
@@ -270,6 +314,13 @@ void TeleopGainPanel::load(const rviz_common::Config& config)
     quat_slider_->setValue(static_cast<int>(quat_gain_));
   }
 
+  float modular_gain;
+  if (config.mapGetFloat("modular_gain", &modular_gain))
+  {
+    modular_gain_ = modular_gain;
+    modular_gain_slider_->setValue(static_cast<int>(modular_gain_ * 10.0));
+  }
+
   bool modular_command_active;
   if (config.mapGetBool("modular_command_active", &modular_command_active))
   {
@@ -288,9 +339,11 @@ void TeleopGainPanel::toggleModularCommand()
   if (modular_command_active_) {
     modular_command_button_->setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;");
     modular_mode_label_->setVisible(true);
+    modular_velocity_indicator_label_->setVisible(true);
   } else {
     modular_command_button_->setStyleSheet("");
     modular_mode_label_->setVisible(false);
+    modular_velocity_indicator_label_->setVisible(false);
   }
 
   auto msg = std_msgs::msg::Bool();
@@ -308,6 +361,29 @@ void TeleopGainPanel::modularModeCallback(const std_msgs::msg::String::SharedPtr
   RCLCPP_DEBUG(node_->get_logger(), "Modular mode updated to: %s", current_modular_mode_.c_str());
 }
 
+void TeleopGainPanel::modularVelocityIndicatorCallback(const std_msgs::msg::Float64::SharedPtr msg)
+{
+  current_modular_velocity_ = msg->data;
+  
+  modular_velocity_indicator_label_->setText(QString("Current speed: %1").arg(QString::number(current_modular_velocity_, 'f', 2)));
+  
+  RCLCPP_DEBUG(node_->get_logger(), "Modular velocity indicator updated: %f", current_modular_velocity_);
+}
+
+void TeleopGainPanel::updateModularGain(int value)
+{
+  modular_gain_ = static_cast<double>(value) / 10.0; 
+  modular_gain_value_label_->setText(QString::number(modular_gain_, 'f', 1));
+  publishModularGain();
+}
+
+void TeleopGainPanel::publishModularGain()
+{
+  auto msg = std_msgs::msg::Float64();
+  msg.data = modular_gain_;
+  modular_gain_publisher_->publish(msg);
+  RCLCPP_INFO(node_->get_logger(), "Modular gain set to: %f", modular_gain_);
+}
 }
 
 #include <pluginlib/class_list_macros.hpp>

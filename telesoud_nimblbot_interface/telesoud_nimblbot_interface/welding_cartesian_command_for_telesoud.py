@@ -108,7 +108,10 @@ class TelesoudCommandToCartesianNode(Node):
         self.__module_index_list = [0]
         self.modular_control_enabled = False
         self.modular_velocity = 0.3
+        self.amplified_modular_velocity = None
         self.joints_trajectory = None
+        
+        self.declare_parameter('modular_gain', 1.0)
 
         # Command handling
         self.pending_command = None
@@ -219,7 +222,6 @@ class TelesoudCommandToCartesianNode(Node):
             '/nb/desired_trajectory_modular',
             10
         )
-
         
         # Telesoud interface publishers
         self.status_publisher = self.create_publisher(
@@ -241,6 +243,11 @@ class TelesoudCommandToCartesianNode(Node):
             10
         )
 
+        self.modular_velocity_indicator_pub = self.create_publisher(
+                Float64,
+                '/welding_command_handler/modular_velocity_indicator',
+                10
+                )
 
     def _create_subscriptions(self):
 
@@ -265,6 +272,13 @@ class TelesoudCommandToCartesianNode(Node):
                 self.on_quat_gain_changed,
                 10
             )
+
+        self.modular_gain_subscriber = self.create_subscription(
+                Float64,
+                'rviz_plugin/modular_gain',
+                self.on_modular_gain_changed,
+                10
+                )
 
         self.modular_command_toggle_sub = self.create_subscription(
                 Bool, 
@@ -506,6 +520,8 @@ class TelesoudCommandToCartesianNode(Node):
         self.robotState_pub.publish(robotState_msg)
 
     def __process_modular_control(self):
+        modular_gain = self.get_parameter('modular_gain').value
+        
         if self.current_velocity_vector is None:
             return
 
@@ -547,6 +563,8 @@ class TelesoudCommandToCartesianNode(Node):
             self.__modular_selector_mode = self.__modular_selector_mode[1:] + [self.__modular_selector_mode[0]]
             self.get_logger().info(f"Selection mode changed to {'MODULE' if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND  else 'SECTION'}")
 
+        self.amplified_modular_velocity = modular_gain * self.modular_velocity
+
         self.joints_trajectory = JointTrajectory()
         self.joints_trajectory.header.stamp = self.get_clock().now().to_msg()
         joint_names = []
@@ -562,7 +580,7 @@ class TelesoudCommandToCartesianNode(Node):
             
 
         module_joint_names = self.__joint_names_alias[joint_inf_idx:joint_sup_idx]
-        module_command = turn_module * self.modular_velocity
+        module_command = turn_module * self.amplified_modular_velocity
         module_velocities = [module_command] * len(module_joint_names)
 
         if self.__modular_command_mode[0] == TILT:
@@ -577,7 +595,7 @@ class TelesoudCommandToCartesianNode(Node):
         if wrist_command !=0 and self.__terminal_wrist:
             wrist_joint_idx = len(self.__q) - 1
             wrist_joint_name = self.__joint_names_alias[-1]
-            wrist_velocity = wrist_command * self.modular_velocity
+            wrist_velocity = wrist_command * self.amplified_modular_velocity
             wrist_position = self.__q[wrist_joint_idx] + wrist_velocity / self.__rate
 
             joint_names.append(wrist_joint_name)
@@ -595,7 +613,11 @@ class TelesoudCommandToCartesianNode(Node):
 
         # Speed vector reinitialisation to avoid control looping
         self.current_velocity_vector = Twist()
-
+        
+        # For visualization purposes
+        msg = Float64()
+        msg.data = self.amplified_modular_velocity
+        self.modular_velocity_indicator_pub.publish(msg)
 
     def _process_stop_command(self, status):
         self.stop_requested = True
@@ -985,7 +1007,7 @@ class TelesoudCommandToCartesianNode(Node):
                 raise RuntimeError(f'Failed service call: {future.exception()}')
 
             self.get_logger().info("Set zeros successful")
-            
+            time.sleep(0.25)
             self.get_logger().info('Setting cartesian mode ...')
             self.switch_control_mode(1)
 
@@ -1032,6 +1054,10 @@ class TelesoudCommandToCartesianNode(Node):
         self.set_parameters([RclpyParameter('quat_gain', RclpyParameter.Type.DOUBLE, new_gain)])
         self.get_logger().info(f"Quaternion gain updated to: {new_gain:.2f}")
     
+    def on_modular_gain_changed(self, msg):
+        new_gain = msg.data
+        self.set_parameters([RclpyParameter('modular_gain', RclpyParameter.Type.DOUBLE, new_gain)])
+        self.get_logger().info(f"Modular gain updated to: {new_gain:.2f}")
 
     def on_modular_command_toggle(self, msg):
         try:
