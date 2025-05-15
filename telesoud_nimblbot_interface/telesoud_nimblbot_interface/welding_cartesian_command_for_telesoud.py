@@ -43,7 +43,7 @@ from telesoud_msgs.msg import RobotData, Command, CommandStatus
 MAX_VEL_EE = 0.020  # m/s
 SERVO_NODE = '/servo_node'
 ERROR_RESOLUTION_TIMEOUT = 3
-SPEED_CORRECTION_FACTOR = 1.55
+SPEED_CORRECTION_FACTOR = 1.55 * 10
 CURRENT_TCP_SPEED = 0.001667 * SPEED_CORRECTION_FACTOR
 DT = 1/30
 
@@ -100,7 +100,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.curent_pose_mimic = None
 
         # Modular control parameters
-        self.__q = None
+        self.__q_desired = None
         self.__modular_command_mode = [AZIMUTH, TILT]
         self.__modular_selector_mode = [MODULE_SELECT_COMMAND, SECTION_SELECT_COMMAND]
         self.__modular_selection_module = 0
@@ -252,9 +252,9 @@ class TelesoudCommandToCartesianNode(Node):
     def _create_subscriptions(self):
 
         _ = self.create_subscription(
-            JointState,
-            "/nb/mdh_measurements",
-            self.__on_mdh_measurements,
+            JointTrajectory,
+            "/nb/desired_trajectory",
+            self.__on_desired_trajectory,
             10
         )
 
@@ -364,10 +364,15 @@ class TelesoudCommandToCartesianNode(Node):
                 self.get_logger().error(f"Service call failed: {e}")
             return ParameterValue()
 
+   
     def switch_control_mode(self, mode):
         try:
             if self.pause and mode==0:
                 return
+
+            if self.modular_control_enabled and mode==1:
+                self.modular_control_enabled = False
+
 
             if not self.change_control_mode_client.wait_for_service(timeout_sec = 5.0):
                 raise RuntimeError("Failed to switch control mode: service not available")
@@ -379,7 +384,7 @@ class TelesoudCommandToCartesianNode(Node):
             
             self.get_logger().info(f'Switched control mode to {mode}')
             
-            time.sleep(0.1)
+            time.sleep(0.25)
 
             self.motor_lock_publisher.publish(Int8MultiArray())
             
@@ -519,7 +524,13 @@ class TelesoudCommandToCartesianNode(Node):
         robotState_msg.data = STATE_NAMES[self.current_state]
         self.robotState_pub.publish(robotState_msg)
 
+    
     def __process_modular_control(self):
+        if self.__q_desired is None:
+            self.get_logger().info('Waiting /nb/desired_trajectory to be populated')
+            return
+
+
         modular_gain = self.get_parameter('modular_gain').value
         
         if self.current_velocity_vector is None:
@@ -571,6 +582,8 @@ class TelesoudCommandToCartesianNode(Node):
         positions = []
         velocities = []
 
+        is_active_command = (turn_module != 0 or wrist_command !=0)
+
         if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND:
             joint_inf_idx = int(self.__modular_selection_module) * 2
             joint_sup_idx = joint_inf_idx + 2
@@ -586,17 +599,21 @@ class TelesoudCommandToCartesianNode(Node):
         if self.__modular_command_mode[0] == TILT:
             # alternate velocity direction for TILT mode (opposing pairs)
             module_velocities = [v if i % 2 == 0 else -v for i, v in enumerate(module_velocities)]
-        module_positions = [self.__q[joint_inf_idx + i] + v / self.__rate for i, v in enumerate(module_velocities)] 
-        
+     
+        if is_active_command:
+            module_positions = [self.__q_desired[joint_inf_idx + i] + v / self.__rate for i, v in enumerate(module_velocities)] 
+        else : 
+            module_positions = [self.__q_desired[joint_inf_idx + i] for i in range(len(module_velocities))]
+
         joint_names.extend(module_joint_names)
         positions.extend(module_positions)
         velocities.extend(module_velocities)
 
         if wrist_command !=0 and self.__terminal_wrist:
-            wrist_joint_idx = len(self.__q) - 1
+            wrist_joint_idx = len(self.__q_desired) - 1
             wrist_joint_name = self.__joint_names_alias[-1]
             wrist_velocity = wrist_command * self.amplified_modular_velocity
-            wrist_position = self.__q[wrist_joint_idx] + wrist_velocity / self.__rate
+            wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / self.__rate
 
             joint_names.append(wrist_joint_name)
             positions.append(wrist_position)
@@ -619,6 +636,7 @@ class TelesoudCommandToCartesianNode(Node):
         msg.data = self.amplified_modular_velocity
         self.modular_velocity_indicator_pub.publish(msg)
 
+    
     def _process_stop_command(self, status):
         self.stop_requested = True
 
@@ -778,11 +796,11 @@ class TelesoudCommandToCartesianNode(Node):
         self.get_logger().error(f"Error detected: {error_message}")
 
     
-    def __on_mdh_measurements(self, msg: JointState) -> None:
+    def __on_desired_trajectory(self, msg: JointTrajectory) -> None:
         """Update the current pose of the robot."""
-        self.__q = list(msg.position)
-
-    
+        self.__q_desired = list(msg.points[0].positions)
+        
+ 
     def __get_current_pose(self, mimic: bool, timeout_sec: int = 1) -> PoseStamped:
         """Get the current pose of the end-effector in the base frame."""
         ee_frame = self.__ee_frame_mimic if mimic else self.__ee_frame_robot

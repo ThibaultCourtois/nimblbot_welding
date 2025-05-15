@@ -129,14 +129,6 @@ def generate_launch_description():
             }.items()
         )
 
-    q_desired_node = Node(
-            package='nimblbot_kinematics',
-            executable='mimic_joint_to_q_desired',
-            name='mimic_joint_to_q_desired',
-            output='log',
-            namespace=robot_namespace,
-            parameters = [{'robot_type' : robot_type}]
-            )
     
     mesh_torche_soudure = Node(
             package='nimblbot_simulation_scenes',
@@ -196,13 +188,18 @@ def generate_launch_description():
         output='screen',
         arguments=['nb/base_link', 'nb/tcp_wrist'],
     )
+    
+    tf_path_trail_base_link_wrist_mimic = Node(
+        package='nimblbot_cartesian_command',
+        executable='tf_path_trail',
+        name='tf_path_trail_base_link_wrist_mimic',
+        output='screen',
+        arguments=['nb_mimic/base_link', 'nb_mimic/tcp_wrist'],
+    )
 
     return LaunchDescription([
             TimerAction(period=0.5, 
                 actions = [nb_nodes]
-            ), 
-            TimerAction(period=1.0,
-                actions = [q_desired_node]
             ),
             mesh_torche_soudure, 
             robot_moveit_nodes,
@@ -211,4 +208,5 @@ def generate_launch_description():
             ),
             usb_cam_node,
             tf_path_trail_base_link_wrist,
+            tf_path_trail_base_link_wrist_mimic,
         ])
