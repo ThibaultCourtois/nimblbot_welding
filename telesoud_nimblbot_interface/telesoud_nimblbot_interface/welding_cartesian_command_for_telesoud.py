@@ -322,9 +322,9 @@ class TelesoudCommandToCartesianNode(Node):
             '/tf_path_trail_' + self.__base_frame_robot.replace('/', '_') + '_to_' + self.__ee_frame_robot.replace('/', '_') + '/clear_path'
         )
 
-        self.tf_path_trail_nb_base_link_to_nb_tcp_client_clear_path = self.create_client(
+        self.tf_path_trail_nb_mimic_base_link_to_nb_mimic_tcp_wrist_client_clear_path = self.create_client(
             Empty_srv,
-            '/tf_path_trail_' + self.__base_frame_robot.replace('/', '_') + '_to_' + self.__ee_frame_robot.replace('/', '_') + '/clear_path'
+            '/tf_path_trail_' + 'nb_mimic_base_link' + '_to_' + 'nb_mimic_tcp_wrist' + '/clear_path'
         )
 
         # Luos wrapper node
@@ -1047,6 +1047,7 @@ class TelesoudCommandToCartesianNode(Node):
     def __clear_tcp_trace_callback(self, _):
         try:
             self.tf_path_trail_nb_base_link_to_nb_tcp_client_clear_path.call_async(Empty_srv.Request())
+            self.tf_path_trail_nb_mimic_base_link_to_nb_mimic_tcp_wrist_client_clear_path.call_async(Empty_srv.Request())
             self.get_logger().info('TCP trace cleared')
         except Exception as e:
             self.get_logger().error(f'Error clearing TCP trace: {e}')
