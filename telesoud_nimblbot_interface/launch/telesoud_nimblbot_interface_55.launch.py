@@ -1,12 +1,10 @@
 import os
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
-
 from launch import LaunchDescription
+from launch.conditions import IfCondition
 from launch.actions import (
         DeclareLaunchArgument,
         IncludeLaunchDescription,
@@ -65,6 +63,13 @@ def generate_launch_description():
             default_value = '20.0',
             description = 'Control rate'
         )   
+    
+    weez_touch_arg = DeclareLaunchArgument(
+    		'weez_touch',
+    		default_value = 'true',
+    		description = 'Enabling command from weez touch',
+    		choices=['true', 'false']
+    	)   
 
     interface = Node(
             package='telesoud_nimblbot_interface',
@@ -73,6 +78,7 @@ def generate_launch_description():
             output='log'
         )
     
+    weez_touch = LaunchConfiguration('weez_touch', default = weez_touch_arg.default_value)
     robot_namespace = LaunchConfiguration('robot_namespace', default=namespace_param.default_value)
     robot_type = LaunchConfiguration('robot_type', default=robot_type_param.default_value)
     simulation = LaunchConfiguration('simulation', default=simulation_param.default_value)
@@ -98,7 +104,8 @@ def generate_launch_description():
             package='telesoud_api',
             executable= 'telesoud_api',
             output='screen',
-            arguments=['--ros-args', '--log-level', 'info']
+            arguments=['--ros-args', '--log-level', 'info'],
+            condition=IfCondition(weez_touch)
             )
 
     nb_nodes = IncludeLaunchDescription(
@@ -119,15 +126,6 @@ def generate_launch_description():
             }.items()
         )
 
-    q_desired_node = Node(
-            package='nimblbot_kinematics',
-            executable='mimic_joint_to_q_desired',
-            name='mimic_joint_to_q_desired',
-            output='log',
-            namespace=robot_namespace,
-            parameters = [{'robot_type' : robot_type}]
-            )
-    
     mesh_torche_soudure = Node(
             package='nimblbot_simulation_scenes',
             executable='mesh_publisher',
@@ -186,22 +184,26 @@ def generate_launch_description():
         output='screen',
         arguments=['nb/base_link', 'nb/tcp_wrist'],
     )
+    
+    tf_path_trail_base_link_wrist_mimic = Node(
+        package='nimblbot_cartesian_command',
+        executable='tf_path_trail',
+        name='tf_path_trail_base_link_wrist_mimic',
+        output='screen',
+        arguments=['nb_mimic/base_link', 'nb_mimic/tcp_wrist'],
+    )
             
 
     return LaunchDescription([
             TimerAction(period=0.5, 
                 actions = [nb_nodes]
             ), 
-            TimerAction(period=1.0,
-                actions = [q_desired_node]
-            ),
-    
             mesh_torche_soudure, 
             robot_moveit_nodes,
-            
             TimerAction(period=5.0, 
                 actions=[telesoud_api, interface, cartesian_command]
             ),
             usb_cam_node,
             tf_path_trail_base_link_wrist,
+            tf_path_trail_base_link_wrist_mimic
         ])
