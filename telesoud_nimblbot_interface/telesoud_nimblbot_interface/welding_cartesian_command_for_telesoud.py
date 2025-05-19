@@ -1,41 +1,29 @@
 import time
-import threading
 
-from math import sqrt, exp, acos, pi
+from math import pi
 import numpy as np
-from scipy.spatial.transform import Rotation, Slerp
-from ament_index_python.packages import get_package_share_directory
+from scipy.spatial.transform import Slerp
 
 import rclpy
 import rclpy.logging
 from rclpy.node import Node
 from rclpy.time import Time, Duration
-from rclpy.executors import MultiThreadedExecutor, ShutdownException
+from rclpy.executors import ShutdownException
 from rclpy.parameter import Parameter as RclpyParameter
 from rcl_interfaces.msg import ParameterValue, Parameter, ParameterType
-
-from threading import Thread
-
-from sensor_msgs.msg import JointState, Joy
-from nav_msgs.msg import Path
-from nav_msgs.srv import GetPlan, GetPlan_Request
-from std_srvs.srv import SetBool, Empty as Empty_srv, Trigger
-from std_msgs.msg import Empty, Header, ColorRGBA, Float64, Bool, String, Int8MultiArray
+from std_srvs.srv import Empty as Empty_srv
+from std_msgs.msg import Empty, Header, Float64, Bool, String, Int8MultiArray
 from moveit_msgs.srv import ServoCommandType
-from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Vector3, PoseArray, Twist
+from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Twist 
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-
-from tf_transformations import quaternion_from_euler, euler_from_quaternion, quaternion_multiply
+from tf_transformations import quaternion_from_euler, quaternion_multiply
 from scipy.spatial.transform import Rotation as R
-from scipy.spatial.transform import Slerp
 
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from tf2_ros.transform_broadcaster import TransformBroadcaster
-from tf2_geometry_msgs import do_transform_pose
 from rcl_interfaces.srv import GetParameters, SetParameters
 
-import xacro
 from nimblpy.common.robot_loader import load_robot_config
 from nimblpy.kinematics.kin_model import KinematicModel
 from telesoud_msgs.msg import RobotData, Command, CommandStatus
@@ -59,10 +47,11 @@ class RobotState:
     """Enum-like class for robot state machine"""
     IDLE: int = 0
     DYNAMIC_MOVEMENT: int = 1
-    CARTESIAN_TRAJECTORY: int =  2
+    CARTESIAN_TRAJECTORY: int = 2
     JOINT_TRAJECTORY: int = 3
     ERROR: int = 4
-    MODULAR_CONTROL: int=5
+    MODULAR_CONTROL: int = 5
+
 
 STATE_NAMES = {
     RobotState.IDLE: "IDLE",
@@ -72,6 +61,7 @@ STATE_NAMES = {
     RobotState.ERROR: "ERROR",
     RobotState.MODULAR_CONTROL: "MODULAR_CONTROL"
 }
+
 
 class TelesoudCommandToCartesianNode(Node):
     def __init__(self, node_name: str) -> None:
@@ -83,18 +73,15 @@ class TelesoudCommandToCartesianNode(Node):
         self._create_subscriptions()
         self._create_clients()
         self._create_services()
-        
         # Pose init
         self.init_poses_timer = self.create_timer(1.0, self.__init_poses)
-        
-        # State machine timer 
+        # State machine timer
         self.__timer_state_machine = self.create_timer(0.1, self.__update_state_machine)
         self.command_timer = self.create_timer(0.01, self.process_pending_command)
 
     def _initialize_basic_parameters(self):
         self.__rate = 20
         self.robot_data_publish_rate = 10
-        
         # Start
         self.current_pose_robot = None
         self.curent_pose_mimic = None
@@ -110,7 +97,6 @@ class TelesoudCommandToCartesianNode(Node):
         self.modular_velocity = 0.3
         self.amplified_modular_velocity = None
         self.joints_trajectory = None
-        
         self.declare_parameter('modular_gain', 1.0)
 
         # Command handling
@@ -131,7 +117,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.dynamic_movement_flag = False
         self.cartesian_trajectory_flag = False
         self.joint_trajectory_flag = False
-        
+
         # Movement  parameters
         self.TCP_speed = 0.0
         self.twist_for_dynamic_movement = None
@@ -144,15 +130,15 @@ class TelesoudCommandToCartesianNode(Node):
         # Teleop cartesian
         self.declare_parameter('pos_gain', 1.0)
         self.declare_parameter('quat_gain', 1000.0)
-        self.teleop_update_rate = 10 # Hz
+        self.teleop_update_rate = 10  # Hz
         self.current_velocity_vector = Twist()
-        
+
         # Velocity control
-        self.declare_parameter('TCP_velocity', 0.01) # default velocity
+        self.declare_parameter('TCP_velocity', 0.01)  # default velocity
         self.declare_parameter('control_rate', 30.0)  # Hz
         self.control_rate = self.get_parameter('control_rate').value
         self.target_velocity = self.get_parameter('TCP_velocity').value
-        
+
         # Interpolation
         self.interpolated_line_poses = None
         self.line_progression_index = 0
@@ -160,19 +146,17 @@ class TelesoudCommandToCartesianNode(Node):
         # Measurements
         self.trajectory_start_time = None
 
-    
     def _setup_transform_infrastructure(self):
         # Namespace from ID's
         self.namespace = "nb"
-        
         self.namespace_mimic = self.namespace + "_mimic"
         self.__base_frame_robot = f"{self.namespace}/base_link"
 
         # Get ee_frame name config in servo_node
-        self.__ee_frame_mimic: str = self.__get_param(SERVO_NODE + '/get_parameters','moveit_servo_nb.ee_frame').string_value
+        self.__ee_frame_mimic: str = self.__get_param(SERVO_NODE + '/get_parameters', 'moveit_servo_nb.ee_frame').string_value
         self.__ee_frame_robot: str = self.__ee_frame_mimic.replace("_mimic", "")
         self.__ee_frame_robot_interactive = self.__ee_frame_robot + '_interactive'
-        
+
         # Load robot configuration
         self.declare_parameter("robot_type", "")
         robot_type = self.get_parameter("robot_type").get_parameter_value().string_value
@@ -359,7 +343,7 @@ class TelesoudCommandToCartesianNode(Node):
                 if response.values:
                     return response.values[0]
                 else:
-                    self.get_logger().error(f"Parameter not found.")
+                    self.get_logger().error("Parameter not found")
             except Exception as e:
                 self.get_logger().error(f"Service call failed: {e}")
             return ParameterValue()
@@ -495,8 +479,6 @@ class TelesoudCommandToCartesianNode(Node):
                 linear_param.value = param_value
 
                 request.parameters = [linear_param]
-                future = self.velocity_param_client.call_async(request)
-        
                 self.current_state = RobotState.IDLE
                 self.get_logger().info("Joint trajectory complete, returning to IDLE state")
         
@@ -514,7 +496,7 @@ class TelesoudCommandToCartesianNode(Node):
                 self.robotInFaultStatus = False
                 self.current_error=""
                 self.current_state = self.previous_state
-                self.get_logger().info(f"Error resolved, returning to previous state")
+                self.get_logger().info("Error resolved, returning to previous state")
 
         if self.current_state != initial_state:
             self.previous_state = initial_state
@@ -763,7 +745,6 @@ class TelesoudCommandToCartesianNode(Node):
 
     def __is_joint_trajectory_complete(self):
          if self.current_state == RobotState.JOINT_TRAJECTORY:
-            current_pose = self.__get_current_pose(mimic = False)
             try:
                 pose_msg = PoseStamped()
                 pose_msg.header.stamp = self.get_clock().now().to_msg()
@@ -879,7 +860,7 @@ class TelesoudCommandToCartesianNode(Node):
             try:
                 new_quat = quaternion_multiply(current_quat, dquat)
             except Exception as e:
-                self.get_logger().info('New quaternion calculus error')
+                self.get_logger().info(f'New quaternion calculus error {e}')
 
             target_pose_msg.pose.orientation.x = new_quat[0]
             target_pose_msg.pose.orientation.y = new_quat[1]
@@ -1111,9 +1092,9 @@ def main(args=None):
     try:
         rclpy.spin(telesoud_command_node)
     except KeyboardInterrupt:
-        rclpy.logging.get_logger('rclpy').info(f'signal_handler(signum=2)')
+        rclpy.logging.get_logger('rclpy').info('signal_handler(signum=2)')
     except ShutdownException:
-        telesoud_command_node.get_logger().info(f'ShutdownException...')
+        telesoud_command_node.get_logger().info('ShutdownException...')
     except Exception as e:
         telesoud_command_node.current_error = str(e)
         telesoud_command_node.get_logger().error(f'Exception : {e}')

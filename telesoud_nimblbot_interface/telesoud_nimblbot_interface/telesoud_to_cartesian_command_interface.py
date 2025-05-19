@@ -1,14 +1,9 @@
-import time
 import rclpy
 from rclpy.node import Node
-from rclpy.time import Time
-from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, PoseArray, Twist
-from std_msgs.msg import Bool, Float64, String
-from std_srvs.srv import SetBool, Trigger 
+from std_msgs.msg import Bool
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 import math
 from  telesoud_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
-import numpy as np
 
 class InterfaceNode(Node):
     def __init__(self):
@@ -98,7 +93,6 @@ class InterfaceNode(Node):
         pose1 = data['pose1']
         TCP_speed_vector = data['TCP_speed_vector']
         TCP_speed = data['TCP_speed']
-        free_drive_btn_status = data['free_drive_btn_status']
 
         self.pending_instruction = False
 
@@ -161,9 +155,6 @@ class InterfaceNode(Node):
         command_id = msg.command_id
 
         if command_id in self.pending_commands:
-            command_info = self.pending_commands[command_id]
-            instruction = command_info['instruction']
-            
             if msg.success:
                 self.get_logger().debug(f'Command {msg.command_type} executed successfully: {msg.message}')
             else:
