@@ -183,9 +183,9 @@ class InterfaceNode(Node):
                     robot_data.pose.position.x,
                     robot_data.pose.position.y,
                     robot_data.pose.position.z,
-                    math.degrees(euler[0]),
-                    math.degrees(euler[1]),
-                    math.degrees(euler[2])
+                    euler[0],  #Telesoud expect radians for the orientation
+                    euler[1],
+                    euler[2]
                 ]
                 
             robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
@@ -211,9 +211,9 @@ class InterfaceNode(Node):
         command.target_pose.position.z = pose[2]
 
         quaternion = quaternion_from_euler(
-                math.radians(pose[3]), 
-                math.radians(pose[4]), 
-                math.radians(pose[5])
+                pose[3], 
+                pose[4], 
+                pose[5]
             )
 
         command.target_pose.orientation.x = quaternion[0]

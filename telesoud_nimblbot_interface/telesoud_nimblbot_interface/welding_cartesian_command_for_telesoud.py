@@ -76,12 +76,12 @@ class TelesoudCommandToCartesianNode(Node):
         # Pose init
         self.init_poses_timer = self.create_timer(1.0, self.__init_poses)
         # State machine timer
-        self.__timer_state_machine = self.create_timer(0.1, self.__update_state_machine)
-        self.command_timer = self.create_timer(0.01, self.process_pending_command)
+        self.__timer_state_machine = self.create_timer(0.02, self.__update_state_machine)
+        self.command_timer = self.create_timer(0.02, self.process_pending_command)
 
     def _initialize_basic_parameters(self):
         self.__rate = 20
-        self.robot_data_publish_rate = 10
+        self.robot_data_publish_rate = 40
         # Start
         self.current_pose_robot = None
         self.curent_pose_mimic = None
@@ -130,12 +130,12 @@ class TelesoudCommandToCartesianNode(Node):
         # Teleop cartesian
         self.declare_parameter('pos_gain', 1.0)
         self.declare_parameter('quat_gain', 1000.0)
-        self.teleop_update_rate = 10  # Hz
+        self.teleop_update_rate = 50  # Hz
         self.current_velocity_vector = Twist()
 
         # Velocity control
         self.declare_parameter('TCP_velocity', 0.01)  # default velocity
-        self.declare_parameter('control_rate', 30.0)  # Hz
+        self.declare_parameter('control_rate', 50.0)  # Hz
         self.control_rate = self.get_parameter('control_rate').value
         self.target_velocity = self.get_parameter('TCP_velocity').value
 
@@ -368,7 +368,7 @@ class TelesoudCommandToCartesianNode(Node):
             
             self.get_logger().info(f'Switched control mode to {mode}')
             
-            time.sleep(0.25)
+            time.sleep(0.5)
 
             self.motor_lock_publisher.publish(Int8MultiArray())
             
@@ -669,7 +669,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.dynamic_movement_flag = True
         
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
-
+        
         self.current_state = RobotState.DYNAMIC_MOVEMENT
         status.success = True
         status.message = "Dynamic cartesian movement started"
