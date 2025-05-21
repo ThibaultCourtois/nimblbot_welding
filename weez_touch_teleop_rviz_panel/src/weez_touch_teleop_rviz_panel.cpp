@@ -7,7 +7,7 @@ namespace weez_touch_teleop_rviz_panel
 TeleopGainPanel::TeleopGainPanel(QWidget* parent)
   : rviz_common::Panel(parent)
   , pos_gain_(1.0)
-  , quat_gain_(1000.0)
+  , quat_gain_(1.0)
   , modular_gain_(1.0)
   , current_modular_velocity_(0.0)
   , current_robot_state_("pause")
@@ -108,7 +108,7 @@ void TeleopGainPanel::setupUi()
   quat_label_ = new QLabel("Quaternion Gain:");
   quat_label_->setAlignment(Qt::AlignCenter);
   quat_slider_ = new QSlider(Qt::Horizontal); 
-  quat_slider_->setMinimum(100);
+  quat_slider_->setMinimum(1);
   quat_slider_->setMaximum(2000);
   quat_slider_->setValue(static_cast<int>(quat_gain_));
   quat_value_label_ = new QLabel(QString::number(quat_gain_, 'f', 1));

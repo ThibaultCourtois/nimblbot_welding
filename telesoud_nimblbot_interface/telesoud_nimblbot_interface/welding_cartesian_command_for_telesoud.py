@@ -42,6 +42,10 @@ MODULE_SELECT_COMMAND = 0
 SECTION_SELECT_COMMAND = 1
 ALL_SELECT_COMMAND = 2
 
+class ControlMode:
+    PAUSE: int=0
+    MODULAR: int=1
+    CARTESIAN : int=2
 
 class RobotState:
     """Enum-like class for robot state machine"""
@@ -76,8 +80,8 @@ class TelesoudCommandToCartesianNode(Node):
         # Pose init
         self.init_poses_timer = self.create_timer(1.0, self.__init_poses)
         # State machine timer
-        self.__timer_state_machine = self.create_timer(0.02, self.__update_state_machine)
-        self.command_timer = self.create_timer(0.02, self.process_pending_command)
+        self.__timer_state_machine = self.create_timer(0.025, self.__update_state_machine)
+        self.command_timer = self.create_timer(0.025, self.process_pending_command)
 
     
     def _initialize_basic_parameters(self):
@@ -103,13 +107,14 @@ class TelesoudCommandToCartesianNode(Node):
         # Command handling
         self.zero_velocity_counter = 0
         self.stop_command_counter = 0
-        self.stop_command_threshold = 400  #~10sec for a 40 Hz rate
+        self.stop_command_threshold = 2400  #~60sec for a 40 Hz rate
         self.last_command_type = None
         self.pending_command = None
         self.command_data = None
 
         # State machine variables
         self.current_state = RobotState.PAUSE
+        self.current_control_mode = 0
         self.previous_state = RobotState.PAUSE
         
         # Error handling
@@ -119,7 +124,6 @@ class TelesoudCommandToCartesianNode(Node):
 
         # Flags
         self.calibration_process = True
-        self.paused = True
         self.resuming_flag = False
 
         # Movement  parameters
@@ -132,13 +136,13 @@ class TelesoudCommandToCartesianNode(Node):
 
         # Teleop cartesian
         self.declare_parameter('pos_gain', 1.0)
-        self.declare_parameter('quat_gain', 1000.0)
-        self.teleop_update_rate = 50  # Hz
+        self.declare_parameter('quat_gain', 1.0)
+        self.teleop_update_rate = 40  # Hz
         self.current_velocity_vector = Twist()
 
         # Velocity control
         self.declare_parameter('TCP_velocity', 0.01)  # default velocity
-        self.declare_parameter('control_rate', 50.0)  # Hz
+        self.declare_parameter('control_rate', 40.0)  # Hz
         self.control_rate = self.get_parameter('control_rate').value
         self.target_velocity = self.get_parameter('TCP_velocity').value
 
@@ -354,17 +358,13 @@ class TelesoudCommandToCartesianNode(Node):
 
    
     def switch_control_mode(self, mode):
-        self.get_logger().info('OUI')
         try:
-            if self.paused and mode==0:
+            if self.current_control_mode == mode:
                 return
-            self.paused = (mode == 0) 
             
-            if self.paused and mode !=0:
-                self.resuming_flag = True
-
-            if self.modular_control_enabled and mode==1:
-                self.modular_control_enabled = False
+            self.resuming_flag = (self.current_control_mode == ControlMode.PAUSE and mode != ControlMode.PAUSE) 
+            self.modular_control_enabled &= (mode != ControlMode.MODULAR)
+            self.current_control_mode = mode
 
             if not self.change_control_mode_client.wait_for_service(timeout_sec = 5.0):
                 raise RuntimeError("Failed to switch control mode: service not available")
@@ -461,6 +461,7 @@ class TelesoudCommandToCartesianNode(Node):
             if self.resuming_flag:
                 self.current_state = RobotState.IDLE
                 self.get_logger().info('Pause finished, returning to IDLE state')
+                self.resuming_flag = False
 
         elif self.current_state == RobotState.DYNAMIC_MOVEMENT:    
             if self.__is_dynamic_cartesian_movement_complete():
@@ -613,7 +614,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.stop_command_counter = 1
             self.last_command_type = 0
 
-        if self.stop_command_counter >= self.stop_command_threshold and not self.paused:
+        if self.stop_command_counter >= self.stop_command_threshold and not self.current_control_mode == ControlMode.PAUSE:
             self.switch_control_mode(0) # ControlMode.PAUSE
             self.current_state = RobotState.PAUSE
             self.stop_command_counter = 0
@@ -1030,10 +1031,6 @@ class TelesoudCommandToCartesianNode(Node):
             self.modular_control_enabled = msg.data
            
             if self.modular_control_enabled:
-                if self.current_state != RobotState.IDLE:
-                    self.get_logger().warn(f"Cannot switch to modular mode from {STATE_NAMES[self.current_state]} state")
-                    return
-                
                 self.previous_state = self.current_state
                 self.current_state = RobotState.MODULAR_CONTROL
                 

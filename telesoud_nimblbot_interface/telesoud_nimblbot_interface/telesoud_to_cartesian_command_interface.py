@@ -121,9 +121,9 @@ class InterfaceNode(Node):
                         command.speed_vector.linear.x = TCP_speed_vector[0]
                         command.speed_vector.linear.y = TCP_speed_vector[1]
                         command.speed_vector.linear.z = TCP_speed_vector[2]
-                        command.speed_vector.angular.x = math.radians(TCP_speed_vector[3])
-                        command.speed_vector.angular.y = math.radians(TCP_speed_vector[4])
-                        command.speed_vector.angular.z = math.radians(TCP_speed_vector[5])
+                        command.speed_vector.angular.x = TCP_speed_vector[3]
+                        command.speed_vector.angular.y = TCP_speed_vector[4]
+                        command.speed_vector.angular.z = TCP_speed_vector[5]
                 case 8:
                     command.command_type = Command.COMMAND_START_DYNAMIC
                     self.get_logger().debug('Instruction START DYNAMIC CARTESIAN MOVEMENT')
