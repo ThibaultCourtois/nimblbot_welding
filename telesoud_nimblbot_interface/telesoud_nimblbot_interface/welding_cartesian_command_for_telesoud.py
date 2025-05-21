@@ -120,7 +120,10 @@ class TelesoudCommandToCartesianNode(Node):
         # Error handling
         self.current_error = ""
         self.robotInFaultStatus = False
-
+        
+        # For telesoud trajectory execution detection
+        self.telesoud_trajectory_execution_timestamp = None
+        self.is_telesoud_trajectory_execution = False
 
         # Flags
         self.calibration_process = True
@@ -641,6 +644,9 @@ class TelesoudCommandToCartesianNode(Node):
     def _process_start_dynamic(self, status):
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
         
+        current_time = self.get_clock().now()
+        self.is_telesoud_trajectory_execution = (current_time - self.telesoud_trajectory_execution_timestamp).nanoseconds < 500_000_000
+        self.get_logger().info(f'{self.is_telesoud_trajectory_execution}')
         self.current_state = RobotState.DYNAMIC_MOVEMENT
         status.success = True
         status.message = "Dynamic cartesian movement started"
@@ -701,6 +707,8 @@ class TelesoudCommandToCartesianNode(Node):
                 if self.zero_velocity_counter > 30:
                     self.current_state = RobotState.IDLE
                     self.zero_velocity_counter = 0
+                    if self.is_telesoud_trajectory_execution:
+                        self.is_telesoud_trajectory_execution = False
                     return True
             else:
                 self.zero_velocity_counter = 0
@@ -732,6 +740,8 @@ class TelesoudCommandToCartesianNode(Node):
                         request.parameters = [linear_param]
                         
                         self.current_state = RobotState.IDLE
+
+                        self.telesoud_trajectory_execution_timestamp = self.get_clock().now()
                         return True
 
                 pose_msg = PoseStamped()
@@ -790,8 +800,13 @@ class TelesoudCommandToCartesianNode(Node):
 
     
     def compute_teleop_target_pose(self):
-        pos_gain = self.get_parameter('pos_gain').value
-        quat_gain = self.get_parameter('quat_gain').value
+        if not self.is_telesoud_trajectory_execution:
+            pos_gain = self.get_parameter('pos_gain').value
+            quat_gain = self.get_parameter('quat_gain').value
+        else:
+            pos_gain = 1.0
+            quat_gain = 1.0
+
         if self.current_velocity_vector != Twist():
             current_pose = self.__get_current_pose(mimic=False)
 
