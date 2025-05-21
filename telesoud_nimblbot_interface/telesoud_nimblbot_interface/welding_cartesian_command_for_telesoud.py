@@ -49,8 +49,8 @@ class RobotState:
     DYNAMIC_MOVEMENT: int = 1
     CARTESIAN_TRAJECTORY: int = 2
     JOINT_TRAJECTORY: int = 3
-    ERROR: int = 4
-    MODULAR_CONTROL: int = 5
+    MODULAR_CONTROL: int = 4
+    PAUSE: int = 5
 
 
 STATE_NAMES = {
@@ -58,8 +58,8 @@ STATE_NAMES = {
     RobotState.DYNAMIC_MOVEMENT: "DYNAMIC_MOVEMENT",
     RobotState.CARTESIAN_TRAJECTORY: "CARTESIAN_TRAJECTORY",
     RobotState.JOINT_TRAJECTORY: "JOINT_TRAJECTORY",
-    RobotState.ERROR: "ERROR",
-    RobotState.MODULAR_CONTROL: "MODULAR_CONTROL"
+    RobotState.MODULAR_CONTROL: "MODULAR_CONTROL",
+    RobotState.PAUSE: "PAUSE"
 }
 
 
@@ -79,6 +79,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.__timer_state_machine = self.create_timer(0.02, self.__update_state_machine)
         self.command_timer = self.create_timer(0.02, self.process_pending_command)
 
+    
     def _initialize_basic_parameters(self):
         self.__rate = 20
         self.robot_data_publish_rate = 40
@@ -100,23 +101,26 @@ class TelesoudCommandToCartesianNode(Node):
         self.declare_parameter('modular_gain', 1.0)
 
         # Command handling
+        self.zero_velocity_counter = 0
+        self.stop_command_counter = 0
+        self.stop_command_threshold = 400  #~10sec for a 40 Hz rate
+        self.last_command_type = None
         self.pending_command = None
         self.command_data = None
 
         # State machine variables
-        self.current_state = RobotState.IDLE
-        self.previous_state = RobotState.IDLE
-        self.robotInFaultStatus = False
+        self.current_state = RobotState.PAUSE
+        self.previous_state = RobotState.PAUSE
+        
+        # Error handling
         self.current_error = ""
-        self.error_time = 0.0
+        self.robotInFaultStatus = False
 
-        # Command flags
+
+        # Flags
         self.calibration_process = True
-        self.stop_requested = True
-        self.set_dynamic_cartesian_speed_flag = False
-        self.dynamic_movement_flag = False
-        self.cartesian_trajectory_flag = False
-        self.joint_trajectory_flag = False
+        self.paused = True
+        self.resuming_flag = False
 
         # Movement  parameters
         self.TCP_speed = 0.0
@@ -124,7 +128,6 @@ class TelesoudCommandToCartesianNode(Node):
         self.current_target_pose = None
         self.current_pose_mimic = None
         self.current_pose_robot = None
-        self.pause = False
         self.movement_in_progess = False
 
         # Teleop cartesian
@@ -146,6 +149,7 @@ class TelesoudCommandToCartesianNode(Node):
         # Measurements
         self.trajectory_start_time = None
 
+    
     def _setup_transform_infrastructure(self):
         # Namespace from ID's
         self.namespace = "nb"
@@ -285,7 +289,7 @@ class TelesoudCommandToCartesianNode(Node):
                 'translator/command',
                 self.__handle_command,
                 10
-            )
+        )
 
     
     def _create_clients(self):
@@ -350,13 +354,17 @@ class TelesoudCommandToCartesianNode(Node):
 
    
     def switch_control_mode(self, mode):
+        self.get_logger().info('OUI')
         try:
-            if self.pause and mode==0:
+            if self.paused and mode==0:
                 return
+            self.paused = (mode == 0) 
+            
+            if self.paused and mode !=0:
+                self.resuming_flag = True
 
             if self.modular_control_enabled and mode==1:
                 self.modular_control_enabled = False
-
 
             if not self.change_control_mode_client.wait_for_service(timeout_sec = 5.0):
                 raise RuntimeError("Failed to switch control mode: service not available")
@@ -364,18 +372,14 @@ class TelesoudCommandToCartesianNode(Node):
             request = ServoCommandType.Request(command_type = mode)
             future = self.change_control_mode_client.call_async(request)
 
-            self.pause = (mode == 0) 
-            
             self.get_logger().info(f'Switched control mode to {mode}')
             
             time.sleep(0.5)
-
             self.motor_lock_publisher.publish(Int8MultiArray())
-            
             return future
+        
         except Exception as e:
             self.current_error = str(e)
-            self.__transition_to_error(f"Error switching control mode: {e}")
             self.get_logger().error(f'{e}')
             return None
 
@@ -399,6 +403,10 @@ class TelesoudCommandToCartesianNode(Node):
         data = self.command_data
         command_type = data['command_type']
         command_id = data['command_id']
+
+        if command_type != 0:
+            self.stop_command_counter = 0
+            self.last_command_type = command_type
 
         self.pending_command = False
 
@@ -446,57 +454,34 @@ class TelesoudCommandToCartesianNode(Node):
     def __update_state_machine(self):
         initial_state = self.current_state
         
-        if self.stop_requested:
-            if self.current_state != RobotState.IDLE:
+        if self.current_state == RobotState.IDLE:
+            pass
+        
+        elif self.current_state == RobotState.PAUSE:
+            if self.resuming_flag:
                 self.current_state = RobotState.IDLE
+                self.get_logger().info('Pause finished, returning to IDLE state')
 
-        if self.current_state == RobotState.DYNAMIC_MOVEMENT:    
-            self.__is_dynamic_cartesian_movement_complete() 
-            
-            if not self.dynamic_movement_flag: 
-                self.current_state = RobotState.IDLE
-                self.get_logger().info("Dynamic movement complete, returning to IDLE state")
+        elif self.current_state == RobotState.DYNAMIC_MOVEMENT:    
+            if self.__is_dynamic_cartesian_movement_complete():
+                self.get_logger().info('Dynamic cartesian movement finished, returning to IDLE state')
+                self.current_state = RobotState.IDLE    
 
         elif self.current_state == RobotState.CARTESIAN_TRAJECTORY:
-            self.__is_cartesian_trajectory_complete()
-            
-            if not self.cartesian_trajectory_flag:
-                self.current_state = RobotState.IDLE                
-                self.get_logger().info("Cartesian trajectory complete, returning to IDLE state")
+            if self.__is_cartesian_trajectory_complete():
+                self.get_logger().info('Cartesian trajectory finished, returning to IDLE state')
+                self.current_state = RobotState.IDLE    
 
         elif self.current_state == RobotState.JOINT_TRAJECTORY:
-            self.__is_joint_trajectory_complete()
-            
-            if not self.joint_trajectory_flag:
-                # Setting back servo node linear scale default value
-                request = SetParameters.Request()
-                param_value = ParameterValue()
-                param_value.type = ParameterType.PARAMETER_DOUBLE
-                param_value.double_value = 0.025
-
-                linear_param = Parameter()
-                linear_param.name = 'servo.scale.linear'
-                linear_param.value = param_value
-
-                request.parameters = [linear_param]
-                self.current_state = RobotState.IDLE
-                self.get_logger().info("Joint trajectory complete, returning to IDLE state")
+            if self.__is_joint_trajectory_complete():
+                self.get_logger().info('Joint trajectory finished, returning to IDLE state')
+                self.current_state = RobotState.IDLE    
         
         elif self.current_state == RobotState.MODULAR_CONTROL:
             self.__process_modular_control()
             if not self.modular_control_enabled:
-                self.current_state = RobotState.IDLE
                 self.get_logger().info("Modular control disabled, returning to IDLE state")
-
-        elif self.current_state == RobotState.ERROR:
-            self.robotInFaultStatus = True
-            self.__is_error_resolved()
-            
-            if self.__is_error_resolved():
-                self.robotInFaultStatus = False
-                self.current_error=""
-                self.current_state = self.previous_state
-                self.get_logger().info("Error resolved, returning to previous state")
+                self.current_state = RobotState.IDLE
 
         if self.current_state != initial_state:
             self.previous_state = initial_state
@@ -591,7 +576,7 @@ class TelesoudCommandToCartesianNode(Node):
         positions.extend(module_positions)
         velocities.extend(module_velocities)
 
-        if wrist_command !=0 and self.__terminal_wrist:
+        if wrist_command != 0 and self.__terminal_wrist:
             wrist_joint_idx = len(self.__q_desired) - 1
             wrist_joint_name = self.__joint_names_alias[-1]
             wrist_velocity = wrist_command * self.amplified_modular_velocity
@@ -620,19 +605,18 @@ class TelesoudCommandToCartesianNode(Node):
 
     
     def _process_stop_command(self, status):
-        self.stop_requested = True
+        self.current_velocity_vector = Twist()
 
-        if self.dynamic_movement_flag:
-            self.dynamic_movement_flag = False
-            self.get_logger().info('Dynamic cartesian movement stopping')
-        elif self.cartesian_trajectory_flag:
-            self.cartesian_trajectory_flag = False
-            self.get_logger().info('Cartesian trajectory execution stopped')
-        elif self.joint_trajectory_flag:
-            self.joint_trajectory_flag = False
-            self.get_logger().info('Joint trajectory execution stopped')
-        
-        self.switch_control_mode(0) # ControlMode.PAUSE
+        if self.last_command_type == 0:
+            self.stop_command_counter += 1
+        else:
+            self.stop_command_counter = 1
+            self.last_command_type = 0
+
+        if self.stop_command_counter >= self.stop_command_threshold and not self.paused:
+            self.switch_control_mode(0) # ControlMode.PAUSE
+            self.current_state = RobotState.PAUSE
+            self.stop_command_counter = 0
 
         status.success = True
         status.message = "Stop command processed"
@@ -647,27 +631,13 @@ class TelesoudCommandToCartesianNode(Node):
         except Exception as e:
             status.success = False
             status.message = f"Error getting robot data: {str(e)}"
-            self.__transition_to_error(f"Error getting robot data: {e}")
-
     
     def _process_set_dynamic(self, status, speed_vector):
-        self.set_dynamic_cartesian_speed_flag = True
         self.current_velocity_vector = speed_vector
         status.success = True
 
     
     def _process_start_dynamic(self, status):
-        self.stop_requested = False
-        
-        if self.current_state != RobotState.IDLE:
-            status.success = False
-            status.message = f"Cannot start dynamic movement in {STATE_NAMES[self.current_state]} state"
-            return
-
-        self.set_dynamic_cartesian_speed_flag = True
-
-        self.dynamic_movement_flag = True
-        
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
         
         self.current_state = RobotState.DYNAMIC_MOVEMENT
@@ -676,12 +646,6 @@ class TelesoudCommandToCartesianNode(Node):
 
   
     def _process_play_cartesian(self, status, target_pose, speed):
-        self.stop_requested = False
-        
-        if self.current_state != RobotState.IDLE:
-            status.success = False
-            status.message = f"Cannot execute cartesian trajectory in {STATE_NAMES[self.current_state]} state"
-            return
         self.TCP_speed = speed
         self.current_target_pose = target_pose
         
@@ -694,20 +658,12 @@ class TelesoudCommandToCartesianNode(Node):
         self.trajectory_start_time = self.get_clock().now()
         
         self.current_state = RobotState.CARTESIAN_TRAJECTORY
-        self.cartesian_trajectory_flag = True
         
         status.success = True
         status.message = "Cartesian trajectory started"
    
 
     def _process_play_joint(self, status, target_pose, speed):
-        self.stop_requested = False
-        
-        if self.current_state != RobotState.IDLE:
-            status.success = False
-            status.message = f"Cannot execute joint trajectory in {STATE_NAMES[self.current_state]} state"
-            return
-        
         self.TCP_speed = speed
         self.current_target_pose = target_pose
         
@@ -721,31 +677,62 @@ class TelesoudCommandToCartesianNode(Node):
         self.desired_pose_publisher.publish(pose_msg)
         
         self.current_state = RobotState.JOINT_TRAJECTORY
-        self.joint_trajectory_flag = True
         
         status.success = True
         status.message = "Joint trajectory started"
    
 
     def __is_cartesian_trajectory_complete(self):
-         if self.current_state == RobotState.CARTESIAN_TRAJECTORY:
+        if self.current_state == RobotState.CARTESIAN_TRAJECTORY:
             current_pose = self.__get_current_pose(mimic=False)
             if current_pose:
                 completed = self.execute_line(current_pose.pose)
                 if completed:
-                    self.cartesian_trajectory_flag = False
-                    self.get_logger().info("Cartesian trajectory complete")
+                    return True
+        return False
 
     
     def __is_dynamic_cartesian_movement_complete(self):
         if self.current_state == RobotState.DYNAMIC_MOVEMENT:
+            if self.current_velocity_vector == Twist():
+                self.zero_velocity_counter += 1
+
+                if self.zero_velocity_counter > 30:
+                    self.current_state = RobotState.IDLE
+                    self.zero_velocity_counter = 0
+                    return True
+            else:
+                self.zero_velocity_counter = 0
+
             pose_target_msg = self.compute_teleop_target_pose()
             if pose_target_msg is not None:
                 self.desired_pose_publisher.publish(pose_target_msg)
+        return False
 
+    
     def __is_joint_trajectory_complete(self):
-         if self.current_state == RobotState.JOINT_TRAJECTORY:
+        if self.current_state == RobotState.JOINT_TRAJECTORY:
             try:
+                current_pose = self.__get_current_pose(mimic=False)
+                if current_pose:
+                    error = self.__calculate_position_error(current_pose.pose, self.current_target_pose)
+                    epsilon = 2
+
+                    if error <= epsilon:
+                        request = SetParameters.Request()
+                        param_value = ParameterValue()
+                        param_value.type = ParameterType.PARAMETER_DOUBLE
+                        param_value.double_value = 0.025
+
+                        linear_param = Parameter()
+                        linear_param.name = 'servo.scale.linear'
+                        linear_param.value = param_value
+
+                        request.parameters = [linear_param]
+                        
+                        self.current_state = RobotState.IDLE
+                        return True
+
                 pose_msg = PoseStamped()
                 pose_msg.header.stamp = self.get_clock().now().to_msg()
                 pose_msg.header.frame_id = self.__base_frame_robot
@@ -754,28 +741,8 @@ class TelesoudCommandToCartesianNode(Node):
                 self.desired_pose_publisher.publish(pose_msg)
             except Exception as e:
                 self.get_logger().error(f'Error during joint trajectory execution {e}')
+        return False
     
-    
-    def __is_error_resolved(self):
-        if time.time() - self.error_time > ERROR_RESOLUTION_TIMEOUT:
-            return True
-
-        try:
-            if not self.change_control_mode_client.service_is_ready():
-                return False
-            return True
-        except Exception as e:
-            self.get_logger().info(f'Error : {e}')
-            return False
-
-    
-    def __transition_to_error(self, error_message):
-        self.previous_state = self.current_state
-        self.current_state = RobotState.ERROR
-        self.error_time = time.time()
-        self.current_error = error_message
-        self.get_logger().error(f"Error detected: {error_message}")
-
     
     def __on_desired_trajectory(self, msg: JointTrajectory) -> None:
         """Update the current pose of the robot."""
@@ -959,7 +926,7 @@ class TelesoudCommandToCartesianNode(Node):
         """Finalize a movement and publish status."""
         self.movement_in_progress = False
         status_msg = CommandStatus()
-        status_msg.command_type = Command.COMMAND_PLAY_CARTESIAN if self.cartesian_trajectory_flag else Command.COMMAND_PLAY_JOINT
+        status_msg.command_type = Command.COMMAND_PLAY_CARTESIAN if self.current_state == RobotState.CARTESIAN_TRAJECTORY else Command.COMMAND_PLAY_JOINT
         status_msg.success = True
         status_msg.message = 'Movement completed successfully'
         status_msg.robot_data = self.__create_robot_data()
@@ -979,8 +946,8 @@ class TelesoudCommandToCartesianNode(Node):
         robot_data.timestamp = self.get_clock().now().to_msg()
         
         return robot_data
-    
-    
+
+   
     def __set_zeros_callback(self, request, response):
         try:
             if self.current_state != RobotState.MODULAR_CONTROL:
@@ -1018,7 +985,6 @@ class TelesoudCommandToCartesianNode(Node):
         
         except Exception as e:
             self.current_error = str(e)
-            self.__transition_to_error(f'Error during zeros calibration: {e}')
             self.get_logger().error(f'Error during calibration: {e}')
             return response
         
@@ -1068,8 +1034,6 @@ class TelesoudCommandToCartesianNode(Node):
                     self.get_logger().warn(f"Cannot switch to modular mode from {STATE_NAMES[self.current_state]} state")
                     return
                 
-                self.stop_requested = False
-
                 self.previous_state = self.current_state
                 self.current_state = RobotState.MODULAR_CONTROL
                 

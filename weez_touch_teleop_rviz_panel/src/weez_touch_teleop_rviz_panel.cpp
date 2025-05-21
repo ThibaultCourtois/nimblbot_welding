@@ -10,7 +10,7 @@ TeleopGainPanel::TeleopGainPanel(QWidget* parent)
   , quat_gain_(1000.0)
   , modular_gain_(1.0)
   , current_modular_velocity_(0.0)
-  , current_robot_state_("idle")
+  , current_robot_state_("pause")
   , modular_command_active_(false)
   , current_modular_mode_("AZIMUTH")
 {
@@ -241,7 +241,7 @@ void TeleopGainPanel::updateRobotStateLabel()
     styleSheet = "color: cyan; font-weight: bold;";
   } else if (current_robot_state_ == "MODULAR_CONTROL") {
     styleSheet = "color: green; font-weight: bold;";
-  } else if (current_robot_state_ == "ERROR") {
+  } else if (current_robot_state_ == "PAUSE") {
     styleSheet = "color: red; font-weight: bold;";
   } else {
     styleSheet = "color: black; font-weight: bold;";
