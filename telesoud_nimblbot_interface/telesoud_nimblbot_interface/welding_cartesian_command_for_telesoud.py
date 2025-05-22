@@ -51,6 +51,8 @@ class RobotState:
     """Enum-like class for robot state machine"""
     IDLE: int = 0
     DYNAMIC_MOVEMENT: int = 1
+    DYNAMIC_MOVEMENT_TELEOP_XYZ: int = 11
+    DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION: int = 12
     CARTESIAN_TRAJECTORY: int = 2
     JOINT_TRAJECTORY: int = 3
     MODULAR_CONTROL: int = 4
@@ -60,6 +62,8 @@ class RobotState:
 STATE_NAMES = {
     RobotState.IDLE: "IDLE",
     RobotState.DYNAMIC_MOVEMENT: "DYNAMIC_MOVEMENT",
+    RobotState.DYNAMIC_MOVEMENT_TELEOP_XYZ: "DYNAMIC_MOVEMENT_TELEOP_XYZ",
+    RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION: "DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION",
     RobotState.CARTESIAN_TRAJECTORY: "CARTESIAN_TRAJECTORY",
     RobotState.JOINT_TRAJECTORY: "JOINT_TRAJECTORY",
     RobotState.MODULAR_CONTROL: "MODULAR_CONTROL",
@@ -80,8 +84,8 @@ class TelesoudCommandToCartesianNode(Node):
         # Pose init
         self.init_poses_timer = self.create_timer(1.0, self.__init_poses)
         # State machine timer
-        self.__timer_state_machine = self.create_timer(0.025, self.__update_state_machine)
-        self.command_timer = self.create_timer(0.025, self.process_pending_command)
+        self.__timer_state_machine = self.create_timer(0.02, self.__update_state_machine)
+        self.command_timer = self.create_timer(0.01, self.process_pending_command)
 
     
     def _initialize_basic_parameters(self):
@@ -140,12 +144,12 @@ class TelesoudCommandToCartesianNode(Node):
         # Teleop cartesian
         self.declare_parameter('pos_gain', 1.0)
         self.declare_parameter('quat_gain', 1.0)
-        self.teleop_update_rate = 40  # Hz
+        self.teleop_update_rate = 50  # Hz
         self.current_velocity_vector = Twist()
 
         # Velocity control
         self.declare_parameter('TCP_velocity', 0.01)  # default velocity
-        self.declare_parameter('control_rate', 40.0)  # Hz
+        self.declare_parameter('control_rate', 50.0)  # Hz
         self.control_rate = self.get_parameter('control_rate').value
         self.target_velocity = self.get_parameter('TCP_velocity').value
 
@@ -293,7 +297,7 @@ class TelesoudCommandToCartesianNode(Node):
         # Telesoud interface subscribers
         self.command_sub = self.create_subscription(
                 Command,
-                'translator/command',
+                '/translator/command',
                 self.__handle_command,
                 10
         )
@@ -466,7 +470,7 @@ class TelesoudCommandToCartesianNode(Node):
                 self.get_logger().info('Pause finished, returning to IDLE state')
                 self.resuming_flag = False
 
-        elif self.current_state == RobotState.DYNAMIC_MOVEMENT:    
+        elif str(self.current_state).startswith(str(RobotState.DYNAMIC_MOVEMENT)):   # DYNAMIC_MOVEMENT = 1, MOVEMENT_TELEOP_XYZ = 11, DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION = 12 
             if self.__is_dynamic_cartesian_movement_complete():
                 self.get_logger().info('Dynamic cartesian movement finished, returning to IDLE state')
                 self.current_state = RobotState.IDLE    
@@ -645,9 +649,11 @@ class TelesoudCommandToCartesianNode(Node):
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
         
         current_time = self.get_clock().now()
-        self.is_telesoud_trajectory_execution = (current_time - self.telesoud_trajectory_execution_timestamp).nanoseconds < 500_000_000
+        if self.telesoud_trajectory_execution_timestamp is not None:
+            self.is_telesoud_trajectory_execution = (current_time - self.telesoud_trajectory_execution_timestamp).nanoseconds < 500_000_000
+        
         self.get_logger().info(f'{self.is_telesoud_trajectory_execution}')
-        self.current_state = RobotState.DYNAMIC_MOVEMENT
+        self.current_state = RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION if self.is_telesoud_trajectory_execution else RobotState.DYNAMIC_MOVEMENT_TELEOP_XYZ
         status.success = True
         status.message = "Dynamic cartesian movement started"
 
@@ -700,7 +706,7 @@ class TelesoudCommandToCartesianNode(Node):
 
     
     def __is_dynamic_cartesian_movement_complete(self):
-        if self.current_state == RobotState.DYNAMIC_MOVEMENT:
+        if str(self.current_state).startswith(str(RobotState.DYNAMIC_MOVEMENT)):
             if self.current_velocity_vector == Twist():
                 self.zero_velocity_counter += 1
 

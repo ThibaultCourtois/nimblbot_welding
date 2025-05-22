@@ -232,17 +232,21 @@ void TeleopGainPanel::updateRobotStateLabel()
   QString styleSheet;
 
   if (current_robot_state_ == "IDLE") {
-    styleSheet = "color: black; font-weight: bold;";
+    styleSheet = "color: #F94C10; font-weight: bold;";
   } else if (current_robot_state_ == "DYNAMIC_MOVEMENT") {
-    styleSheet = "color: purple; font-weight: bold;";
+    styleSheet = "color: #BC7AF9; font-weight: bold;";
+  } else if (current_robot_state_ == "DYNAMIC_MOVEMENT_TELEOP_XYZ") {
+    styleSheet = "color: #FFA1F5; font-weight: bold;";
+  } else if (current_robot_state_ == "DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION") {
+    styleSheet = "color: #687EFF; font-weight: bold;";
   } else if (current_robot_state_ == "CARTESIAN_TRAJECTORY") {
-    styleSheet = "color: blue; font-weight: bold;";
+    styleSheet = "color: #80B3FF; font-weight: bold;";
   } else if (current_robot_state_ == "JOINT_TRAJECTORY") {
-    styleSheet = "color: cyan; font-weight: bold;";
+    styleSheet = "color: #98E4FF; font-weight: bold;";
   } else if (current_robot_state_ == "MODULAR_CONTROL") {
-    styleSheet = "color: green; font-weight: bold;";
+    styleSheet = "color: #4CCD99; font-weight: bold;";
   } else if (current_robot_state_ == "PAUSE") {
-    styleSheet = "color: red; font-weight: bold;";
+    styleSheet = "color: #C70039; font-weight: bold;";
   } else {
     styleSheet = "color: black; font-weight: bold;";
   }
