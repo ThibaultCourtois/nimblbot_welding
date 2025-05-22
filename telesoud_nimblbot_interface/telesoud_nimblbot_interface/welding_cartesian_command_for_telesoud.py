@@ -130,6 +130,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.is_telesoud_trajectory_execution = False
 
         # Flags
+        self.emergency_stop = False
         self.calibration_process = True
         self.resuming_flag = False
 
@@ -284,7 +285,14 @@ class TelesoudCommandToCartesianNode(Node):
                 '/rviz_plugin/modular_command_state',
                 self.on_modular_command_toggle,
                 10
-                )
+        )
+
+        self.emergency_stop_sub = self.create_subscription(
+                Bool,
+                '/rviz_plugin/emergency_stop',
+                self.on_emergency_stop,
+                10
+        )
 
         # For TCP trace clearing
         self.clear_tcp_trace_sub = self.create_subscription(
@@ -621,7 +629,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.stop_command_counter = 1
             self.last_command_type = 0
 
-        if self.stop_command_counter >= self.stop_command_threshold and not self.current_control_mode == ControlMode.PAUSE:
+        if self.stop_command_counter >= self.stop_command_threshold and not self.current_control_mode == ControlMode.PAUSE and not self.emergency_stop:
             self.switch_control_mode(0) # ControlMode.PAUSE
             self.current_state = RobotState.PAUSE
             self.stop_command_counter = 0
@@ -1042,11 +1050,13 @@ class TelesoudCommandToCartesianNode(Node):
         self.set_parameters([RclpyParameter('quat_gain', RclpyParameter.Type.DOUBLE, new_gain)])
         self.get_logger().info(f"Quaternion gain updated to: {new_gain:.2f}")
     
+    
     def on_modular_gain_changed(self, msg):
         new_gain = msg.data
         self.set_parameters([RclpyParameter('modular_gain', RclpyParameter.Type.DOUBLE, new_gain)])
         self.get_logger().info(f"Modular gain updated to: {new_gain:.2f}")
 
+    
     def on_modular_command_toggle(self, msg):
         try:
             self.modular_control_enabled = msg.data
@@ -1066,11 +1076,21 @@ class TelesoudCommandToCartesianNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error toggling modular mode : {e}")
 
+    
+    def on_emergency_stop(self, msg):
+        self.emergency_stop = msg.data
+        if self.emergency_stop:
+            self.get_logger().info('EMERGENCY STOP')
+            self.switch_control_mode(0)
+            self.current_state = RobotState.PAUSE
+        else: 
+            if self.current_state == RobotState.PAUSE:
+                self.current_state = RobotState.IDLE
+
 
 def main(args=None):
     rclpy.init(args=args)
     telesoud_command_node = TelesoudCommandToCartesianNode("welding_cartesian_command_node")
-
     try:
         rclpy.spin(telesoud_command_node)
     except KeyboardInterrupt:

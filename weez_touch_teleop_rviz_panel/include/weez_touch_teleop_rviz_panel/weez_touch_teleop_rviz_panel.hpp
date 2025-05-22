@@ -20,110 +20,101 @@
 
 namespace weez_touch_teleop_rviz_panel
 {
+  class TeleopGainPanel : public rviz_common::Panel
+  {
+    Q_OBJECT
 
-class TeleopGainPanel : public rviz_common::Panel
-{
-  Q_OBJECT
+    public:
+      // Constructor
+      explicit TeleopGainPanel(QWidget* parent = nullptr);
 
-public:
-  // Constructor
-  explicit TeleopGainPanel(QWidget* parent = nullptr);
+      // Destructor
+      ~TeleopGainPanel() override;
 
-  // Destructor
-  ~TeleopGainPanel() override;
+      // Override save/load configuration methods
+      void save(rviz_common::Config config) const override;
+      void load(const rviz_common::Config& config) override;
 
-  // Override save/load configuration methods
-  void save(rviz_common::Config config) const override;
-  void load(const rviz_common::Config& config) override;
-
-private Q_SLOTS:
-  // Slots for slider value changes
-  void updatePosGain(int value);
-  void updateQuatGain(int value);
-  void updateModularGain(int value);
-  
-  void modularVelocityIndicatorCallback(const std_msgs::msg::Float64::SharedPtr msg);
-
-  // Slots for \"clear TCP button\"
-  void clearTcpTrace();
-
-  // Slot for ROS spinner
-  void spinOnce();
-
-  // Slots for \"set zeros button\"
-  void setZeros();
-
-  //Slot for \"modular command button\"
-  void toggleModularCommand();
+    private Q_SLOTS:
+      void updatePosGain(int value);
+      void updateQuatGain(int value);
+      void updateModularGain(int value);
+      void modularVelocityIndicatorCallback(const std_msgs::msg::Float64::SharedPtr msg);
+      void clearTcpTrace();
+      void spinOnce();
+      void setZeros();
+      void toggleModularCommand();
+      void toggleEmergencyStop();
 
 
-private:
-  // Setup UI components
-  void setupUi();
 
-  // ROS publishers
-  void publishPosGain();
-  void publishQuatGain();
-  void publishModularGain();
-  
-  // ROS subscribers
-  void robotStateCallback(const std_msgs::msg::String::SharedPtr msg);
-  void modularModeCallback(const std_msgs::msg::String::SharedPtr msg);
-  void updateRobotStateLabel();
+    private:
+      // Setup UI components
+      void setupUi();
 
-  // ROS clients
-  rclcpp::Client<std_srvs::srv::Empty>::SharedPtr set_zeros_client_;
+      // ROS publishers
+      void publishPosGain();
+      void publishQuatGain();
+      void publishModularGain();
+      
+      // ROS subscribers
+      void robotStateCallback(const std_msgs::msg::String::SharedPtr msg);
+      void modularModeCallback(const std_msgs::msg::String::SharedPtr msg);
+      void updateRobotStateLabel();
 
-  // ROS node, publishers and subscribers
-  rclcpp::Node::SharedPtr node_;
-  
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pos_gain_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr quat_gain_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr clear_tcp_trace_publisher_; 
-  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr modular_command_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr modular_gain_publisher_;
+      // ROS clients
+      rclcpp::Client<std_srvs::srv::Empty>::SharedPtr set_zeros_client_;
 
+      // ROS node, publishers and subscribers
+      rclcpp::Node::SharedPtr node_;
+      
+      rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pos_gain_publisher_;
+      rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr quat_gain_publisher_;
+      rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr clear_tcp_trace_publisher_; 
+      rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr modular_command_publisher_;
+      rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr modular_gain_publisher_;
+      rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr emergency_stop_publisher_;
 
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_state_subscriber_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr modular_mode_subscriber_;
-  rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr modular_velocity_indicator_subscriber_;
-  
+      rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_state_subscriber_;
+      rclcpp::Subscription<std_msgs::msg::String>::SharedPtr modular_mode_subscriber_;
+      rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr modular_velocity_indicator_subscriber_;
+      
 
-  // UI components
-  QSlider* pos_slider_;
-  QSlider* quat_slider_;
-  QSlider* modular_gain_slider_;
-  QLabel* pos_value_label_;
-  QLabel* pos_label_;
-  QLabel* quat_value_label_;
-  QLabel* quat_label_;
-  QLabel* robot_state_label_;
-  QLabel* modular_mode_label_;
-  QLabel* cartesian_mode_label_;
-  QLabel* modular_gain_label_;
-  QLabel* modular_gain_value_label_;
-  QLabel* modular_velocity_indicator_label_;
-  QPushButton* clear_tcp_trace_button_; 
-  QPushButton* set_zeros_button_;
-  QPushButton* modular_command_button_;
+      // UI components
+      QSlider* pos_slider_;
+      QSlider* quat_slider_;
+      QSlider* modular_gain_slider_;
+      QLabel* pos_value_label_;
+      QLabel* pos_label_;
+      QLabel* quat_value_label_;
+      QLabel* quat_label_;
+      QLabel* robot_state_label_;
+      QLabel* modular_mode_label_;
+      QLabel* cartesian_mode_label_;
+      QLabel* modular_gain_label_;
+      QLabel* modular_gain_value_label_;
+      QLabel* modular_velocity_indicator_label_;
+      QPushButton* clear_tcp_trace_button_; 
+      QPushButton* set_zeros_button_;
+      QPushButton* modular_command_button_;
+      QPushButton* emergency_stop_button_;
+      
+      bool modular_command_active_;
+      bool emergency_stop_active_;
 
-  bool modular_command_active_;
+      double pos_gain_;
+      double quat_gain_;
+      double modular_gain_;
+      double current_modular_velocity_;
 
-  double pos_gain_;
-  double quat_gain_;
-  double modular_gain_;
-  double current_modular_velocity_;
+      // command mode
+      std::string current_modular_mode_;
 
-  // command mode
-  std::string current_modular_mode_;
+      // robotState
+      std::string current_robot_state_;
 
-  // robotState
-  std::string current_robot_state_;
-
-  // Timer for ROS spinning
-  QTimer* timer_;
-};
-
+      // Timer for ROS spinning
+      QTimer* timer_;
+  };
 } // namespace teleop_gain_panel
-
 #endif // TELEOP_GAIN_PANEL_HPP
