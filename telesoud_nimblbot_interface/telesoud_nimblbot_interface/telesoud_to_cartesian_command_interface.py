@@ -2,7 +2,6 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
-import math
 from  telesoud_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
 
 class InterfaceNode(Node):
@@ -23,7 +22,7 @@ class InterfaceNode(Node):
         self.next_command_id = 0
         self.pending_commands = {}
 
-        self.instruction_timer = self.create_timer(0.01, self.process_pending_instruction)
+        self.instruction_timer = self.create_timer(0.02, self.process_pending_instruction)
         
         # Namespace 
         self.namespace = self.get_namespace().strip('/')
@@ -87,7 +86,6 @@ class InterfaceNode(Node):
         """Traite l'instruction en attente, appelé par le timer"""
         if not self.pending_instruction:
             return
-
         data = self.instruction_data
         instruction = data['instruction']
         pose1 = data['pose1']
@@ -136,7 +134,6 @@ class InterfaceNode(Node):
 
                     if pose1 is not None and len(pose1) > 0:
                         command.target_pose = self.__construct_command_pose(pose1)
-
                 case 16:
                     command.command_type = Command.COMMAND_PLAY_JOINT
                     self.get_logger().info('Instruction PLAY JOINT TRAJECTORY')

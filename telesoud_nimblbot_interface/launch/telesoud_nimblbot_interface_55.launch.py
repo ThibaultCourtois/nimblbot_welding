@@ -117,7 +117,7 @@ def generate_launch_description():
             ]),
             launch_arguments = {
                 'robot_type':robot_type,
-                'control_mode':'2',
+                'control_mode':'6',
                 'robot_namespace':robot_namespace,
                 'rviz':'false',
                 'simulate_dynamics':simulate_dynamics,
@@ -192,6 +192,13 @@ def generate_launch_description():
         output='screen',
         arguments=['nb_mimic/base_link', 'nb_mimic/tcp_wrist'],
     )
+
+    welding_scene_publisher_node = Node(
+            package='welding_scene_publisher',
+            executable='welding_scene_publisher',
+            name='welding_scene_publisher',
+            output='screen',
+    )
             
 
     return LaunchDescription([
@@ -205,5 +212,6 @@ def generate_launch_description():
             ),
             usb_cam_node,
             tf_path_trail_base_link_wrist,
-            tf_path_trail_base_link_wrist_mimic
+            tf_path_trail_base_link_wrist_mimic,
+            welding_scene_publisher_node
         ])
