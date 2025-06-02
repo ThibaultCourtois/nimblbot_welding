@@ -30,11 +30,9 @@ from telesoud_msgs.msg import RobotData, Command, CommandStatus
 
 from collections import deque
 
-MAX_VEL_EE = 0.020  # m/s
 SERVO_NODE = '/servo_node'
 SPEED_CORRECTION_FACTOR = 1.55
 CURRENT_TCP_SPEED = 0.001667 * SPEED_CORRECTION_FACTOR
-DT = 1/30
 
 # Modular control
 AZIMUTH = 0
@@ -86,12 +84,13 @@ class TelesoudCommandToCartesianNode(Node):
         self.init_poses_timer = self.create_timer(1.0, self.__init_poses)
         # State machine timer
         self.__timer_state_machine = self.create_timer(0.02, self.__update_state_machine)
-        self.command_timer = self.create_timer(0.01, self.process_pending_command)
+        self.command_timer = self.create_timer(0.02, self.process_pending_command)
 
     
     def _initialize_basic_parameters(self):
-        self.__rate = 20.0
-        self.robot_data_publish_rate = 40
+        self._robot_rate = 20.0
+        self._telesoud_rate = 40.0
+
         # Start
         self.current_pose_robot = None
         self.curent_pose_mimic = None
@@ -127,13 +126,17 @@ class TelesoudCommandToCartesianNode(Node):
         self.robotInFaultStatus = False
         
         # Telesoud interpolated trajectory execution
-        self.buffer_rate = 50
         self.telesoud_trajectory_execution_timestamp = None
         self.is_telesoud_trajectory_execution = False
-        self.speed_vector_buffer = deque(maxlen=5)
-        self.buffer_timer = None
+        self.pose_buffer = deque(maxlen=10000)
+        self.pose_buffer_timer = None
         self.last_speed_vector = Twist()
-        self.buffer_active = False
+        self.pose_buffer_active = False
+        self.virtual_pose = None
+        self.virtual_pose_initialized = False
+        self.last_intergration_time = None
+        self.pose_skip_counter = 0
+        self.pending_joint_command = None
 
         # Flags
         self.emergency_stop = False
@@ -155,7 +158,7 @@ class TelesoudCommandToCartesianNode(Node):
 
         # Velocity control
         self.declare_parameter('TCP_velocity', 0.01)  # default velocity
-        self.declare_parameter('control_rate', 50.0)  # Hz
+        self.declare_parameter('control_rate', 40.0)  # Hz
         self.control_rate = self.get_parameter('control_rate').value
         self.target_velocity = self.get_parameter('TCP_velocity').value
 
@@ -191,7 +194,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.__num_joints = 2 * self.__num_modules + self.__terminal_wrist
             self.__model = KinematicModel(conf, None)
             self.robot_zero = self.__model.get_T_EE(q=np.zeros((self.__num_joints, 1)))
-
+            
             # Get joint names
             alias = conf['low_level_control']['alias']
             self.__joint_names_alias = [alias + str(i) if i != 0 else alias for i in range(self.__num_joints)]
@@ -252,7 +255,7 @@ class TelesoudCommandToCartesianNode(Node):
                 Float64,
                 '/welding_command_handler/modular_velocity_indicator',
                 10
-                )
+        )
 
     def _create_subscriptions(self):
 
@@ -460,7 +463,12 @@ class TelesoudCommandToCartesianNode(Node):
                     case 15:
                         self._process_play_cartesian(status, data['target_pose'], data['speed'])
                     case 16:
-                        self._process_play_joint(status, data['target_pose'], data['speed'])
+                        if self.current_state == RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION:
+                            self.pending_joint_command = [status, data['target_pose'], data['speed']]
+                            status.success = True
+                            status.message = 'Telesoud trajectory exeuction'
+                        else :
+                            self._process_play_joint(status, data['target_pose'], data['speed'])
                     case _:
                         status.success = False
                         status.message = f"Unknown command type: {command_type}"
@@ -483,9 +491,12 @@ class TelesoudCommandToCartesianNode(Node):
                 self.get_logger().info('Pause finished, returning to IDLE state')
                 self.resuming_flag = False
 
-        elif str(self.current_state).startswith(str(RobotState.DYNAMIC_MOVEMENT)):   # DYNAMIC_MOVEMENT = 1, MOVEMENT_TELEOP_XYZ = 11, DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION = 12 
-            if self.__is_dynamic_cartesian_movement_complete():
-                self.get_logger().info('Dynamic cartesian movement finished, returning to IDLE state')
+        elif self.current_state == RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION:
+            pass
+
+        elif self.current_state == RobotState.DYNAMIC_MOVEMENT_TELEOP_XYZ: 
+            if self.__is_teleop_movement_complete():
+                self.get_logger().info('Teleop movement finished, returning to IDLE state')
                 self.current_state = RobotState.IDLE    
 
         elif self.current_state == RobotState.CARTESIAN_TRAJECTORY:
@@ -517,7 +528,6 @@ class TelesoudCommandToCartesianNode(Node):
         if self.__q_desired is None:
             self.get_logger().info('Waiting /nb/desired_trajectory to be populated')
             return
-
 
         modular_gain = self.get_parameter('modular_gain').value
         
@@ -589,7 +599,7 @@ class TelesoudCommandToCartesianNode(Node):
             module_velocities = [v if i % 2 == 0 else -v for i, v in enumerate(module_velocities)]
      
         if is_active_command:
-            module_positions = [self.__q_desired[joint_inf_idx + i] + v / self.__rate for i, v in enumerate(module_velocities)] 
+            module_positions = [self.__q_desired[joint_inf_idx + i] + v / self._robot_rate for i, v in enumerate(module_velocities)] 
         else : 
             module_positions = [self.__q_desired[joint_inf_idx + i] for i in range(len(module_velocities))]
 
@@ -601,7 +611,7 @@ class TelesoudCommandToCartesianNode(Node):
             wrist_joint_idx = len(self.__q_desired) - 1
             wrist_joint_name = self.__joint_names_alias[-1]
             wrist_velocity = wrist_command * self.amplified_modular_velocity
-            wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / self.__rate
+            wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / self._robot_rate
 
             joint_names.append(wrist_joint_name)
             positions.append(wrist_position)
@@ -653,26 +663,25 @@ class TelesoudCommandToCartesianNode(Node):
             status.success = False
             status.message = f"Error getting robot data: {str(e)}"
     
+    
     def _process_set_dynamic(self, status, speed_vector):
+        self.current_speed_vector = speed_vector
         if self.is_telesoud_trajectory_execution:
-            buffer_entry = {
-                'speed_vector': speed_vector,
-                'timestamp': self.get_clock().now()
-            }
-            self.speed_vector_buffer.append(buffer_entry)
-
-            if not self.buffer_active:
-                self.buffer_active = True
-                self.buffer_timer = self.create_timer(1.0 / self.buffer_rate, self._drain_speed_vector_buffer)
-            status.success = True
-        else:
-            self.current_speed_vector = speed_vector
-            status.success = True
-
+            target_pose_msg = self.compute_target_pose(use_virtual_pose=True)
+            if target_pose_msg:
+                self.pose_skip_counter += 1 # skipping info to adapt to 20 Hz
+                if self.pose_skip_counter % 2 == 1:
+                    self.pose_buffer.append(target_pose_msg)
+                if not self.pose_buffer_active:
+                    self.pose_buffer_active = True
+                    self.pose_buffer_timer = self.create_timer(
+                        1.0/self._robot_rate,
+                        self._drain_pose_buffer
+                    )
+        status.success = True
     
     def _process_start_dynamic(self, status):
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
-        
         current_time = self.get_clock().now()
         if self.telesoud_trajectory_execution_timestamp is not None:
             self.is_telesoud_trajectory_execution = (current_time - self.telesoud_trajectory_execution_timestamp).nanoseconds < 1_000_000_000
@@ -728,28 +737,20 @@ class TelesoudCommandToCartesianNode(Node):
         return False
 
     
-    def __is_dynamic_cartesian_movement_complete(self):
-        if str(self.current_state).startswith(str(RobotState.DYNAMIC_MOVEMENT)):
-            buffer_empty = len(self.speed_vector_buffer) == 0
-                
-            if self.current_speed_vector == Twist() and buffer_empty:
-                self.zero_velocity_counter += 1
-
-                if self.zero_velocity_counter > 15:
-                    self.current_state = RobotState.IDLE
-                    self.zero_velocity_counter = 0
-                    if self.is_telesoud_trajectory_execution:
-                        self.is_telesoud_trajectory_execution = False
-                    return True
-            else:
+    def __is_teleop_movement_complete(self):
+        if self.current_speed_vector == Twist():
+            self.zero_velocity_counter += 1
+            if self.zero_velocity_counter > 15:
                 self.zero_velocity_counter = 0
-
-            pose_target_msg = self.compute_dynamic_target_pose()
-            if pose_target_msg is not None:
-                self.desired_pose_publisher.publish(pose_target_msg)
+                return True
+        else:
+            self.zero_velocity_counter = 0
+        pose_target_msg = self.compute_target_pose(use_virtual_pose=False)
+        if pose_target_msg is not None:
+            self.desired_pose_publisher.publish(pose_target_msg)
         return False
 
-    
+        
     def __is_joint_trajectory_complete(self):
         if self.current_state == RobotState.JOINT_TRAJECTORY:
             try:
@@ -830,61 +831,93 @@ class TelesoudCommandToCartesianNode(Node):
             self.get_logger().warn(f'Could not initialize poses yet: {e}')
 
     
-    def compute_dynamic_target_pose(self):
-        if not self.is_telesoud_trajectory_execution:
-            pos_gain = self.get_parameter('pos_gain').value
-            quat_gain = self.get_parameter('quat_gain').value
+    def compute_target_pose(self, use_virtual_pose=False):
+        if self.current_speed_vector == Twist():
+            return None
+        
+        pos_gain = self.get_parameter('pos_gain').value if not use_virtual_pose else 1.0
+        quat_gain = self.get_parameter('quat_gain').value if not use_virtual_pose else 1.0
+        
+        if use_virtual_pose:
+            if not self.virtual_pose_initialized:
+                current_pose = self.__get_current_pose(mimic=False)
+                if not current_pose:
+                    return None
+                self.virtual_pose = PoseStamped()
+                self.virtual_pose.header = current_pose.header
+                self.virtual_pose.pose = Pose(
+                    position=Point(
+                        x=current_pose.pose.position.x,
+                        y=current_pose.pose.position.y,
+                        z=current_pose.pose.position.z
+                    ),
+                    orientation=current_pose.pose.orientation
+                )
+                self.virtual_pose_initialized = True
+            
+            working_pose = self.virtual_pose
+            dt = 1.0 / self._telesoud_rate
         else:
-            pos_gain = 1.0
-            quat_gain = 1.0
-
-        if self.current_speed_vector != Twist():
-            current_pose = self.__get_current_pose(mimic=False)
-            if not current_pose:
+            working_pose = self.__get_current_pose(mimic=False)
+            if not working_pose:
                 self.get_logger().warn("Couldn't get current robot pose for teleop")
-                return
-
-            dt = 1.0 / self.__rate
-
-            target_pose_msg = PoseStamped()
-            target_pose_msg.header.stamp = self.get_clock().now().to_msg()
-            target_pose_msg.header.frame_id = self.__base_frame_robot
-
-            avg_vel_x = (self.current_speed_vector.linear.x + self.last_speed_vector.linear.x) / 2.0
-            avg_vel_y = (self.current_speed_vector.linear.y + self.last_speed_vector.linear.y) / 2.0
-            avg_vel_z = (self.current_speed_vector.linear.z + self.last_speed_vector.linear.z) / 2.0
-            
-            target_pose_msg.pose.position.x = current_pose.pose.position.x + avg_vel_x * dt * pos_gain
-            target_pose_msg.pose.position.y = current_pose.pose.position.y + avg_vel_y * dt * pos_gain
-            target_pose_msg.pose.position.z = current_pose.pose.position.z + avg_vel_z * dt * pos_gain
-            
-            avg_omega_x = (self.current_speed_vector.angular.x + self.last_speed_vector.angular.x) / 2.0
-            avg_omega_y = (self.current_speed_vector.angular.y + self.last_speed_vector.angular.y) / 2.0
-            avg_omega_z = (self.current_speed_vector.angular.z + self.last_speed_vector.angular.z) / 2.0
-            
-            dquat = quaternion_from_euler(
-                avg_omega_x * dt * quat_gain,
-                avg_omega_y * dt * quat_gain,
-                avg_omega_z * dt * quat_gain,
-                axes='sxyz'
+                return None
+            dt = 1.0 / self._robot_rate
+        
+        dx = self.current_speed_vector.linear.x * dt * pos_gain
+        dy = self.current_speed_vector.linear.y * dt * pos_gain
+        dz = self.current_speed_vector.linear.z * dt * pos_gain
+        
+        dquat = quaternion_from_euler(
+            self.current_speed_vector.angular.x * dt * quat_gain,
+            self.current_speed_vector.angular.y * dt * quat_gain,
+            self.current_speed_vector.angular.z * dt * quat_gain,
+            axes='sxyz'
+        )
+        
+        current_quat = [
+            working_pose.pose.orientation.x,
+            working_pose.pose.orientation.y,
+            working_pose.pose.orientation.z,
+            working_pose.pose.orientation.w
+        ]
+        
+        new_quat = quaternion_multiply(current_quat, dquat)
+        
+        target_pose_msg = PoseStamped()
+        target_pose_msg.header.stamp = self.get_clock().now().to_msg()
+        target_pose_msg.header.frame_id = self.__base_frame_robot
+        
+        if use_virtual_pose:
+            self.virtual_pose.pose.position.x += dx
+            self.virtual_pose.pose.position.y += dy
+            self.virtual_pose.pose.position.z += dz
+            self.virtual_pose.pose.orientation = Quaternion(
+                x=new_quat[0], y=new_quat[1], z=new_quat[2], w=new_quat[3]
             )
-            
-            self.last_speed_vector = self.current_speed_vector
+            target_pose_msg.pose = Pose(
+                position=Point(
+                    x=self.virtual_pose.pose.position.x,
+                    y=self.virtual_pose.pose.position.y,
+                    z=self.virtual_pose.pose.position.z
+                ),
+                orientation=Quaternion(
+                    x=self.virtual_pose.pose.orientation.x,
+                    y=self.virtual_pose.pose.orientation.y,
+                    z=self.virtual_pose.pose.orientation.z,
+                    w=self.virtual_pose.pose.orientation.w
+                )
+            )
 
-            current_quat = [
-                    current_pose.pose.orientation.x,
-                    current_pose.pose.orientation.y,
-                    current_pose.pose.orientation.z,
-                    current_pose.pose.orientation.w
-                ]
-
-            new_quat = quaternion_multiply(current_quat, dquat)
-            target_pose_msg.pose.orientation.x = new_quat[0]
-            target_pose_msg.pose.orientation.y = new_quat[1]
-            target_pose_msg.pose.orientation.z = new_quat[2]
-            target_pose_msg.pose.orientation.w = new_quat[3]
-
-            return target_pose_msg
+        else:
+            target_pose_msg.pose.position.x = working_pose.pose.position.x + dx
+            target_pose_msg.pose.position.y = working_pose.pose.position.y + dy
+            target_pose_msg.pose.position.z = working_pose.pose.position.z + dz
+            target_pose_msg.pose.orientation = Quaternion(
+                x=new_quat[0], y=new_quat[1], z=new_quat[2], w=new_quat[3]
+            )
+        
+        return target_pose_msg
 
     
     def generate_interpolated_line(self, pose1, pose2):
@@ -918,7 +951,7 @@ class TelesoudCommandToCartesianNode(Node):
 
         orientation_distance = np.arccos(np.clip(np.abs(np.dot(quat1/np.linalg.norm(quat2), quat2/np.linalg.norm(quat2))), -1.0, 1.0)) / pi
 
-        max_distance = CURRENT_TCP_SPEED * DT
+        max_distance = CURRENT_TCP_SPEED * 1/self._robot_rate
         num_points = int(max(self.position_distance, orientation_distance) / max_distance + 2)
 
         rotation_interpolation = Slerp([0, num_points], R.from_quat([list(quat1), list(quat2)]))
@@ -970,22 +1003,39 @@ class TelesoudCommandToCartesianNode(Node):
                 self.get_logger().error(f"Trajectory execution error : {e}")
                 return False
 
-    def _drain_speed_vector_buffer(self):
-        if len(self.speed_vector_buffer) > 0:
-            buffer_entry = self.speed_vector_buffer.popleft()
-            self.current_speed_vector = buffer_entry['speed_vector']
-        elif self.buffer_active and not self.is_telesoud_trajectory_execution:
-            self._stop_buffer_drainage()
 
-    def _stop_buffer_drainage(self):
-        if self.buffer_timer:
-            self.buffer_timer.cancel()
-            self.buffer_timer = None
-        self.buffer_active = False
-        self.speed_vector_buffer.clear()
-        self.last_speed_vector = Twist()
-        self.current_speed_vector = Twist()
+    def _drain_pose_buffer(self):
+        if len(self.pose_buffer) > 0:
+            if self.current_speed_vector == Twist():
+                self.get_logger().info('Stopping execution -- stop instruction received')
+                self._stop_telesoud_trajectory_execution()
+            pose_target_msg = self.pose_buffer.popleft()
+            pose_target_msg.header.stamp = self.get_clock().now().to_msg() 
+            self.desired_pose_publisher.publish(pose_target_msg)
+        else:
+            if self.current_speed_vector == Twist() and self.current_state == RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION :
+                self.get_logger().info('OUI')
+                self._stop_telesoud_trajectory_execution()
+            if self.pending_joint_command is not None:
+                self._process_play_joint(self.pending_joint_command[0], self.pending_joint_command[1], self.pending_joint_command[2])
+                self.pending_joint_command = None
+        self._stop_pose_buffer()
 
+    
+    def _stop_telesoud_trajectory_execution(self):
+        self.current_state = RobotState.IDLE
+        self.is_telesoud_trajectory_execution = False
+        self.virtual_pose_initialized = False
+        self.virtual_pose = None
+        self.pose_skip_counter = 0
+
+    
+    def _stop_pose_buffer(self):
+        if self.pose_buffer_timer:
+            self.pose_buffer_timer.cancel()
+            self.pose_buffer_timer = None
+        self.pose_buffer_active = False
+        self.pose_buffer.clear()
 
 
     def _finalize_movement(self):
@@ -1003,14 +1053,16 @@ class TelesoudCommandToCartesianNode(Node):
     
     def __create_robot_data(self):
         robot_data = RobotData()
-        
-        current_pose = self.__get_current_pose(mimic=False)
-        robot_data.pose = current_pose.pose
+
+        if self.current_state == RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION and self.virtual_pose_initialized:
+            robot_data.pose = self.virtual_pose.pose
+        else: 
+            current_pose = self.__get_current_pose(mimic=False)
+            robot_data.pose = current_pose.pose
         
         robot_data.robot_in_fault_status = self.robotInFaultStatus
         robot_data.error_message = self.current_error
         robot_data.timestamp = self.get_clock().now().to_msg()
-        
         return robot_data
 
    
@@ -1072,7 +1124,7 @@ class TelesoudCommandToCartesianNode(Node):
                     target_pose.position.y - current_pose.position.y,
                     target_pose.position.z - current_pose.position.z
                 ]
-        return np.linalg.norm(error_vector)/(DT * CURRENT_TCP_SPEED)
+        return np.linalg.norm(error_vector)/((1/self._robot_rate) * CURRENT_TCP_SPEED)
 
 
     def on_pos_gain_changed(self, msg):
