@@ -641,7 +641,7 @@ class TelesoudCommandToCartesianNode(Node):
         if self.last_command_type == 0:
             self.stop_command_counter += 1
         else:
-            self.stop_command_counter = 1
+            self.stop_command_counter = 0
             self.last_command_type = 0
 
         if self.stop_command_counter >= self.stop_command_threshold and not self.current_control_mode == ControlMode.PAUSE and not self.emergency_stop:
@@ -730,21 +730,19 @@ class TelesoudCommandToCartesianNode(Node):
     def __is_cartesian_trajectory_complete(self):
         if self.current_state == RobotState.CARTESIAN_TRAJECTORY:
             current_pose = self.__get_current_pose(mimic=False)
+            if self.stop_command_counter > 0:
+                return True
             if current_pose:
                 completed = self.execute_line(current_pose.pose)
                 if completed:
+                    self.telesoud_trajectory_execution_timestamp = self.get_clock().now()
                     return True
         return False
 
     
     def __is_teleop_movement_complete(self):
-        if self.current_speed_vector == Twist():
-            self.zero_velocity_counter += 1
-            if self.zero_velocity_counter > 15:
-                self.zero_velocity_counter = 0
-                return True
-        else:
-            self.zero_velocity_counter = 0
+        if self.stop_command_counter > 15:    
+            return True
         pose_target_msg = self.compute_target_pose(use_virtual_pose=False)
         if pose_target_msg is not None:
             self.desired_pose_publisher.publish(pose_target_msg)
@@ -752,6 +750,8 @@ class TelesoudCommandToCartesianNode(Node):
 
         
     def __is_joint_trajectory_complete(self):
+        if self.stop_command_counter > 0:
+            return True
         if self.current_state == RobotState.JOINT_TRAJECTORY:
             try:
                 current_pose = self.__get_current_pose(mimic=False)
@@ -1006,15 +1006,14 @@ class TelesoudCommandToCartesianNode(Node):
 
     def _drain_pose_buffer(self):
         if len(self.pose_buffer) > 0:
-            if self.current_speed_vector == Twist():
+            if self.stop_command_counter > 0:
                 self.get_logger().info('Stopping execution -- stop instruction received')
                 self._stop_telesoud_trajectory_execution()
             pose_target_msg = self.pose_buffer.popleft()
             pose_target_msg.header.stamp = self.get_clock().now().to_msg() 
             self.desired_pose_publisher.publish(pose_target_msg)
         else:
-            if self.current_speed_vector == Twist() and self.current_state == RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION :
-                self.get_logger().info('OUI')
+            if self.stop_command_counter > 0 and self.current_state == RobotState.DYNAMIC_MOVEMENT_TRAJECTORY_EXECUTION :
                 self._stop_telesoud_trajectory_execution()
             if self.pending_joint_command is not None:
                 self._process_play_joint(self.pending_joint_command[0], self.pending_joint_command[1], self.pending_joint_command[2])
