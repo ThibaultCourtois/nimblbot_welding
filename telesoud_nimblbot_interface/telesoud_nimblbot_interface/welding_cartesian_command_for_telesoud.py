@@ -107,6 +107,19 @@ class TelesoudCommandToCartesianNode(Node):
         self.amplified_modular_velocity = None
         self.joints_trajectory = None
         self.declare_parameter('modular_gain', 1.0)
+        self.previous_modular_commands = {
+            'select_module' : 0,
+            'turn_module' : 0,
+            'set_speed_module' : 0,
+            'select_command_type' : 0,
+            'selection_mode' : 0,
+            'wrist_command' : 0
+        }
+        self.current_modular_states = {
+                'turn_module' : 0,
+                'wrist_command' : 0
+        }
+
 
         # Command handling
         self.zero_velocity_counter = 0
@@ -444,6 +457,8 @@ class TelesoudCommandToCartesianNode(Node):
     
             
         if self.modular_control_enabled:
+            if command_type == 0:
+                self.current_speed_vector = Twist()
             if command_type == 7:
                 self._process_set_dynamic(status, data['speed_vector'])
             status.success = True
@@ -478,6 +493,7 @@ class TelesoudCommandToCartesianNode(Node):
                 self.get_logger().error(f"Error in command processing: {e}")
         
         self.status_publisher.publish(status)
+
     
     def __update_state_machine(self):
         initial_state = self.current_state
@@ -523,6 +539,40 @@ class TelesoudCommandToCartesianNode(Node):
         robotState_msg.data = STATE_NAMES[self.current_state]
         self.robotState_pub.publish(robotState_msg)
 
+
+    def __detect_modular_command_toggle(self, speed_vector):
+        # Processing current_speed_vector into modular command instructions
+        # Possible values for each instruction : [1, 0, -1]
+        current_commands = {
+            'select_module': np.sign(speed_vector.linear.x),
+            'turn_module': np.sign(speed_vector.linear.y),
+            'set_speed_module': np.sign(speed_vector.linear.z),
+            'select_command_type': np.sign(speed_vector.angular.x),
+            'selection_mode': np.sign(speed_vector.angular.y),
+            'wrist_command': np.sign(speed_vector.angular.z)
+        }
+
+        toggles = {}
+
+        for command, current_state in current_commands.items():
+            previous_state = self.previous_modular_commands[command]
+            if previous_state == 0 and current_state != 0:
+                toggles[command] = 'rise'
+            elif previous_state != 0 and current_state == 0:
+                toggles[command] = 'fall'
+            elif previous_state != current_state and current_state != 0:
+                toggles[command] = 'change'
+            else:
+                toggles[command] = 'sleep'
+        self.previous_modular_commands = current_commands.copy()
+        
+        for motor_cmd in ['turn_module', 'wrist_command']:
+            if toggles[motor_cmd] in ['rise', 'change']:
+                self.current_modular_states[motor_cmd] = current_commands[motor_cmd]
+            elif toggles[motor_cmd] == 'fall':
+                self.current_modular_states[motor_cmd] = 0
+        return toggles, current_commands
+
     
     def __process_modular_control(self):
         if self.__q_desired is None:
@@ -534,22 +584,10 @@ class TelesoudCommandToCartesianNode(Node):
         if self.current_speed_vector is None:
             return
 
-        # Processing current_speed_vector into modular command instructions
-        # Possible values for each instruction : [1, 0, -1]
+        toggles, current_commands = self.__detect_modular_command_toggle(self.current_speed_vector)
 
-        select_module, turn_module, set_speed_module, select_command_type, selection_mode, wrist_command = map(
-            np.sign, 
-            [
-                self.current_speed_vector.linear.x,
-                self.current_speed_vector.linear.y,
-                self.current_speed_vector.linear.z,
-                self.current_speed_vector.angular.x,
-                self.current_speed_vector.angular.y,
-                self.current_speed_vector.angular.z
-            ]
-        )
-
-        if select_module != 0:
+        if toggles['select_module'] == 'rise':
+            select_module = current_commands['select_module']
             if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND:
                 self.__modular_selection_module = max(0, min(self.__modular_selection_module + select_module, self.__num_modules -1))
                 self.__modular_selection_section = max(0, min(self.__modular_selection_module // 3, self.__num_sections - 1))
@@ -557,20 +595,24 @@ class TelesoudCommandToCartesianNode(Node):
                 self.__modular_selection_section = max(0, min(self.__modular_selection_section + select_module, self.__num_sections - 1))
                 self.__modular_selection_module = self.__modular_selection_section * 3
 
-        if set_speed_module != 0:
-            self.modular_velocity = max(0.05, min(self.modular_velocity + set_speed_module * 0.05, 0.5))
+        if toggles['set_speed_module'] == 'rise':
+            set_speed_module = current_commands['set_speed_module']
+            self.modular_velocity = max(0.05, min(self.modular_velocity + set_speed_module * 0.05, 1.0))
             self.get_logger().info(f"Modular velocity adjusted to: {self.modular_velocity:.2f}")
 
-        if select_command_type != 0:
+        if toggles['select_command_type'] == 'rise':
             self.__modular_command_mode = self.__modular_command_mode[1:] + [self.__modular_command_mode[0]]
             modular_mode_msg = String()
             modular_mode_msg.data = 'TILT' if self.__modular_command_mode[0] == TILT else 'AZIMUTH'
             self.modular_mode_pub.publish(modular_mode_msg)
             self.get_logger().info(f"Switched to {'TILT' if self.__modular_command_mode[0] == TILT else 'AZIMUTH'} mode")
 
-        if selection_mode != 0:
+        if toggles['selection_mode'] == 'rise':
             self.__modular_selector_mode = self.__modular_selector_mode[1:] + [self.__modular_selector_mode[0]]
             self.get_logger().info(f"Selection mode changed to {'MODULE' if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND  else 'SECTION'}")
+
+        turn_module = self.current_modular_states['turn_module']
+        wrist_command = self.current_modular_states['wrist_command']
 
         self.amplified_modular_velocity = modular_gain * self.modular_velocity
 
@@ -579,8 +621,6 @@ class TelesoudCommandToCartesianNode(Node):
         joint_names = []
         positions = []
         velocities = []
-
-        is_active_command = (turn_module != 0 or wrist_command !=0)
 
         if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND:
             joint_inf_idx = int(self.__modular_selection_module) * 2
@@ -597,8 +637,8 @@ class TelesoudCommandToCartesianNode(Node):
         if self.__modular_command_mode[0] == TILT:
             # alternate velocity direction for TILT mode (opposing pairs)
             module_velocities = [v if i % 2 == 0 else -v for i, v in enumerate(module_velocities)]
-     
-        if is_active_command:
+
+        if turn_module != 0:
             module_positions = [self.__q_desired[joint_inf_idx + i] + v / self._robot_rate for i, v in enumerate(module_velocities)] 
         else : 
             module_positions = [self.__q_desired[joint_inf_idx + i] for i in range(len(module_velocities))]
@@ -607,11 +647,16 @@ class TelesoudCommandToCartesianNode(Node):
         positions.extend(module_positions)
         velocities.extend(module_velocities)
 
-        if wrist_command != 0 and self.__terminal_wrist:
+        if self.__terminal_wrist:
             wrist_joint_idx = len(self.__q_desired) - 1
             wrist_joint_name = self.__joint_names_alias[-1]
-            wrist_velocity = wrist_command * self.amplified_modular_velocity
-            wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / self._robot_rate
+
+            if wrist_command != 0:
+                wrist_velocity = wrist_command * self.amplified_modular_velocity
+                wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / self._robot_rate
+            else:
+                wrist_velocity = 0.0
+                wrist_position = self.__q_desired[wrist_joint_idx]
 
             joint_names.append(wrist_joint_name)
             positions.append(wrist_position)
@@ -625,9 +670,6 @@ class TelesoudCommandToCartesianNode(Node):
             self.joints_trajectory.points = [trajectory_point]
 
             self.joints_trajectory_pub.publish(self.joints_trajectory)
-
-        # Speed vector reinitialisation to avoid control looping
-        self.current_speed_vector = Twist()
         
         # For visualization purposes
         msg = Float64()
