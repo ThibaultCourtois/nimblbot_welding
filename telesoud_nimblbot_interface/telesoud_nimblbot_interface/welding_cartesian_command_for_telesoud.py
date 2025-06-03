@@ -32,7 +32,6 @@ from collections import deque
 
 SERVO_NODE = '/servo_node'
 SPEED_CORRECTION_FACTOR = 1.55
-CURRENT_TCP_SPEED = 0.001667 * SPEED_CORRECTION_FACTOR
 
 # Modular control
 AZIMUTH = 0
@@ -157,7 +156,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.resuming_flag = False
 
         # Movement  parameters
-        self.TCP_speed = 0.0
+        self.TCP_speed = 0.005
         self.twist_for_dynamic_movement = None
         self.current_target_pose = None
         self.current_pose_mimic = None
@@ -265,9 +264,9 @@ class TelesoudCommandToCartesianNode(Node):
         )
 
         self.modular_velocity_indicator_pub = self.create_publisher(
-                Float64,
-                '/welding_command_handler/modular_velocity_indicator',
-                10
+            Float64,
+            '/welding_command_handler/modular_velocity_indicator',
+            10
         )
 
     def _create_subscriptions(self):
@@ -281,38 +280,38 @@ class TelesoudCommandToCartesianNode(Node):
 
         # Rviz plugin 
         self.pos_gain_subscriber = self.create_subscription(
-                Float64,
-                '/rviz_plugin/pos_gain',
-                self.on_pos_gain_changed,
-                10
-            )
+            Float64,
+            '/rviz_plugin/pos_gain',
+            self.on_pos_gain_changed,
+            10
+        )
 
         self.quat_gain_subscriber = self.create_subscription(
-                Float64,
-                '/rviz_plugin/quat_gain',
-                self.on_quat_gain_changed,
-                10
-            )
+            Float64,
+            '/rviz_plugin/quat_gain',
+            self.on_quat_gain_changed,
+            10
+        )
 
         self.modular_gain_subscriber = self.create_subscription(
-                Float64,
-                'rviz_plugin/modular_gain',
-                self.on_modular_gain_changed,
-                10
-                )
+            Float64,
+            'rviz_plugin/modular_gain',
+            self.on_modular_gain_changed,
+            10
+        )
 
         self.modular_command_toggle_sub = self.create_subscription(
-                Bool, 
-                '/rviz_plugin/modular_command_state',
-                self.on_modular_command_toggle,
-                10
+            Bool, 
+            '/rviz_plugin/modular_command_state',
+            self.on_modular_command_toggle,
+            10
         )
 
         self.emergency_stop_sub = self.create_subscription(
-                Bool,
-                '/rviz_plugin/emergency_stop',
-                self.on_emergency_stop,
-                10
+            Bool,
+            '/rviz_plugin/emergency_stop',
+            self.on_emergency_stop,
+            10
         )
 
         # For TCP trace clearing
@@ -325,10 +324,10 @@ class TelesoudCommandToCartesianNode(Node):
 
         # Telesoud interface subscribers
         self.command_sub = self.create_subscription(
-                Command,
-                '/translator/command',
-                self.__handle_command,
-                10
+            Command,
+            '/translator/command',
+            self.__handle_command,
+            10
         )
 
     
@@ -733,7 +732,7 @@ class TelesoudCommandToCartesianNode(Node):
 
   
     def _process_play_cartesian(self, status, target_pose, speed):
-        self.TCP_speed = speed
+        self.TCP_speed = speed * SPEED_CORRECTION_FACTOR
         self.current_target_pose = target_pose
         
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
@@ -751,7 +750,7 @@ class TelesoudCommandToCartesianNode(Node):
    
 
     def _process_play_joint(self, status, target_pose, speed):
-        self.TCP_speed = speed
+        self.TCP_speed = speed * SPEED_CORRECTION_FACTOR
         self.current_target_pose = target_pose
         
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
@@ -799,7 +798,7 @@ class TelesoudCommandToCartesianNode(Node):
                 current_pose = self.__get_current_pose(mimic=False)
                 if current_pose:
                     error = self.__calculate_position_error(current_pose.pose, self.current_target_pose)
-                    epsilon = 10
+                    epsilon = 0.001
 
                     if error <= epsilon:
                         request = SetParameters.Request()
@@ -993,7 +992,7 @@ class TelesoudCommandToCartesianNode(Node):
 
         orientation_distance = np.arccos(np.clip(np.abs(np.dot(quat1/np.linalg.norm(quat2), quat2/np.linalg.norm(quat2))), -1.0, 1.0)) / pi
 
-        max_distance = CURRENT_TCP_SPEED * 1/self._robot_rate
+        max_distance = self.TCP_speed * 1/self._robot_rate
         num_points = int(max(self.position_distance, orientation_distance) / max_distance + 2)
 
         rotation_interpolation = Slerp([0, num_points], R.from_quat([list(quat1), list(quat2)]))
@@ -1030,7 +1029,7 @@ class TelesoudCommandToCartesianNode(Node):
 
             if self.line_progression_index >= len(self.interpolated_line_poses) - 1:
                 error = self.__calculate_position_error(current_pose, self.current_target_pose)
-                epsilon = 10
+                epsilon = 0.001
 
                 if error <= epsilon:
                     self._finalize_movement()
@@ -1165,7 +1164,7 @@ class TelesoudCommandToCartesianNode(Node):
                     target_pose.position.y - current_pose.position.y,
                     target_pose.position.z - current_pose.position.z
                 ]
-        return np.linalg.norm(error_vector)/((1/self._robot_rate) * CURRENT_TCP_SPEED)
+        return np.linalg.norm(error_vector)
 
 
     def on_pos_gain_changed(self, msg):
