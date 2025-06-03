@@ -1,39 +1,22 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
-from  telesoud_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
+from telesoud_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
 
 class InterfaceNode(Node):
     def __init__(self):
         super().__init__('interface_node')
-
-        self.stop_msg = Bool()
-        self.stop_msg.data = True
-        self.getRobotData_msg = Bool() 
-        self.getRobotData_msg.data = False
         
-        # instruction from Telesoud
-        self._last_instruction_code = None
+        # Instruction from Telesoud
+        self.last_instruction_code = None
         self.pending_instruction = None
         self.instruction_data = None
 
-        # command for welding_command
+        # Command for welding_command
         self.next_command_id = 0
         self.pending_commands = {}
 
         self.instruction_timer = self.create_timer(0.02, self.process_pending_instruction)
-        
-        # Namespace 
-        self.namespace = self.get_namespace().strip('/')
-        if not self.namespace:
-            self.namespace = "nb"
-
-        # Frames
-        self.base_frame_robot = f"{self.namespace}/base_link"
-        self.ee_frame_mimic = f"{self.namespace}_mimic/tcp_wrist"
-        self.ee_frame_robot = f"{self.namespace}/tcp_wrist"
-        self.ee_frame_robot_target = f"{self.ee_frame_robot}_target"
         
         self._create_subscriptions()
         self._create_publishers()
@@ -41,56 +24,56 @@ class InterfaceNode(Node):
     
     def _create_subscriptions(self):
         self.instruction_sub = self.create_subscription(
-                TelesoudInstruction, 
-                '/telesoud/instructions',
-                self.__received_telesoud_instructions,
-                10
-            )
+            TelesoudInstruction, 
+            '/telesoud/instructions',
+            self._on_telesoud_instructions,
+            10
+        )
 
         self.command_status_sub = self.create_subscription(
-                CommandStatus,
-                '/welding_command_handler/command_status',
-                self.__handle_command_status,
-                10
-            )
+            CommandStatus,
+            '/welding_command_handler/command_status',
+            self._on_command_status,
+            10
+        )
     
     
     def _create_publishers(self):
-        
         self.command_pub = self.create_publisher(
-                Command,
-                '/translator/command',
-                10
-            )
+            Command,
+            '/translator/command',
+            10
+        )
 
         self.robot_data_pub = self.create_publisher(
-                RobotData,
-                '/translator/robotData',
-                10
-            )
+            RobotData,
+            '/translator/robotData',
+            10
+        )
 
     
-    def __received_telesoud_instructions(self, msg):
+    def _on_telesoud_instructions(self, msg):
+        """Handle incoming Telesoud instructions"""
         self.instruction_data = {
-                'instruction': msg.instruction_code,
-                'pose1': msg.pose1,
-                'TCP_speed_vector': msg.speed_vector,
-                'TCP_speed': msg.speed,
-                'free_drive_btn_status':msg.free_drive_btn_status
-                }
+            'instruction': msg.instruction_code,
+            'pose1': msg.pose1,
+            'tcp_speed_vector': msg.speed_vector,
+            'tcp_speed': msg.speed,
+            'free_drive_btn_status': msg.free_drive_btn_status
+        }
         self.pending_instruction = True
-        return
     
     
     def process_pending_instruction(self):
-        """Traite l'instruction en attente, appelé par le timer"""
+        """Process pending instruction, called by timer"""
         if not self.pending_instruction:
             return
+            
         data = self.instruction_data
         instruction = data['instruction']
         pose1 = data['pose1']
-        TCP_speed_vector = data['TCP_speed_vector']
-        TCP_speed = data['TCP_speed']
+        tcp_speed_vector = data['tcp_speed_vector']
+        tcp_speed = data['tcp_speed']
 
         self.pending_instruction = False
 
@@ -99,91 +82,98 @@ class InterfaceNode(Node):
         self.next_command_id += 1
 
         self.pending_commands[command.command_id] = {
-                    'instruction': instruction,
-                    'timestamp': self.get_clock().now()
-                }
+            'instruction': instruction,
+            'timestamp': self.get_clock().now()
+        }
 
         if instruction is not None:
             match instruction:
                 case 0:
                     command.command_type = Command.COMMAND_STOP
                     self.get_logger().debug('Instruction STOP')
+                    
                 case 1:
                     command.command_type = Command.COMMAND_GET_ROBOT_DATA
                     self.get_logger().debug('Instruction GET ROBOT DATA')
+                    
                 case 7:
                     command.command_type = Command.COMMAND_SET_DYNAMIC
                     self.get_logger().debug('Instruction SET DYNAMIC CARTESIAN MOVEMENT')
 
-                    if TCP_speed_vector is not None and len(pose1) > 0:
-                        command.speed_vector.linear.x = TCP_speed_vector[0]
-                        command.speed_vector.linear.y = TCP_speed_vector[1]
-                        command.speed_vector.linear.z = TCP_speed_vector[2]
-                        command.speed_vector.angular.x = TCP_speed_vector[3]
-                        command.speed_vector.angular.y = TCP_speed_vector[4]
-                        command.speed_vector.angular.z = TCP_speed_vector[5]
+                    if tcp_speed_vector is not None and len(pose1) > 0:
+                        command.speed_vector.linear.x = tcp_speed_vector[0]
+                        command.speed_vector.linear.y = tcp_speed_vector[1]
+                        command.speed_vector.linear.z = tcp_speed_vector[2]
+                        command.speed_vector.angular.x = tcp_speed_vector[3]
+                        command.speed_vector.angular.y = tcp_speed_vector[4]
+                        command.speed_vector.angular.z = tcp_speed_vector[5]
+                        
                 case 8:
                     command.command_type = Command.COMMAND_START_DYNAMIC
                     self.get_logger().debug('Instruction START DYNAMIC CARTESIAN MOVEMENT')
+                    
                 case 15:
                     command.command_type = Command.COMMAND_PLAY_CARTESIAN
-                    self.get_logger().info('Insturction PLAY CARTESIAN TRAJECTORY')
+                    self.get_logger().info('Instruction PLAY CARTESIAN TRAJECTORY')
 
-                    if TCP_speed is not None:
-                        command.speed = TCP_speed
+                    if tcp_speed is not None:
+                        command.speed = tcp_speed
 
                     if pose1 is not None and len(pose1) > 0:
-                        command.target_pose = self.__construct_command_pose(pose1)
+                        command.target_pose = self._construct_command_pose(pose1)
+                        
                 case 16:
                     command.command_type = Command.COMMAND_PLAY_JOINT
                     self.get_logger().info('Instruction PLAY JOINT TRAJECTORY')
 
-                    if TCP_speed is not None:
-                        command.speed = TCP_speed
+                    if tcp_speed is not None:
+                        command.speed = tcp_speed
 
                     if pose1 is not None and len(pose1) > 0:
-                        command.target_pose = self.__construct_command_pose(pose1)
+                        command.target_pose = self._construct_command_pose(pose1)
         
         self.command_pub.publish(command)
-        self._last_instruction_code = instruction
+        self.last_instruction_code = instruction
 
     
-    def __handle_command_status(self, msg):
+    def _on_command_status(self, msg):
+        """Handle command status feedback"""
         command_id = msg.command_id
 
         if command_id in self.pending_commands:
             if msg.success:
                 self.get_logger().debug(f'Command {msg.command_type} executed successfully: {msg.message}')
             else:
-                self.get_logger().error(f'Command {msg.command_type} failed : {msg.message}')
+                self.get_logger().error(f'Command {msg.command_type} failed: {msg.message}')
 
             if msg.robot_data is not None:
-                self.__forward_robot_data(msg.robot_data)
+                self._forward_robot_data(msg.robot_data)
             del self.pending_commands[command_id]
         else:
             self.get_logger().warning(f'Received status for unknown command ID: {command_id}')
 
     
-    def __forward_robot_data(self, robot_data):
+    def _forward_robot_data(self, robot_data):
+        """Forward robot data to Telesoud"""
         try:
             robot_data_msg = RobotData()
             robot_data_msg.pose = robot_data.pose
             
             euler = euler_from_quaternion([
-                    robot_data.pose.orientation.x,
-                    robot_data.pose.orientation.y,
-                    robot_data.pose.orientation.z,
-                    robot_data.pose.orientation.w
-                ])
+                robot_data.pose.orientation.x,
+                robot_data.pose.orientation.y,
+                robot_data.pose.orientation.z,
+                robot_data.pose.orientation.w
+            ])
                 
             xyzwpr = [
-                    robot_data.pose.position.x,
-                    robot_data.pose.position.y,
-                    robot_data.pose.position.z,
-                    euler[0],  #Telesoud expect radians for the orientation
-                    euler[1],
-                    euler[2]
-                ]
+                robot_data.pose.position.x,
+                robot_data.pose.position.y,
+                robot_data.pose.position.z,
+                euler[0],  # Telesoud expects radians for the orientation
+                euler[1],
+                euler[2]
+            ]
                 
             robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
             robot_data_msg.error_message = robot_data.error_message
@@ -200,18 +190,15 @@ class InterfaceNode(Node):
             self.get_logger().error(f'Error forwarding robot data: {e}')
 
     
-    def __construct_command_pose(self, pose):
+    def _construct_command_pose(self, pose):
+        """Construct pose message from pose array"""
         command = Command()
         
         command.target_pose.position.x = pose[0]
         command.target_pose.position.y = pose[1]
         command.target_pose.position.z = pose[2]
 
-        quaternion = quaternion_from_euler(
-                pose[3], 
-                pose[4], 
-                pose[5]
-            )
+        quaternion = quaternion_from_euler(pose[3], pose[4], pose[5])
 
         command.target_pose.orientation.x = quaternion[0]
         command.target_pose.orientation.y = quaternion[1]
@@ -227,13 +214,12 @@ def main(args=None):
         node = InterfaceNode()
         rclpy.spin(node)
     except Exception as e:
-        print(f'Error : {e}')
+        print(f'Error: {e}')
     finally:
         rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
-
 
 
 
