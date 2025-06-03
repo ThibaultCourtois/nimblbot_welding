@@ -25,7 +25,25 @@ from telesoud_msgs.msg import RobotData, Command, CommandStatus
 from collections import deque
 
 SERVO_NODE = '/servo_node'
-SPEED_CORRECTION_FACTOR = 1.55
+
+ROBOT_RATE = 20.0                   # NimblBot input command rate
+TELESOUD_RATE = 40.0                # Telesoud output command rate
+TIMER_PERIOD = 0.02                 # 50 Hz > Telesoud ouput command rate  
+
+STOP_COMMAND_THRESHOLD = 2400       # ~60 sec at 40 Hz -- delay before automatic safety pause
+POSITION_EPSILON = 0.001            # 1mm 
+
+SPEED_CORRECTION_FACTOR = 1.55      # Correction factor for TCP_speed
+DEFAULT_TCP_SPEED = 0.005
+
+MAX_POSE_BUFFER_SIZE = 10000        
+
+SERVICE_TIMEOUT = 5.0
+
+MIN_MODULAR_VELOCITY = 0.05
+MAX_MODULAR_VELOCITY = 0.5
+MODULAR_VELOCITY_STEP = 0.05
+DEFAULT_MODULAR_SPEED = 0.3 
 
 # Modular control
 AZIMUTH = 0
@@ -69,18 +87,16 @@ class TelesoudCommandToCartesianNode(Node):
         self._create_clients()
         self._create_services()
 
-        self.__timer_state_machine = self.create_timer(0.02, self._update_state_machine)
-        self.command_timer = self.create_timer(0.02, self.process_pending_command)
+        self.__timer_state_machine = self.create_timer(TIMER_PERIOD, self._update_state_machine)
+        self.command_timer = self.create_timer(TIMER_PERIOD, self.process_pending_command)
         self.pose_buffer_timer = self.create_timer(
-                    1.0/self._robot_rate,
+                    1.0/ROBOT_RATE,
                     self._drain_pose_buffer
                 )
         self.pose_buffer_timer.cancel()
 
 
     def _initialize_basic_parameters(self):
-        self._robot_rate = 20.0
-        self._telesoud_rate = 40.0
         # Modular control parameters
         self.__q_desired = None
         self.__modular_command_mode = [AZIMUTH, TILT]
@@ -88,10 +104,9 @@ class TelesoudCommandToCartesianNode(Node):
         self.__modular_selection_module = 0
         self.__modular_selection_section = 0
         self.modular_control_enabled = False
-        self.modular_velocity = 0.3
+        self.modular_velocity = DEFAULT_MODULAR_SPEED
         self.amplified_modular_velocity = None
         self.joints_trajectory = None
-        self.declare_parameter('modular_gain', 1.0)
         self.previous_modular_commands = {
             'select_module' : 0,
             'turn_module' : 0,
@@ -106,7 +121,6 @@ class TelesoudCommandToCartesianNode(Node):
         }
         # Command handling
         self.stop_command_counter = 0
-        self.stop_command_threshold = 2400  #~60sec for a 40 Hz rate
         self.last_command_type = None
         self.pending_command = None
         self.command_data = None
@@ -118,7 +132,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.current_error = ""
         self.robot_in_fault_status = False
         # Telesoud interpolated trajectory execution
-        self.pose_buffer = deque(maxlen=10000)
+        self.pose_buffer = deque(maxlen=MAX_POSE_BUFFER_SIZE)
         self.pose_buffer_active = False
         self.virtual_pose = None
         self.virtual_pose_initialized = False
@@ -128,8 +142,9 @@ class TelesoudCommandToCartesianNode(Node):
         self.emergency_stop = False
         self.resuming_flag = False
         # Movement  parameters
-        self.tcp_speed = 0.01
+        self.tcp_speed = DEFAULT_TCP_SPEED
         self.current_target_pose = None
+        self.declare_parameter('modular_gain', 1.0)
         self.declare_parameter('pos_gain', 1.0)
         self.declare_parameter('quat_gain', 1.0)
         self.current_speed_vector = Twist()
@@ -320,7 +335,7 @@ class TelesoudCommandToCartesianNode(Node):
         """Retrieve the value of a parameter from a specified node."""
         client = self.create_client(GetParameters, node_name)
 
-        while not client.wait_for_service(timeout_sec=1.0):
+        while not client.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
             self.get_logger().info(f'Waiting for {node_name} to get parameter...')
 
         future = client.call_async(GetParameters.Request(names=[parameters]))
@@ -421,7 +436,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.stop_command_counter = 0
             self.last_command_type = 0
 
-        if self.stop_command_counter >= self.stop_command_threshold and not self.current_control_mode == ControlMode.PAUSE and not self.emergency_stop:
+        if self.stop_command_counter >= STOP_COMMAND_THRESHOLD and not self.current_control_mode == ControlMode.PAUSE and not self.emergency_stop:
             self.switch_control_mode(0) # ControlMode.PAUSE
             self.current_state = RobotState.PAUSE
             self.stop_command_counter = 0
@@ -549,9 +564,9 @@ class TelesoudCommandToCartesianNode(Node):
                 current_pose = self._get_current_pose(mimic=False)
                 if current_pose:
                     error = self._get_position_error(current_pose.pose, self.current_target_pose)
-                    epsilon = 0.001
+                    POSITION_EPSILON = 0.001
 
-                    if error <= epsilon:
+                    if error <= POSITION_EPSILON:
                         request = SetParameters.Request()
                         param_value = ParameterValue()
                         param_value.type = ParameterType.PARAMETER_DOUBLE
@@ -686,7 +701,7 @@ class TelesoudCommandToCartesianNode(Node):
 
         if toggles['set_speed_module'] == 'rise':
             set_speed_module = current_commands['set_speed_module']
-            self.modular_velocity = max(0.05, min(self.modular_velocity + set_speed_module * 0.05, 1.0))
+            self.modular_velocity = max(MIN_MODULAR_VELOCITY, min(self.modular_velocity + set_speed_module * MODULAR_VELOCITY_STEP, MAX_MODULAR_VELOCITY))
             self.get_logger().info(f"Modular velocity adjusted to: {self.modular_velocity:.2f}")
 
         if toggles['select_command_type'] == 'rise':
@@ -730,7 +745,7 @@ class TelesoudCommandToCartesianNode(Node):
             module_velocities = [v if i % 2 == 0 else -v for i, v in enumerate(module_velocities)]
 
         if turn_module != 0:
-            module_positions = [self.__q_desired[joint_inf_idx + i] + v / self._robot_rate for i, v in enumerate(module_velocities)] 
+            module_positions = [self.__q_desired[joint_inf_idx + i] + v / ROBOT_RATE for i, v in enumerate(module_velocities)] 
         else : 
             module_positions = [self.__q_desired[joint_inf_idx + i] for i in range(len(module_velocities))]
 
@@ -744,7 +759,7 @@ class TelesoudCommandToCartesianNode(Node):
 
             if wrist_command != 0:
                 wrist_velocity = wrist_command * self.amplified_modular_velocity
-                wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / self._robot_rate
+                wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / ROBOT_RATE
             else:
                 wrist_velocity = 0.0
                 wrist_position = self.__q_desired[wrist_joint_idx]
@@ -768,7 +783,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.modular_velocity_indicator_pub.publish(msg)
         
  
-    def _get_current_pose(self, mimic: bool, timeout_sec: int = 1) -> PoseStamped:
+    def _get_current_pose(self, mimic: bool, timeout_sec: int = SERVICE_TIMEOUT) -> PoseStamped:
         """Get the current pose of the end-effector in the base frame."""
         ee_frame = self.__ee_frame_mimic if mimic else self.__ee_frame_robot
 
@@ -830,7 +845,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.virtual_pose_initialized = True
         
         working_pose = self.virtual_pose
-        dt = 1.0 / self._telesoud_rate
+        dt = 1.0 / TELESOUD_RATE
         
         dx = self.current_speed_vector.linear.x * dt * pos_gain
         dy = self.current_speed_vector.linear.y * dt * pos_gain
@@ -891,9 +906,9 @@ class TelesoudCommandToCartesianNode(Node):
 
             if self.line_progression_index >= len(self.interpolated_line_poses) - 1:
                 error = self._get_position_error(current_pose, self.current_target_pose)
-                epsilon = 0.001
+                POSITION_EPSILON = 0.001
 
-                if error <= epsilon:
+                if error <= POSITION_EPSILON:
                     self._finalize_movement()
                     self.get_logger().info('Linear welding finished')
                     return True
@@ -937,7 +952,7 @@ class TelesoudCommandToCartesianNode(Node):
 
         orientation_distance = np.arccos(np.clip(np.abs(np.dot(quat1/np.linalg.norm(quat2), quat2/np.linalg.norm(quat2))), -1.0, 1.0)) / pi
 
-        max_distance = self.tcp_speed * 1/self._robot_rate
+        max_distance = self.tcp_speed * 1/ROBOT_RATE
         num_points = int(max(self.position_distance, orientation_distance) / max_distance + 2)
 
         rotation_interpolation = Slerp([0, num_points], R.from_quat([list(quat1), list(quat2)]))
@@ -996,7 +1011,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.modular_control_enabled &= (mode != ControlMode.MODULAR)
             self.current_control_mode = mode
 
-            if not self.change_control_mode_client.wait_for_service(timeout_sec = 5.0):
+            if not self.change_control_mode_client.wait_for_service(timeout_sec = SERVICE_TIMEOUT):
                 raise RuntimeError("Failed to switch control mode: service not available")
 
             request = ServoCommandType.Request(command_type = mode)
@@ -1029,11 +1044,11 @@ class TelesoudCommandToCartesianNode(Node):
 
 
             self.get_logger().info('Calling set_zeros service...')
-            if not self.set_zeros_client.wait_for_service(timeout_sec=5.0):
+            if not self.set_zeros_client.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
                 raise RuntimeError("Service /nb/set_zeros not available")
 
             future = self.set_zeros_client.call_async(Empty_srv.Request())
-            rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
+            rclpy.spin_until_future_complete(self, future, timeout_sec=SERVICE_TIMEOUT)
 
             if future.exception() is not None:
                 raise RuntimeError(f'Failed service call: {future.exception()}')
