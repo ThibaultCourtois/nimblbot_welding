@@ -22,21 +22,18 @@ from rcl_interfaces.srv import GetParameters, SetParameters
 from nimblpy.common.robot_loader import load_robot_config
 from nimblpy.kinematics.kin_model import KinematicModel
 from telesoud_msgs.msg import RobotData, Command, CommandStatus
-from collections import deque
 
 SERVO_NODE = '/servo_node'
 
 ROBOT_RATE = 20.0                   # NimblBot input command rate
 TELESOUD_RATE = 40.0                # Telesoud output command rate
-TIMER_PERIOD = 0.02                 # 50 Hz > Telesoud ouput command rate  
+TIMER_PERIOD = 0.025                 # 40 Hz = Telesoud ouput command rate  
 
 STOP_COMMAND_THRESHOLD = 2400       # ~60 sec at 40 Hz -- delay before automatic safety pause
 POSITION_EPSILON = 0.001            # 1mm 
 
-SPEED_CORRECTION_FACTOR = 1.55      # Correction factor for TCP_speed
+SPEED_CORRECTION_FACTOR = 1.0      # Correction factor for TCP_speed
 DEFAULT_TCP_SPEED = 0.005
-
-MAX_POSE_BUFFER_SIZE = 10000        
 
 SERVICE_TIMEOUT = 5.0
 
@@ -89,11 +86,6 @@ class TelesoudCommandToCartesianNode(Node):
 
         self.__timer_state_machine = self.create_timer(TIMER_PERIOD, self._update_state_machine)
         self.command_timer = self.create_timer(TIMER_PERIOD, self.process_pending_command)
-        self.pose_buffer_timer = self.create_timer(
-                    1.0/ROBOT_RATE,
-                    self._drain_pose_buffer
-                )
-        self.pose_buffer_timer.cancel()
 
 
     def _initialize_basic_parameters(self):
@@ -132,12 +124,8 @@ class TelesoudCommandToCartesianNode(Node):
         self.current_error = ""
         self.robot_in_fault_status = False
         # Telesoud interpolated trajectory execution
-        self.pose_buffer = deque(maxlen=MAX_POSE_BUFFER_SIZE)
-        self.pose_buffer_active = False
         self.virtual_pose = None
         self.virtual_pose_initialized = False
-        self.pose_skip_counter = 0
-        self.pending_joint_command = None
         # Flags
         self.emergency_stop = False
         self.resuming_flag = False
@@ -411,12 +399,7 @@ class TelesoudCommandToCartesianNode(Node):
                     case 15:
                         self._process_play_cartesian(status, data['target_pose'], data['speed'])
                     case 16:
-                        if self.current_state == RobotState.DYNAMIC_MOVEMENT:
-                            self.pending_joint_command = [status, data['target_pose'], data['speed']]
-                            status.success = True
-                            status.message = 'Telesoud trajectory execution'
-                        else :
-                            self._process_play_joint(status, data['target_pose'], data['speed'])
+                        self._process_play_joint(status, data['target_pose'], data['speed'])
                     case _:
                         status.success = False
                         status.message = f"Unknown command type: {command_type}"
@@ -598,47 +581,14 @@ class TelesoudCommandToCartesianNode(Node):
         if self.current_speed_vector != Twist():
             target_pose_msg = self.compute_target_pose()
             if target_pose_msg:
-                self.pose_skip_counter += 1
-                if self.pose_skip_counter % 2 == 1: #40Hz -> 20Hz
-                    self.pose_buffer.append(target_pose_msg)
-
-        if len(self.pose_buffer) > 0 and not self.pose_buffer_active:
-            self.pose_buffer_active = True
-            self.pose_buffer_timer.reset()
-        
-        elif (self.pending_joint_command is not None and not self.pose_buffer_active):
-
-            self._process_play_joint(
-                        self.pending_joint_command[0],
-                        self.pending_joint_command[1],
-                        self.pending_joint_command[2]
-                    )
-            self.pending_joint_command = None
-            return True
-
+                target_pose_msg.header.stamp = self.get_clock().now().to_msg() 
+                self.desired_pose_publisher.publish(target_pose_msg)
         if self.stop_command_counter > 0:
-            self._stop_telesoud_trajectory_execution()
+            self.current_state = RobotState.IDLE
+            self.virtual_pose_initialized = False
+            self.virtual_pose = None
             return True
         return False
-
-
-    def _drain_pose_buffer(self):
-        if len(self.pose_buffer) > 0:
-            pose_target_msg = self.pose_buffer.popleft()
-            pose_target_msg.header.stamp = self.get_clock().now().to_msg() 
-            self.desired_pose_publisher.publish(pose_target_msg)
-        if len(self.pose_buffer) == 0:
-            self.pose_buffer_timer.cancel()
-            self.pose_buffer_active = False
-    
-    def _stop_telesoud_trajectory_execution(self):
-        self.pose_buffer_timer.cancel()
-        self.pose_buffer_active = False
-
-        self.current_state = RobotState.IDLE
-        self.virtual_pose_initialized = False
-        self.virtual_pose = None
-        self.pose_skip_counter = 0
 
 
     def _detect_modular_command_toggle(self, speed_vector):
