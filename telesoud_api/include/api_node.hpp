@@ -20,7 +20,7 @@ private:
   std::string errorDescription_ = "";
   bool emergencyStop_ = false;
   bool weldingTrigger_PlcSignal_ = false;
-  int operationMode_ = 1;
+  int operationMode_ = 2;
   bool collisionStatus_ = false;
 
   // Class initialization after construction

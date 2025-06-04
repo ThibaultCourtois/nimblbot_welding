@@ -3,7 +3,6 @@
 
 #include "InstructionToRobotCode.hpp"
 #include <array>
-#include <iostream>
 #include <rpc/server.h>
 
 constexpr const uint8_t NUMBER_OF_AXIS = 6;
@@ -28,7 +27,7 @@ struct InformationFromRobotToTelesoud {
   bool collisionStatus = false;
   bool emergencyStop = false;
   bool weldingTrigger_PlcSignal = false;
-  int operatinMode = 1; // Auto = 0 | T4 = 1 | T2 = 2
+  int operatinMode = 2; // Auto = 0 | T4 = 1 | T2 = 2
   MSGPACK_DEFINE_ARRAY(robotInFaultStatus, robotInSlaveModeStatus, robotPose, robotJoints, errorsAsString,
                        collisionStatus, emergencyStop, weldingTrigger_PlcSignal, operatinMode)
 };
