@@ -7,7 +7,9 @@
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/empty.hpp>
 #include <std_srvs/srv/empty.hpp>
-
+#include <geometry_msgs/msg/pose.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 #include <rviz_common/panel.hpp>
 
@@ -16,6 +18,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QGroupBox>
 #include <QTimer>
 
 namespace weez_touch_teleop_rviz_panel
@@ -45,9 +48,8 @@ namespace weez_touch_teleop_rviz_panel
       void setZeros();
       void toggleModularCommand();
       void toggleEmergencyStop();
-
-
-
+      void tcpPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
+    
     private:
       // Setup UI components
       void setupUi();
@@ -78,7 +80,7 @@ namespace weez_touch_teleop_rviz_panel
       rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_state_subscriber_;
       rclcpp::Subscription<std_msgs::msg::String>::SharedPtr modular_mode_subscriber_;
       rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr modular_velocity_indicator_subscriber_;
-      
+      rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr tcp_pose_subscriber_;
 
       // UI components
       QSlider* pos_slider_;
@@ -94,6 +96,12 @@ namespace weez_touch_teleop_rviz_panel
       QLabel* modular_gain_label_;
       QLabel* modular_gain_value_label_;
       QLabel* modular_velocity_indicator_label_;
+      QLabel* tcp_pos_x_label_;
+      QLabel* tcp_pos_y_label_;
+      QLabel* tcp_pos_z_label_;
+      QLabel* tcp_orient_w_label_;
+      QLabel* tcp_orient_p_label_;
+      QLabel* tcp_orient_r_label_;
       QPushButton* clear_tcp_trace_button_; 
       QPushButton* set_zeros_button_;
       QPushButton* modular_command_button_;
@@ -106,6 +114,8 @@ namespace weez_touch_teleop_rviz_panel
       double quat_gain_;
       double modular_gain_;
       double current_modular_velocity_;
+      double current_tcp_x_, current_tcp_y_, current_tcp_z_;
+      double current_tcp_roll_, current_tcp_pitch_, current_tcp_yaw_;
 
       // command mode
       std::string current_modular_mode_;

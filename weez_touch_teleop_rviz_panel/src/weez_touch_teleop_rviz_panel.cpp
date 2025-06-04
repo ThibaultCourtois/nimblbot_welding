@@ -13,6 +13,12 @@ namespace weez_touch_teleop_rviz_panel
     , modular_command_active_(false)
     , current_modular_mode_("AZIMUTH")
     , emergency_stop_active_(false)
+    , current_tcp_x_(0.0)
+    , current_tcp_y_(0.0)
+    , current_tcp_z_(0.0)
+    , current_tcp_roll_(0.0)
+    , current_tcp_pitch_(0.0)
+    , current_tcp_yaw_(0.0)
   {
     // Initialize ROS 2 node
     node_ = std::make_shared<rclcpp::Node>("teleop_gain_panel_node");
@@ -44,15 +50,21 @@ namespace weez_touch_teleop_rviz_panel
         );
     
     modular_velocity_indicator_subscriber_ = node_->create_subscription<std_msgs::msg::Float64>(
-            "/welding_command_handler/modular_velocity_indicator", 
-            10,
-            std::bind(&TeleopGainPanel::modularVelocityIndicatorCallback, this, std::placeholders::_1)
+        "/welding_command_handler/modular_velocity_indicator", 
+        10,
+        std::bind(&TeleopGainPanel::modularVelocityIndicatorCallback, this, std::placeholders::_1)
         );
     
     modular_mode_subscriber_ = node_->create_subscription<std_msgs::msg::String>(
         "/welding_command_handler/modular_mode", 
         10, 
         std::bind(&TeleopGainPanel::modularModeCallback, this, std::placeholders::_1)
+        );
+ 
+    tcp_pose_subscriber_ = node_->create_subscription<geometry_msgs::msg::Pose>(
+        "/welding_command_handler/tcp_pose", 
+        10, 
+        std::bind(&TeleopGainPanel::tcpPoseCallback, this, std::placeholders::_1)
         );
 
     //Create clients
@@ -97,7 +109,7 @@ namespace weez_touch_teleop_rviz_panel
     pos_label_->setAlignment(Qt::AlignCenter);
     pos_slider_ = new QSlider(Qt::Horizontal);  
     pos_slider_->setMinimum(1);
-    pos_slider_->setMaximum(25);
+    pos_slider_->setMaximum(10);
     pos_slider_->setValue(static_cast<int>(pos_gain_));
     pos_value_label_ = new QLabel(QString::number(pos_gain_, 'f', 1));
     pos_value_label_->setAlignment(Qt::AlignCenter);
@@ -112,7 +124,7 @@ namespace weez_touch_teleop_rviz_panel
     quat_label_->setAlignment(Qt::AlignCenter);
     quat_slider_ = new QSlider(Qt::Horizontal); 
     quat_slider_->setMinimum(1);
-    quat_slider_->setMaximum(2000);
+    quat_slider_->setMaximum(10);
     quat_slider_->setValue(static_cast<int>(quat_gain_));
     quat_value_label_ = new QLabel(QString::number(quat_gain_, 'f', 1));
     quat_value_label_->setAlignment(Qt::AlignCenter);
@@ -121,14 +133,52 @@ namespace weez_touch_teleop_rviz_panel
     quat_layout->addWidget(quat_slider_);
     quat_layout->addWidget(quat_value_label_);
 
+    // TCP Pose Display
+    auto tcp_group_box = new QGroupBox("TCP Pose");
+    auto tcp_main_layout = new QHBoxLayout;
+    tcp_group_box->setLayout(tcp_main_layout);
+
+    // Position column
+    auto tcp_pos_layout = new QVBoxLayout;
+    auto tcp_pos_title = new QLabel("Position (mm)");
+    tcp_pos_title->setAlignment(Qt::AlignCenter);
+    tcp_pos_title->setStyleSheet("font-weight: bold;");
+
+    tcp_pos_x_label_ = new QLabel("X: 0.0");
+    tcp_pos_y_label_ = new QLabel("Y: 0.0");
+    tcp_pos_z_label_ = new QLabel("Z: 0.0");
+
+    tcp_pos_layout->addWidget(tcp_pos_title);
+    tcp_pos_layout->addWidget(tcp_pos_x_label_);
+    tcp_pos_layout->addWidget(tcp_pos_y_label_);
+    tcp_pos_layout->addWidget(tcp_pos_z_label_);
+
+    // Orientation column
+    auto tcp_orient_layout = new QVBoxLayout;
+    auto tcp_orient_title = new QLabel("Orientation (deg)");
+    tcp_orient_title->setAlignment(Qt::AlignCenter);
+    tcp_orient_title->setStyleSheet("font-weight: bold;");
+
+    tcp_orient_w_label_ = new QLabel("W: 0.0");
+    tcp_orient_p_label_ = new QLabel("P: 0.0");
+    tcp_orient_r_label_ = new QLabel("R: 0.0");
+
+    tcp_orient_layout->addWidget(tcp_orient_title);
+    tcp_orient_layout->addWidget(tcp_orient_w_label_);
+    tcp_orient_layout->addWidget(tcp_orient_p_label_);
+    tcp_orient_layout->addWidget(tcp_orient_r_label_);
+
+    tcp_main_layout->addLayout(tcp_pos_layout);
+    tcp_main_layout->addLayout(tcp_orient_layout);
+
     // Modular Gain Slider
     auto modular_gain_layout = new QVBoxLayout;
     modular_gain_label_ = new QLabel("Modular Gain:");
     modular_gain_label_->setAlignment(Qt::AlignCenter);
     modular_gain_slider_ = new QSlider(Qt::Horizontal);
-    modular_gain_slider_->setMinimum(10);   // 1.0
-    modular_gain_slider_->setMaximum(100);  // 10.0
-    modular_gain_slider_->setValue(static_cast<int>(modular_gain_ * 10.0));
+    modular_gain_slider_->setMinimum(1);   // 1.0
+    modular_gain_slider_->setMaximum(10);  // 10.0
+    modular_gain_slider_->setValue(static_cast<int>(modular_gain_));
     modular_gain_value_label_ = new QLabel(QString::number(modular_gain_, 'f', 1));
     modular_gain_value_label_->setAlignment(Qt::AlignCenter);
     
@@ -187,9 +237,10 @@ namespace weez_touch_teleop_rviz_panel
 
     // Add all elements to the main layout
     layout->addWidget(robot_state_label_);
-    layout->addLayout(sliders_container);  // Les sliders côte à côte
-    layout->addLayout(modular_command_layout);
     layout->addLayout(buttons_layout);
+    layout->addLayout(sliders_container);
+    layout->addWidget(tcp_group_box);
+    layout->addLayout(modular_command_layout);;
     layout->addLayout(emergency_layout);
     
     modular_mode_label_->setVisible(modular_command_active_);
@@ -272,7 +323,6 @@ namespace weez_touch_teleop_rviz_panel
     robot_state_label_->setStyleSheet(styleSheet);
   }
 
-
   void TeleopGainPanel::updatePosGain(int value)
   {
     pos_gain_ = static_cast<double>(value);
@@ -328,21 +378,18 @@ namespace weez_touch_teleop_rviz_panel
       pos_gain_ = pos_gain;
       pos_slider_->setValue(static_cast<int>(pos_gain_));
     }
-    
     float quat_gain;
     if (config.mapGetFloat("quat_gain", &quat_gain))
     {
       quat_gain_ = quat_gain;
       quat_slider_->setValue(static_cast<int>(quat_gain_));
     }
-
     float modular_gain;
     if (config.mapGetFloat("modular_gain", &modular_gain))
     {
       modular_gain_ = modular_gain;
       modular_gain_slider_->setValue(static_cast<int>(modular_gain_ * 10.0));
     }
-
     bool modular_command_active;
     if (config.mapGetBool("modular_command_active", &modular_command_active))
     {
@@ -395,9 +442,7 @@ namespace weez_touch_teleop_rviz_panel
   void TeleopGainPanel::modularVelocityIndicatorCallback(const std_msgs::msg::Float64::SharedPtr msg)
   {
     current_modular_velocity_ = msg->data;
-    
     modular_velocity_indicator_label_->setText(QString("Current speed: %1").arg(QString::number(current_modular_velocity_, 'f', 2)));
-    
     RCLCPP_DEBUG(node_->get_logger(), "Modular velocity indicator updated: %f", current_modular_velocity_);
   }
 
@@ -425,13 +470,40 @@ namespace weez_touch_teleop_rviz_panel
     } else {
       emergency_stop_button_->setStyleSheet("font-weight: bold; font-size: 14px;");
     }
-
     auto msg = std_msgs::msg::Bool();
     msg.data = emergency_stop_active_;
     emergency_stop_publisher_->publish(msg);
 
     RCLCPP_INFO(node_->get_logger(), "Emergency stop state changed to: %s",
                  emergency_stop_active_ ? "ACTIVATED" : "DEACTIVATED");
+  }
+  
+  void TeleopGainPanel::tcpPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg)
+  {
+    current_tcp_x_ = msg->position.x * 1000.0; // Convert to mm
+    current_tcp_y_ = msg->position.y * 1000.0;
+    current_tcp_z_ = msg->position.z * 1000.0;
+    
+    // Convert quaternion to Euler using tf2
+    tf2::Quaternion q(msg->orientation.x, msg->orientation.y, 
+                     msg->orientation.z, msg->orientation.w);
+    tf2::Matrix3x3 m(q);
+    
+    m.getRPY(current_tcp_roll_, current_tcp_pitch_, current_tcp_yaw_);
+    
+    // Convert to degrees
+    current_tcp_roll_ *= 180.0 / M_PI;
+    current_tcp_pitch_ *= 180.0 / M_PI;
+    current_tcp_yaw_ *= 180.0 / M_PI;
+    
+    // Update UI labels
+    tcp_pos_x_label_->setText(QString("X: %1").arg(QString::number(current_tcp_x_, 'f', 1)));
+    tcp_pos_y_label_->setText(QString("Y: %1").arg(QString::number(current_tcp_y_, 'f', 1)));
+    tcp_pos_z_label_->setText(QString("Z: %1").arg(QString::number(current_tcp_z_, 'f', 1)));
+    
+    tcp_orient_w_label_->setText(QString("W: %1").arg(QString::number(current_tcp_yaw_, 'f', 1)));
+    tcp_orient_p_label_->setText(QString("P: %1").arg(QString::number(current_tcp_pitch_, 'f', 1)));
+    tcp_orient_r_label_->setText(QString("R: %1").arg(QString::number(current_tcp_roll_, 'f', 1)));
   }
 }
 #include <pluginlib/class_list_macros.hpp>

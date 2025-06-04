@@ -130,6 +130,7 @@ class TelesoudCommandToCartesianNode(Node):
         self.emergency_stop = False
         self.resuming_flag = False
         # Movement  parameters
+        self.tcp_pose = None
         self.tcp_speed = DEFAULT_TCP_SPEED
         self.current_target_pose = None
         self.declare_parameter('modular_gain', 1.0)
@@ -178,13 +179,13 @@ class TelesoudCommandToCartesianNode(Node):
 
     def _create_publishers(self):
         # Multiple command publishers
-        self.motor_lock_publisher = self.create_publisher(
+        self.motor_lock_pub = self.create_publisher(
             Int8MultiArray,
             "/nb/motor_lock",
             10
         )
 
-        self.desired_pose_publisher = self.create_publisher(
+        self.desired_pose_pub = self.create_publisher(
             PoseStamped,
             '/nb/desired_pose',
             10
@@ -197,7 +198,7 @@ class TelesoudCommandToCartesianNode(Node):
         )
         
         # Telesoud interface publishers
-        self.status_publisher = self.create_publisher(
+        self.status_pub = self.create_publisher(
             CommandStatus,
             '/welding_command_handler/command_status',
             10
@@ -222,6 +223,11 @@ class TelesoudCommandToCartesianNode(Node):
             10
         )
 
+        self.tcp_pose_pub = self.create_publisher(
+            Pose,
+            'welding_command_handler/tcp_pose',
+            10
+        )
 
     def _create_subscriptions(self):
 
@@ -233,21 +239,21 @@ class TelesoudCommandToCartesianNode(Node):
         )
 
         # Rviz plugin 
-        self.pos_gain_subscriber = self.create_subscription(
+        self.pos_gain_sub = self.create_subscription(
             Float64,
             '/rviz_plugin/pos_gain',
             self.on_pos_gain_changed,
             10
         )
 
-        self.quat_gain_subscriber = self.create_subscription(
+        self.quat_gain_sub = self.create_subscription(
             Float64,
             '/rviz_plugin/quat_gain',
             self.on_quat_gain_changed,
             10
         )
 
-        self.modular_gain_subscriber = self.create_subscription(
+        self.modular_gain_sub = self.create_subscription(
             Float64,
             'rviz_plugin/modular_gain',
             self.on_modular_gain_changed,
@@ -408,7 +414,8 @@ class TelesoudCommandToCartesianNode(Node):
                 status.message = f"Error processing command: {str(e)}"
                 self.get_logger().error(f"Error in command processing: {e}")
         
-        self.status_publisher.publish(status)
+        self.status_pub.publish(status)
+        self.tcp_pose_pub.publish(self.tcp_pose)
 
 
     def _process_stop_command(self, status):
@@ -477,7 +484,7 @@ class TelesoudCommandToCartesianNode(Node):
         pose_msg.header.frame_id = self.__base_frame_robot
         pose_msg.pose = self.current_target_pose
         
-        self.desired_pose_publisher.publish(pose_msg)
+        self.desired_pose_pub.publish(pose_msg)
         
         self.current_state = RobotState.JOINT_TRAJECTORY
         
@@ -569,7 +576,7 @@ class TelesoudCommandToCartesianNode(Node):
                 pose_msg.header.frame_id = self.__base_frame_robot
                 pose_msg.pose = self.current_target_pose
 
-                self.desired_pose_publisher.publish(pose_msg)
+                self.desired_pose_pub.publish(pose_msg)
             except Exception as e:
                 self.get_logger().error(f'Error during joint trajectory execution {e}')
         return False
@@ -582,7 +589,7 @@ class TelesoudCommandToCartesianNode(Node):
             target_pose_msg = self.compute_target_pose()
             if target_pose_msg:
                 target_pose_msg.header.stamp = self.get_clock().now().to_msg() 
-                self.desired_pose_publisher.publish(target_pose_msg)
+                self.desired_pose_pub.publish(target_pose_msg)
         if self.stop_command_counter > 0:
             self.current_state = RobotState.IDLE
             self.virtual_pose_initialized = False
@@ -850,7 +857,7 @@ class TelesoudCommandToCartesianNode(Node):
 
             pose_stamped:PoseStamped = self.interpolated_line_poses[self.line_progression_index]
             pose_stamped.header.stamp = self.get_clock().now().to_msg()
-            self.desired_pose_publisher.publish(pose_stamped)
+            self.desired_pose_pub.publish(pose_stamped)
 
             self.line_progression_index = min(self.line_progression_index + 1, len(self.interpolated_line_poses) -1)
 
@@ -933,19 +940,17 @@ class TelesoudCommandToCartesianNode(Node):
         status_msg.message = 'Movement completed successfully'
         status_msg.robot_data = self._create_robot_data()
 
-        self.status_publisher.publish(status_msg)
+        self.status_pub.publish(status_msg)
         self.get_logger().info('Movement finished')
 
     
     def _create_robot_data(self):
         robot_data = RobotData()
-
+        current_pose = self._get_current_pose(mimic=False)
+        robot_data.pose = current_pose.pose
+        self.tcp_pose = current_pose.pose
         if self.current_state == RobotState.DYNAMIC_MOVEMENT and self.virtual_pose_initialized:
             robot_data.pose = self.virtual_pose.pose
-        else: 
-            current_pose = self._get_current_pose(mimic=False)
-            robot_data.pose = current_pose.pose
-        
         robot_data.robot_in_fault_status = self.robot_in_fault_status
         robot_data.error_message = self.current_error
         robot_data.timestamp = self.get_clock().now().to_msg()
@@ -970,7 +975,7 @@ class TelesoudCommandToCartesianNode(Node):
             self.get_logger().info(f'Switched control mode to {mode}')
             
             time.sleep(0.5)
-            self.motor_lock_publisher.publish(Int8MultiArray())
+            self.motor_lock_pub.publish(Int8MultiArray())
             return future
         
         except Exception as e:
