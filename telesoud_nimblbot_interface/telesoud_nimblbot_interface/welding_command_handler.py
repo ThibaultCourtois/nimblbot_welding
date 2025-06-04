@@ -21,7 +21,7 @@ from tf2_ros.transform_listener import TransformListener
 from rcl_interfaces.srv import GetParameters, SetParameters
 from nimblpy.common.robot_loader import load_robot_config
 from nimblpy.kinematics.kin_model import KinematicModel
-from telesoud_msgs.msg import RobotData, Command, CommandStatus
+from interface_custom_msgs.msg import RobotData, Command, CommandStatus
 
 SERVO_NODE = '/servo_node'
 
@@ -74,7 +74,7 @@ STATE_NAMES = {
 }
 
 
-class TelesoudCommandToCartesianNode(Node):
+class WeldingCommandHandlerNode(Node):
     def __init__(self, node_name: str) -> None:
         super().__init__(node_name)
         self._initialize_basic_parameters()
@@ -1090,18 +1090,18 @@ class TelesoudCommandToCartesianNode(Node):
    
 def main(args=None):
     rclpy.init(args=args)
-    telesoud_command_node = TelesoudCommandToCartesianNode("welding_cartesian_command_node")
+    welding_command_handler_node = WeldingCommandHandlerNode("welding_cartesian_command_node")
     try:
-        rclpy.spin(telesoud_command_node)
+        rclpy.spin(welding_command_handler_node)
     except KeyboardInterrupt:
         rclpy.logging.get_logger('rclpy').info('signal_handler(signum=2)')
     except ShutdownException:
-        telesoud_command_node.get_logger().info('ShutdownException...')
+        welding_command_handler_node.get_logger().info('ShutdownException...')
     except Exception as e:
-        telesoud_command_node.current_error = str(e)
-        telesoud_command_node.get_logger().error(f'Exception : {e}')
+        welding_command_handler_node.current_error = str(e)
+        welding_command_handler_node.get_logger().error(f'Exception : {e}')
     finally:
-        telesoud_command_node.destroy_node()
+        welding_command_handler_node.destroy_node()
         rclpy.try_shutdown()
 
 if __name__ == "__main__":

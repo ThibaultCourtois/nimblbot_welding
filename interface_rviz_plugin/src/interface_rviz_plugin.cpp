@@ -1,7 +1,7 @@
-#include "weez_touch_teleop_rviz_panel/weez_touch_teleop_rviz_panel.hpp"
+#include "interface_rviz_plugin/interface_rviz_plugin.hpp"
 #include <std_msgs/msg/bool.hpp>
 
-namespace weez_touch_teleop_rviz_panel
+namespace interface_rviz_plugin
 {
   TeleopGainPanel::TeleopGainPanel(QWidget* parent)
     : rviz_common::Panel(parent)
@@ -507,4 +507,4 @@ namespace weez_touch_teleop_rviz_panel
   }
 }
 #include <pluginlib/class_list_macros.hpp>
-PLUGINLIB_EXPORT_CLASS(weez_touch_teleop_rviz_panel::TeleopGainPanel, rviz_common::Panel)
+PLUGINLIB_EXPORT_CLASS(interface_rviz_plugin::TeleopGainPanel, rviz_common::Panel)

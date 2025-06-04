@@ -14,13 +14,13 @@ void ApiNode::initialize() {
   telesoudTranslator_ = std::make_shared<DataFromAndToTelesoudTranslator>(shared_from_this());
 	
   // ----------- Intructions publisher to NimblBot welding framework --------------
-  instruction_publisher_ = this->create_publisher<telesoud_msgs::msg::TelesoudInstruction>(
+  instruction_publisher_ = this->create_publisher<interface_custom_msgs::msg::TelesoudInstruction>(
   		  "/telesoud/instructions"
 		  , 10
 		  );
 
   // ----------- RobotInfo subscriber from NimblBot welding framework to Telesoud -----------
-  robot_data_subscription_ = this->create_subscription<telesoud_msgs::msg::RobotData>(
+  robot_data_subscription_ = this->create_subscription<interface_custom_msgs::msg::RobotData>(
 		  "/translator/robotData", 
 		  10, 
 		  std::bind(&ApiNode::robotDataCallback, this, std::placeholders::_1)
@@ -72,7 +72,7 @@ ApiNode::instructionsFromTelesoudManager(const InstructionFromTelesoudToRobot &i
   }
 
   // ----- Publishing --------
-  auto msg = telesoud_msgs::msg::TelesoudInstruction();
+  auto msg = interface_custom_msgs::msg::TelesoudInstruction();
   msg.instruction_code = instFromTelesoud.instructionCode;
 
  //  Pose1, 2, 3 and speed vector to msg

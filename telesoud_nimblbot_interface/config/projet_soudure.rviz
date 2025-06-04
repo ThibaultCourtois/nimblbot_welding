@@ -5,9 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Trajectory1/Current Path1
       Splitter Ratio: 0.49803921580314636
-    Tree Height: 1252
+    Tree Height: 619
   - Class: rviz_common/Help
     Name: Help
   - Class: rviz_common/Views
@@ -15,6 +14,13 @@ Panels:
       - /Current View1
     Name: Views
     Splitter Ratio: 0.5
+  - Class: interface_rviz_plugin/TeleopGainPanel
+    Name: TeleopGainPanel
+    emergency_stop_active: false
+    modular_command_active: false
+    modular_gain: 1
+    pos_gain: 1
+    quat_gain: 1
 Visualization Manager:
   Class: ""
   Displays:
@@ -36,295 +42,6 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Class: rviz_common/Group
-      Displays:
-        - Class: rviz_default_plugins/Marker
-          Enabled: false
-          Name: Plaque_Angle
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /soudure_angle_mesh
-          Value: false
-        - Class: rviz_default_plugins/Marker
-          Enabled: false
-          Name: Plaque_Plat
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 1
-            History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /soudure_plat_mesh
-          Value: false
-        - Class: rviz_default_plugins/Marker
-          Enabled: false
-          Name: TCP
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /Support_spatule_mesh
-          Value: false
-        - Class: rviz_default_plugins/Marker
-          Enabled: false
-          Name: Marker
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /spatule_76_mesh
-          Value: false
-      Enabled: false
-      Name: Mesh
-    - Class: rviz_common/Group
-      Displays:
-        - Class: rviz_default_plugins/InteractiveMarkers
-          Enable Transparency: false
-          Enabled: false
-          Interactive Markers Namespace: /nb_base_link_plaque_angle_tf_controller
-          Name: Plaque_Angle
-          Show Axes: false
-          Show Descriptions: true
-          Show Visual Aids: false
-          Value: false
-        - Class: rviz_default_plugins/InteractiveMarkers
-          Enable Transparency: false
-          Enabled: false
-          Interactive Markers Namespace: /nb_base_link_plaque_plat_tf_controller
-          Name: Plaque_Plat
-          Show Axes: false
-          Show Descriptions: true
-          Show Visual Aids: false
-          Value: false
-        - Class: rviz_default_plugins/InteractiveMarkers
-          Enable Transparency: false
-          Enabled: false
-          Interactive Markers Namespace: /nb_base_link_nb_tcp_wrist_interactive_tf_controller
-          Name: TCP
-          Show Axes: false
-          Show Descriptions: true
-          Show Visual Aids: false
-          Value: false
-      Enabled: false
-      Name: Interactive_Markers
-    - Class: rviz_common/Group
-      Displays:
-        - Alpha: 1
-          Buffer Length: 1
-          Class: rviz_default_plugins/Path
-          Color: 255; 0; 0
-          Enabled: true
-          Head Diameter: 0.30000001192092896
-          Head Length: 0.20000000298023224
-          Length: 0.30000001192092896
-          Line Style: Billboards
-          Line Width: 0.0020000000949949026
-          Name: Current Path
-          Offset:
-            X: 0
-            Y: 0
-            Z: 0
-          Pose Color: 255; 85; 255
-          Pose Style: None
-          Radius: 0.029999999329447746
-          Shaft Diameter: 0.10000000149011612
-          Shaft Length: 0.10000000149011612
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /tf_path_trail_nb_base_link_to_nb_tcp_wrist/path
-          Value: true
-        - Alpha: 1
-          Buffer Length: 1
-          Class: rviz_default_plugins/Path
-          Color: 25; 255; 0
-          Enabled: true
-          Head Diameter: 0.30000001192092896
-          Head Length: 0.20000000298023224
-          Length: 0.009999999776482582
-          Line Style: Lines
-          Line Width: 0.029999999329447746
-          Name: Desired Trajectory
-          Offset:
-            X: 0
-            Y: 0
-            Z: 0
-          Pose Color: 255; 85; 255
-          Pose Style: Axes
-          Radius: 0.0010000000474974513
-          Shaft Diameter: 0.10000000149011612
-          Shaft Length: 0.10000000149011612
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /trajectory_path_generator_node/path_low
-          Value: true
-        - Class: rviz_common/Group
-          Displays:
-            - Class: rviz_default_plugins/Marker
-              Enabled: true
-              Name: Right_Arrow
-              Namespaces:
-                {}
-              Topic:
-                Depth: 5
-                Durability Policy: Volatile
-                Filter size: 10
-                History Policy: Keep Last
-                Reliability Policy: Reliable
-                Value: /nb/future_marker_R
-              Value: true
-            - Class: rviz_default_plugins/Marker
-              Enabled: true
-              Name: Left_Arrow
-              Namespaces:
-                {}
-              Topic:
-                Depth: 5
-                Durability Policy: Volatile
-                Filter size: 10
-                History Policy: Keep Last
-                Reliability Policy: Reliable
-                Value: /nb/future_marker_L
-              Value: true
-            - Alpha: 0.75
-              Buffer Length: 1
-              Class: rviz_default_plugins/Path
-              Color: 255; 255; 0
-              Enabled: true
-              Head Diameter: 0.003000000026077032
-              Head Length: 0.0020000000949949026
-              Length: 0.003000000026077032
-              Line Style: Billboards
-              Line Width: 0.0024999999441206455
-              Name: Path_tilt
-              Offset:
-                X: 0
-                Y: 0
-                Z: 0
-              Pose Color: 220; 138; 221
-              Pose Style: None
-              Radius: 0.0010000000474974513
-              Shaft Diameter: 0.0010000000474974513
-              Shaft Length: 0.003000000026077032
-              Topic:
-                Depth: 5
-                Durability Policy: Volatile
-                Filter size: 10
-                History Policy: Keep Last
-                Reliability Policy: Reliable
-                Value: /nb/future_path_tilt_active
-              Value: true
-            - Alpha: 0.75
-              Buffer Length: 1
-              Class: rviz_default_plugins/Path
-              Color: 200; 200; 200
-              Enabled: true
-              Head Diameter: 0.003000000026077032
-              Head Length: 0.0020000000949949026
-              Length: 0.30000001192092896
-              Line Style: Billboards
-              Line Width: 0.0024999999441206455
-              Name: Path_tilt_inactive
-              Offset:
-                X: 0
-                Y: 0
-                Z: 0
-              Pose Color: 220; 138; 221
-              Pose Style: None
-              Radius: 0.029999999329447746
-              Shaft Diameter: 0.0010000000474974513
-              Shaft Length: 0.003000000026077032
-              Topic:
-                Depth: 5
-                Durability Policy: Volatile
-                Filter size: 10
-                History Policy: Keep Last
-                Reliability Policy: Reliable
-                Value: /nb/future_path_tilt_inactive
-              Value: true
-            - Alpha: 0.75
-              Buffer Length: 1
-              Class: rviz_default_plugins/Path
-              Color: 25; 255; 255
-              Enabled: true
-              Head Diameter: 0.003000000026077032
-              Head Length: 0.0020000000949949026
-              Length: 0.30000001192092896
-              Line Style: Billboards
-              Line Width: 0.0024999999441206455
-              Name: Path_azimuth
-              Offset:
-                X: 0
-                Y: 0
-                Z: 0
-              Pose Color: 220; 138; 221
-              Pose Style: None
-              Radius: 0.029999999329447746
-              Shaft Diameter: 0.0010000000474974513
-              Shaft Length: 0.003000000026077032
-              Topic:
-                Depth: 5
-                Durability Policy: Volatile
-                Filter size: 10
-                History Policy: Keep Last
-                Reliability Policy: Reliable
-                Value: /nb/future_path_azimuth_active
-              Value: true
-            - Alpha: 1
-              Buffer Length: 1
-              Class: rviz_default_plugins/Path
-              Color: 200; 200; 200
-              Enabled: true
-              Head Diameter: 0.003000000026077032
-              Head Length: 0.0020000000949949026
-              Length: 0.30000001192092896
-              Line Style: Billboards
-              Line Width: 0.0024999999441206455
-              Name: Path_azimuth_inactive
-              Offset:
-                X: 0
-                Y: 0
-                Z: 0
-              Pose Color: 220; 138; 221
-              Pose Style: None
-              Radius: 0.029999999329447746
-              Shaft Diameter: 0.0010000000474974513
-              Shaft Length: 0.003000000026077032
-              Topic:
-                Depth: 5
-                Durability Policy: Volatile
-                Filter size: 10
-                History Policy: Keep Last
-                Reliability Policy: Reliable
-                Value: /nb/future_path_azimuth_inactive
-              Value: true
-          Enabled: true
-          Name: Modular_Command
-      Enabled: false
-      Name: Trajectory
     - Class: rviz_common/Group
       Displays:
         - Acceleration_Scaling_Factor: 0.1
@@ -435,43 +152,7 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-            nb/ball_azimuth_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
             nb/ball_azimuth_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_azimuth_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -483,43 +164,7 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
-            nb/ball_tilt_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
             nb/ball_tilt_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            nb/ball_tilt_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -537,52 +182,7 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
-            nb/bride_link_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             nb/bride_link_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/bride_link_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -602,52 +202,7 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
-            nb/lower_end_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             nb/lower_end_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_end_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -662,52 +217,7 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
-            nb/lower_ring_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             nb/lower_ring_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/lower_ring_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -730,52 +240,7 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
-            nb/upper_end_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             nb/upper_end_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_end_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -790,52 +255,7 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
-            nb/upper_ring_10:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_11:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
             nb/upper_ring_2:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_3:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_4:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_5:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_6:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_7:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_8:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            nb/upper_ring_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -853,132 +273,13 @@ Visualization Manager:
           Update Interval: 0
           Value: true
           Visual Enabled: true
-        - Align Bottom: false
-          Background Alpha: 0.800000011920929
-          Background Color: 0; 0; 0
-          Class: rviz_2d_overlay_plugins/TextOverlay
-          Enabled: false
-          Foreground Alpha: 0.800000011920929
-          Foreground Color: 25; 255; 240
-          Invert Shadow: false
-          Name: Overlay_Control_Command
-          Overtake BG Color Properties: false
-          Overtake FG Color Properties: false
-          Overtake Position Properties: false
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /rviz_overlay
-          Value: false
-          font: DejaVu Sans Mono
-          height: 128
-          hor_alignment: left
-          hor_dist: 0
-          line width: 2
-          text size: 12
-          ver_alignment: top
-          ver_dist: 0
-          width: 128
       Enabled: true
       Name: NB55
-    - Class: rviz_common/Group
-      Displays:
-        - Class: rviz_default_plugins/Marker
-          Enabled: true
-          Name: Vecteur_Wrist
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /point_cloud/pose_vect_plan_wrist
-          Value: true
-        - Class: rviz_default_plugins/Marker
-          Enabled: true
-          Name: Vecteur_Mesure
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /point_cloud/pose_vect_plan
-          Value: true
-        - Alpha: 1
-          Class: rviz_default_plugins/Polygon
-          Color: 192; 28; 40
-          Enabled: true
-          Name: Plan_Mesure
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /point_cloud/plan
-          Value: true
-        - Alpha: 1
-          Autocompute Intensity Bounds: true
-          Autocompute Value Bounds:
-            Max Value: 10
-            Min Value: -10
-            Value: true
-          Axis: Z
-          Channel Name: intensity
-          Class: rviz_default_plugins/PointCloud
-          Color: 255; 255; 255
-          Color Transformer: RGB8
-          Decay Time: 0
-          Enabled: true
-          Invert Rainbow: false
-          Max Color: 255; 255; 255
-          Max Intensity: 4096
-          Min Color: 0; 0; 0
-          Min Intensity: 0
-          Name: PointCloud_Mesure
-          Position Transformer: XYZ
-          Selectable: true
-          Size (Pixels): 3
-          Size (m): 0.007000000216066837
-          Style: Spheres
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            Filter size: 10
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /point_cloud/data
-          Use Fixed Frame: true
-          Use rainbow: true
-          Value: true
-        - Class: rviz_default_plugins/Image
-          Enabled: true
-          Max Value: 1
-          Median window: 5
-          Min Value: 0
-          Name: Mesure
-          Normalize Range: true
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /angle_visualization
-          Value: true
-      Enabled: false
-      Name: Capteur_Orientation
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: TorcheLaser
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -1014,9 +315,90 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /servo_node/pose_target_cmds
       Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: TCP_Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /tf_path_trail_nb_base_link_to_nb_tcp_wrist/path
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 145; 65; 172
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: Mimic_Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /tf_path_trail_nb_mimic_base_link_to_nb_mimic_tcp_wrist/path
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: WeldingScene
+      Namespaces:
+        stl_objects: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /welding_scene_publisher/welding_scene
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /TorchBracket_mesh
+      Value: true
   Enabled: true
   Global Options:
-    Background Color: 192; 191; 188
+    Background Color: 72; 72; 72
     Fixed Frame: nb/base_link
     Frame Rate: 30
   Name: root
@@ -1032,25 +414,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.7214833498001099
+      Distance: 2.0863513946533203
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.10661493241786957
+        Y: 0.22038903832435608
+        Z: 0.273395836353302
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.41039806604385376
+      Pitch: 0.4253980815410614
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 5.8685832023620605
+      Yaw: 6.128576278686523
     Saved: ~
 Window Geometry:
   Displays:
@@ -1060,13 +442,13 @@ Window Geometry:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  Mesure:
-    collapsed: false
   MotionPlanning_NB55:
     collapsed: false
   MotionPlanning_NB55 - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000027200000521fc0200000008fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000fb000000100044006900730070006c006100790073010000003d00000521000000c900fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067000000028a000001c70000000000000000fb0000000800480065006c0070000000029a0000006e0000006e00fffffffb0000000a005600690065007700730000000333000000c3000000a400fffffffb0000004e004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e0042003500350020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb00000026004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e004200350035000000010c000001d40000017d00fffffffb0000000c004d00650073007500720065000000011b000002db0000002800ffffff000007880000052100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000027200000521fc0200000009fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000fb000000100044006900730070006c006100790073010000003d000002a8000000c900fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067000000028a000001c70000000000000000fb0000000800480065006c0070000000029a0000006e0000006e00fffffffb0000000a005600690065007700730000000333000000c3000000a400fffffffb0000004e004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e0042003500350020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb00000026004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e004200350035000000010c000001d40000017d00fffffffb0000000c004d00650073007500720065000000011b000002db0000000000000000fb0000001e00540065006c0065006f0070004700610069006e00500061006e0065006c01000002eb000002730000018400ffffff000007880000052100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  TeleopGainPanel:
+    collapsed: false
   Views:
     collapsed: false
   Width: 2560

@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>telesoud_nimblbot_interface</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="thibault@todo.todo">thibault</maintainer>
+  <version>0.9.0</version>
+  <description>ROS2 package for Telesoud WeezTouch controller and NimblBot robots interface</description>
+  <maintainer email="tcourtois@nimbl-bot.com">Thibault Courtois</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
@@ -14,7 +14,7 @@
   <depend>tf2_ros</depend>
   <depend>moveit_msgs</depend>
   <depend>tf_transformations</depend>
-  <depend>telesoud_mgs</depend>
+  <depend>interface_custom_mgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>rcl_interfaces</depend>
@@ -22,8 +22,6 @@
   <depend>python3-numpy</depend>
   <depend>python3-scipy</depend>
   <depend>nimblpy</depend>
-
-
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

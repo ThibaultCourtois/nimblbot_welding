@@ -28,7 +28,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(gpio_controllers_iron REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(telesoud_msgs REQUIRED)
+find_package(interface_custom_msgs REQUIRED)
 
 include_directories(${telesoud_msgs_INCLUDE_DIRS})
 
@@ -46,7 +46,7 @@ add_executable(${PROJECT_NAME}
 )
 
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS} 
-rclcpp telesoud_msgs control_msgs geometry_msgs trajectory_msgs tf2 tf2_ros gpio_controllers_iron controller_manager_msgs)
+rclcpp interface_custom_msgs control_msgs geometry_msgs trajectory_msgs tf2 tf2_ros gpio_controllers_iron controller_manager_msgs)
 
 target_include_directories(${PROJECT_NAME}
   PRIVATE

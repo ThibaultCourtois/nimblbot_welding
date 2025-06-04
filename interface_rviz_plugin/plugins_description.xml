@@ -1,9 +1,9 @@
-<library path="weez_touch_teleop_rviz_panel">
-  <class name="weez_touch_teleop_rviz_panel/TeleopGainPanel"
-         type="weez_touch_teleop_rviz_panel::TeleopGainPanel"
+<library path="interface_rviz_plugin">
+  <class name="interface_rviz_plugin/TeleopGainPanel"
+         type="interface_rviz_plugin::TeleopGainPanel"
          base_class_type="rviz_common::Panel">
     <description>
-      A panel for adjusting teleop gains in RViz.
+      Robot state display, Teleoperation gain sliders, TCP Pose display, Modular command toggle button, Emergency stop toggle button, Motors zero button.
     </description>
   </class>
 </library>

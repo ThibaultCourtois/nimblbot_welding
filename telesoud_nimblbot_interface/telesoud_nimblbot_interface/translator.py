@@ -1,11 +1,11 @@
 import rclpy
 from rclpy.node import Node
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
-from telesoud_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
+from interface_custom_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
 
-class InterfaceNode(Node):
+class TranslatorNode(Node):
     def __init__(self):
-        super().__init__('interface_node')
+        super().__init__('translator_node')
         
         # Instruction from Telesoud
         self.last_instruction_code = None
@@ -211,7 +211,7 @@ class InterfaceNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     try:
-        node = InterfaceNode()
+        node = TranslatorNode()
         rclpy.spin(node)
     except Exception as e:
         print(f'Error: {e}')

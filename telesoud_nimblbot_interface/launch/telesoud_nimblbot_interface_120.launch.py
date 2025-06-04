@@ -3,7 +3,6 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch.conditions import IfCondition
 from launch import LaunchDescription
 from launch.actions import (
         DeclareLaunchArgument,
@@ -21,7 +20,7 @@ def generate_launch_description():
 
     robot_type_param = DeclareLaunchArgument(
             "robot_type",
-            default_value = 'nb120_3m_fonctionnel',
+            default_value = 'nb120_3m_welding',
             description = ''
         )
 
@@ -49,54 +48,30 @@ def generate_launch_description():
     rviz_template_param = DeclareLaunchArgument(
             'rviz_template',
             default_value = os.path.join(get_package_share_directory('telesoud_nimblbot_interface'), 'config', 'projet_soudure.rviz'),
-            description = 'Template Rviz2',
+            description = 'Template Rviz',
         )
     
-    TCP_velocity_arg = DeclareLaunchArgument(
-            'TCP_velocity',
-            default_value = '0.01',
-            description = 'End effector linear speed'
-        )
-
-    control_rate_arg = DeclareLaunchArgument(
-            'control_rate',
-            default_value = '20.0',
-            description = 'Control rate'
-        )
-        
-    weez_touch_arg = DeclareLaunchArgument(
-    		'weez_touch',
-    		default_value = 'true',
-    		description = 'Enabling command from weez touch',
-    		choices=['true', 'false']
-    	)   
-
-    interface = Node(
-            package='telesoud_nimblbot_interface',
-            executable='telesoud_interface',
-            name='telesoud_interface_node',
-            output='log'
-        )
-    
-    weez_touch = LaunchConfiguration('weez_touch', default = weez_touch_arg.default_value)
     robot_namespace = LaunchConfiguration('robot_namespace', default=namespace_param.default_value)
     robot_type = LaunchConfiguration('robot_type', default=robot_type_param.default_value)
     simulation = LaunchConfiguration('simulation', default=simulation_param.default_value)
     simulate_dynamics = LaunchConfiguration('simulate_dynamics', default=simulate_dynamics_param.default_value)
     rviz_moveit = LaunchConfiguration('rviz_moveit', default=rviz_moveit_param.default_value)
     rviz_template = LaunchConfiguration('rviz_template', default=rviz_template_param.default_value)
-    TCP_velocity = LaunchConfiguration('TCP_velocity', default=TCP_velocity_arg.default_value)
-    control_rate = LaunchConfiguration('control_rate', default=control_rate_arg.default_value)
-    
-    cartesian_command = Node(
+
+    translator = Node(
             package='telesoud_nimblbot_interface',
-            executable= 'welding_cartesian_command',
-            name='welding_cartesian_command_node',
+            executable='translator',
+            name='translator_node',
+            output='log'
+        )
+    
+    welding_command_handler = Node(
+            package='telesoud_nimblbot_interface',
+            executable= 'welding_command_handler',
+            name='welding_command_handler_node',
             output='log',
             parameters=[{
                 'robot_type':robot_type,
-                'TCP_velocity':TCP_velocity,
-                'control_rate':control_rate,
                 }]
             )
 
@@ -105,7 +80,6 @@ def generate_launch_description():
             executable= 'telesoud_api',
             output='screen',
             arguments=['--ros-args', '--log-level', 'info'],
-            condition=IfCondition(weez_touch)
             )
 
     nb_nodes = IncludeLaunchDescription(
@@ -126,7 +100,6 @@ def generate_launch_description():
             }.items()
         )
 
-    
     mesh_torche_soudure = Node(
             package='nimblbot_simulation_scenes',
             executable='mesh_publisher',
@@ -140,7 +113,7 @@ def generate_launch_description():
                     '1.5707',
                     '0.0',
                     'nb/wrist',
-                    'file:///home/thibault/Documents/TorchBracket.stl',
+                    'file://' + os.path.join(get_package_share_directory('telesoud_nimblbot_interface'), 'welding_meshes', 'TorchBracket.stl'),
                     '0.001',
                     '0.001',
                     '0.001',
@@ -194,6 +167,14 @@ def generate_launch_description():
         arguments=['nb_mimic/base_link', 'nb_mimic/tcp_wrist'],
     )
 
+    welding_scene_publisher_node = Node(
+            package='welding_scene_publisher',
+            executable='welding_scene_publisher',
+            name='welding_scene_publisher',
+            output='screen',
+    )
+
+
     return LaunchDescription([
             TimerAction(period=0.5, 
                 actions = [nb_nodes]
@@ -201,9 +182,10 @@ def generate_launch_description():
             mesh_torche_soudure, 
             robot_moveit_nodes,
             TimerAction(period=5.0, 
-                actions=[telesoud_api, interface, cartesian_command]
+                actions=[telesoud_api, translator, welding_command_handler]
             ),
             usb_cam_node,
             tf_path_trail_base_link_wrist,
             tf_path_trail_base_link_wrist_mimic,
+            welding_scene_publisher_node
         ])

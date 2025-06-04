@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>telesoud_msgs</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="thibault@todo.todo">thibault</maintainer>
+  <name>interface_custom_msgs</name>
+  <version>1.0.0</version>
+  <description>ROS2 custom messages for Telesoud / NimblBot data pipeline</description>
+  <maintainer email="tcourtois@nimbl-bot.com">Thibault Courtois</maintainer>
   <license>TODO: License declaration</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>telesoud_api</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The telesoud API package</description>
   <maintainer email="lpa@weez-u-welding.com">weez-u</maintainer>
   <license>Apache2.0</license>
@@ -23,7 +23,7 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>trajectory_msgs</depend>
-  <depend>telesoud_msgs</depend>
+  <depend>interface_custom_msgs</depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>

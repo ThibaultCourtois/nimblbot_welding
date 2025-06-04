@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(weez_touch_teleop_rviz_panel)
+project(interface_rviz_plugin)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -24,7 +24,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 qt5_wrap_cpp(MOC_FILES
-  include/weez_touch_teleop_rviz_panel/weez_touch_teleop_rviz_panel.hpp
+  include/interface_rviz_plugin/interface_rviz_plugin.hpp
 )
 
 
@@ -34,7 +34,7 @@ include_directories(
 
 # Build the panel plugin
 add_library(${PROJECT_NAME} SHARED
-  src/weez_touch_teleop_rviz_panel.cpp
+  src/interface_rviz_plugin.cpp
   ${MOC_FILES}
 )
 
@@ -44,6 +44,8 @@ ament_target_dependencies(${PROJECT_NAME}
   std_srvs
   rviz_common
   pluginlib
+  tf2_geometry_msgs
+  tf2
 )
 
 target_link_libraries(${PROJECT_NAME}

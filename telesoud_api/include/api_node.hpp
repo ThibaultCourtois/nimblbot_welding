@@ -5,8 +5,8 @@
 #include <communicationWithTelesoudStructures.hpp>
 #include <dataFromAndToTelesoudTranslator.hpp>
 #include <rpc/server.h>
-#include <telesoud_msgs/msg/telesoud_instruction.hpp>
-#include <telesoud_msgs/msg/robot_data.hpp>
+#include <interface_custom_msgs/msg/telesoud_instruction.hpp>
+#include <interface_custom_msgs/msg/robot_data.hpp>
 
 // Class that implement the api ros node
 class ApiNode : public rclcpp::Node {
@@ -38,10 +38,10 @@ private:
   std::array<double, 6> currentEndEffXyzwpr_;
   
   //Instructions publisher to NimblBot welding framework
-  rclcpp::Publisher<telesoud_msgs::msg::TelesoudInstruction>::SharedPtr instruction_publisher_;
+  rclcpp::Publisher<interface_custom_msgs::msg::TelesoudInstruction>::SharedPtr instruction_publisher_;
 
   //Robot Data subscriber from NimblBot welding framework to Telesoud
-  using RobotDataMsg = telesoud_msgs::msg::RobotData;
+  using RobotDataMsg = interface_custom_msgs::msg::RobotData;
   rclcpp::Subscription<RobotDataMsg>::SharedPtr robot_data_subscription_;
   void robotDataCallback(const std::shared_ptr<RobotDataMsg> msg);
   
