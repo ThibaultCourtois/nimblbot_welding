@@ -448,7 +448,7 @@ namespace interface_rviz_plugin
 
   void TeleopGainPanel::updateModularGain(int value)
   {
-    modular_gain_ = static_cast<double>(value) / 10.0; 
+    modular_gain_ = static_cast<double>(value); 
     modular_gain_value_label_->setText(QString::number(modular_gain_, 'f', 1));
     publishModularGain();
   }
