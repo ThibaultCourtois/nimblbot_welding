@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 from interface_custom_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
-from typing import List, TYPE_CHECKING
+from typing import List
 from geometry_msgs.msg import Pose
 
 class TranslatorNode(Node):
