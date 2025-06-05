@@ -946,11 +946,20 @@ class WeldingCommandHandlerNode(Node):
     
     def _create_robot_data(self):
         robot_data = RobotData()
-        current_pose = self._get_current_pose(mimic=False)
-        robot_data.pose = current_pose.pose
-        self.tcp_pose = current_pose.pose
-        if self.current_state == RobotState.DYNAMIC_MOVEMENT and self.virtual_pose_initialized:
-            robot_data.pose = self.virtual_pose.pose
+        try:
+            current_pose = self._get_current_pose(mimic=False)
+            robot_data.pose = current_pose.pose
+            self.tcp_pose = current_pose.pose
+            
+            if self.current_state == RobotState.DYNAMIC_MOVEMENT and self.virtual_pose_initialized:
+                robot_data.pose = self.virtual_pose.pose
+        
+        except Exception as e:
+            self.get_logger().debug(f'Transform not available yet : {e}')
+            default_pose = Pose()
+            robot_data.pose = default_pose
+            self.tcp_pose = default_pose
+
         robot_data.robot_in_fault_status = self.robot_in_fault_status
         robot_data.error_message = self.current_error
         robot_data.timestamp = self.get_clock().now().to_msg()
