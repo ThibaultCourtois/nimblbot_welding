@@ -2,9 +2,16 @@ import rclpy
 from rclpy.node import Node
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 from interface_custom_msgs.msg import TelesoudInstruction, RobotData, Command, CommandStatus
+from typing import List, TYPE_CHECKING
+from geometry_msgs.msg import Pose
 
 class TranslatorNode(Node):
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the TranslatorNode.
+        
+        Sets up ROS2 node for translating Telesoud instructions to robot commands.
+        Initializes publishers, subscribers, and timers for instruction processing.
+        """
         super().__init__('translator_node')
         
         # Instruction from Telesoud
@@ -22,7 +29,13 @@ class TranslatorNode(Node):
         self._create_publishers()
                        
     
-    def _create_subscriptions(self):
+    def _create_subscriptions(self) -> None:
+        """Create ROS2 subscriptions for incoming messages.
+        
+        Sets up subscriptions for:
+        - Telesoud instructions
+        - Command status feedback from welding command handler
+        """
         self.instruction_sub = self.create_subscription(
             TelesoudInstruction, 
             '/telesoud/instructions',
@@ -38,7 +51,13 @@ class TranslatorNode(Node):
         )
     
     
-    def _create_publishers(self):
+    def _create_publishers(self) -> None:
+        """Create ROS2 publishers for outgoing messages.
+        
+        Sets up publishers for:
+        - Robot commands to welding command handler
+        - Robot data feedback to Telesoud
+        """
         self.command_pub = self.create_publisher(
             Command,
             '/translator/command',
@@ -52,8 +71,12 @@ class TranslatorNode(Node):
         )
 
     
-    def _on_telesoud_instructions(self, msg):
-        """Handle incoming Telesoud instructions"""
+    def _on_telesoud_instructions(self, msg: TelesoudInstruction) -> None:
+        """Handle incoming Telesoud instructions.
+        
+        Args:
+            msg: TelesoudInstruction message containing instruction code, poses, and parameters
+        """
         self.instruction_data = {
             'instruction': msg.instruction_code,
             'pose1': msg.pose1,
@@ -64,8 +87,17 @@ class TranslatorNode(Node):
         self.pending_instruction = True
     
     
-    def process_pending_instruction(self):
-        """Process pending instruction, called by timer"""
+    def process_pending_instruction(self) -> None:
+        """Process pending Telesoud instruction and convert to robot command.
+        
+        Converts Telesoud instruction codes to appropriate robot commands:
+        - 0: STOP
+        - 1: GET_ROBOT_DATA  
+        - 7: SET_DYNAMIC (speed vector)
+        - 8: START_DYNAMIC
+        - 15: PLAY_CARTESIAN
+        - 16: PLAY_JOINT
+        """
         if not self.pending_instruction:
             return
             
@@ -136,8 +168,12 @@ class TranslatorNode(Node):
         self.last_instruction_code = instruction
 
     
-    def _on_command_status(self, msg):
-        """Handle command status feedback"""
+    def _on_command_status(self, msg: CommandStatus) -> None:
+        """Handle command status feedback from welding command handler.
+        
+        Args:
+            msg: CommandStatus message with execution result and robot data
+        """
         command_id = msg.command_id
 
         if command_id in self.pending_commands:
@@ -153,8 +189,15 @@ class TranslatorNode(Node):
             self.get_logger().warning(f'Received status for unknown command ID: {command_id}')
 
     
-    def _forward_robot_data(self, robot_data):
-        """Forward robot data to Telesoud"""
+    def _forward_robot_data(self, robot_data: RobotData) -> None:
+        """Forward robot data to Telesoud interface.
+        
+        Converts robot pose from quaternion to Euler angles and publishes
+        robot status information including pose, fault status, and error messages.
+        
+        Args:
+            robot_data: RobotData message from welding command handler
+        """
         try:
             robot_data_msg = RobotData()
             robot_data_msg.pose = robot_data.pose
@@ -190,8 +233,18 @@ class TranslatorNode(Node):
             self.get_logger().error(f'Error forwarding robot data: {e}')
 
     
-    def _construct_command_pose(self, pose):
-        """Construct pose message from pose array"""
+    def _construct_command_pose(self, pose: List[float]) -> Pose:
+        """Construct ROS Pose message from pose array.
+        
+        Converts XYZWPR format (position + Euler angles) to ROS Pose
+        with quaternion orientation.
+        
+        Args:
+            pose: List of 6 floats [x, y, z, roll, pitch, yaw]
+            
+        Returns:
+            Pose message with position and quaternion orientation
+        """
         command = Command()
         
         command.target_pose.position.x = pose[0]

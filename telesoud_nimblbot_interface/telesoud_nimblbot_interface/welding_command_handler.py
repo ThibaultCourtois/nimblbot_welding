@@ -22,6 +22,7 @@ from rcl_interfaces.srv import GetParameters, SetParameters
 from nimblpy.common.robot_loader import load_robot_config
 from nimblpy.kinematics.kin_model import KinematicModel
 from interface_custom_msgs.msg import RobotData, Command, CommandStatus
+from typing import List, Optional, Any
 
 SERVO_NODE = '/servo_node'
 
@@ -76,6 +77,11 @@ STATE_NAMES = {
 
 class WeldingCommandHandlerNode(Node):
     def __init__(self, node_name: str) -> None:
+        """Initialize the WeldingCommandHandlerNode.
+        
+        Args:
+            node_name: Name of the ROS2 node
+        """
         super().__init__(node_name)
         self._initialize_basic_parameters()
         self._setup_transform_infrastructure()
@@ -88,7 +94,12 @@ class WeldingCommandHandlerNode(Node):
         self.command_timer = self.create_timer(TIMER_PERIOD, self.process_pending_command)
 
 
-    def _initialize_basic_parameters(self):
+    def _initialize_basic_parameters(self) -> None:
+        """Initialize basic node parameters and state variables.
+        
+        Sets up modular control parameters, command handling state,
+        robot state machine variables, and movement parameters.
+        """
         # Modular control parameters
         self.__q_desired = None
         self.__modular_command_mode = [AZIMUTH, TILT]
@@ -142,7 +153,12 @@ class WeldingCommandHandlerNode(Node):
         self.line_progression_index = 0
 
     
-    def _setup_transform_infrastructure(self):
+    def _setup_transform_infrastructure(self) -> None:
+        """Setup transform infrastructure and robot configuration.
+        
+        Loads robot configuration, sets up TF listeners, and initializes
+        kinematic model for the specified robot type.
+        """
         # Namespace from ID's
         self.namespace = "nb"
         self.__base_frame_robot = f"{self.namespace}/base_link"
@@ -177,7 +193,18 @@ class WeldingCommandHandlerNode(Node):
         self.__tf_listener = TransformListener(self.__tf_buffer, self)
 
 
-    def _create_publishers(self):
+    def _create_publishers(self) -> None:
+        """Create ROS2 publishers for robot control and status communication.
+        
+        Sets up publishers for:
+        - Motor lock commands
+        - Desired pose commands
+        - Joint trajectory commands for modular control
+        - Command status feedback
+        - Robot state visualization
+        - Modular control mode and velocity indicators
+        - TCP pose feedback
+        """
         # Multiple command publishers
         self.motor_lock_pub = self.create_publisher(
             Int8MultiArray,
@@ -229,8 +256,16 @@ class WeldingCommandHandlerNode(Node):
             10
         )
 
-    def _create_subscriptions(self):
-
+    def _create_subscriptions(self) -> None:
+        """Create ROS2 subscriptions for incoming control signals and parameters.
+        
+        Sets up subscriptions for:
+        - Joint trajectory feedback
+        - RViz plugin parameter updates (gains, modular commands)
+        - Emergency stop signals
+        - TCP trace clearing commands
+        - Robot commands from translator
+        """
         _ = self.create_subscription(
             JointTrajectory,
             "/nb/desired_trajectory",
@@ -291,7 +326,14 @@ class WeldingCommandHandlerNode(Node):
         )
 
     
-    def _create_clients(self):
+    def _create_clients(self) -> None:
+        """Create ROS2 service clients for robot control and configuration.
+        
+        Sets up clients for:
+        - Control mode switching
+        - TCP trace path clearing
+        - Robot calibration (set zeros)
+        """
         # Multiple command client
         self.change_control_mode_client = self.create_client(
                 ServoCommandType,
@@ -316,7 +358,12 @@ class WeldingCommandHandlerNode(Node):
         )
      
     
-    def _create_services(self):
+    def _create_services(self) -> None:
+        """Create ROS2 services provided by this node.
+        
+        Sets up services for:
+        - Robot calibration (set zeros) requests
+        """
         # Set zeros protocol
         self.set_zeros_srv = self.create_service(
                 Empty_srv, 
@@ -326,7 +373,15 @@ class WeldingCommandHandlerNode(Node):
     
 
     def _get_param(self, node_name: str, parameters: str) -> ParameterValue:
-        """Retrieve the value of a parameter from a specified node."""
+        """Retrieve parameter value from a specified ROS2 node.
+        
+        Args:
+            node_name: Name of the target ROS2 node
+            parameters: Name of the parameter to retrieve
+            
+        Returns:
+            Parameter value, or empty ParameterValue if failed
+        """
         client = self.create_client(GetParameters, node_name)
 
         while not client.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
@@ -348,7 +403,12 @@ class WeldingCommandHandlerNode(Node):
             return ParameterValue()
 
 
-    def on_command(self, msg):
+    def on_command(self, msg: Command) -> None:
+        """Handle incoming robot commands from translator.
+        
+        Args:
+            msg: Command message with type, pose, speed, and other parameters
+        """
         self.command_data = {
             'command_type': msg.command_type,
             'command_id': msg.command_id,
@@ -360,7 +420,12 @@ class WeldingCommandHandlerNode(Node):
         return
 
     
-    def process_pending_command(self):
+    def process_pending_command(self) -> None:
+        """Process pending robot command and execute appropriate action.
+        
+        Routes commands to specific handlers based on command type and
+        publishes command status feedback.
+        """
         if not self.pending_command:
             return
 
@@ -418,7 +483,12 @@ class WeldingCommandHandlerNode(Node):
         self.tcp_pose_pub.publish(self.tcp_pose)
 
 
-    def _process_stop_command(self, status):
+    def _process_stop_command(self, status: CommandStatus) -> None:
+        """Process STOP command and handle safety timeout.
+        
+        Args:
+            status: CommandStatus object to update with execution result
+        """
         self.current_speed_vector = Twist()
         if self.last_command_type == 0:
             self.stop_command_counter += 1
@@ -435,7 +505,12 @@ class WeldingCommandHandlerNode(Node):
         status.message = "Stop command processed"
 
     
-    def _process_get_robot_data(self, status):
+    def _process_get_robot_data(self, status: CommandStatus) -> None:
+        """Process GET_ROBOT_DATA command and retrieve current robot state.
+        
+        Args:
+            status: CommandStatus object to populate with robot data
+        """
         try:
             robot_data = self._create_robot_data()
             status.robot_data = robot_data
@@ -446,20 +521,38 @@ class WeldingCommandHandlerNode(Node):
             status.message = f"Error getting robot data: {str(e)}"
     
     
-    def _process_set_dynamic(self, status, speed_vector):
+    def _process_set_dynamic(self, status: CommandStatus, speed_vector: Twist) -> None:
+        """Process SET_DYNAMIC command to update cartesian speed vector.
+        
+        Args:
+            status: CommandStatus object to update
+            speed_vector: Target velocity in cartesian coordinates
+        """
         self.current_speed_vector = speed_vector
         status.success = True
         status.message = "Dynamic speed updated"
 
     
-    def _process_start_dynamic(self, status):
+    def _process_start_dynamic(self, status: CommandStatus) -> None:
+        """Process START_DYNAMIC command to begin dynamic cartesian movement.
+        
+        Args:
+            status: CommandStatus object to update with execution result
+        """
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
         self.current_state = RobotState.DYNAMIC_MOVEMENT
         status.success = True
         status.message = "Dynamic cartesian movement started"
 
   
-    def _process_play_cartesian(self, status, target_pose, speed):
+    def _process_play_cartesian(self, status: CommandStatus, target_pose: Pose, speed: float) -> None:
+        """Process PLAY_CARTESIAN command for cartesian trajectory execution.
+        
+        Args:
+            status: CommandStatus object to update
+            target_pose: Target end-effector pose
+            speed: Movement speed for trajectory
+        """
         self.tcp_speed = speed * SPEED_CORRECTION_FACTOR
         self.current_target_pose = target_pose
         
@@ -473,7 +566,14 @@ class WeldingCommandHandlerNode(Node):
         status.message = "Cartesian trajectory started"
    
 
-    def _process_play_joint(self, status, target_pose, speed):
+    def _process_play_joint(self, status: CommandStatus, target_pose: Pose, speed: float) -> None:
+        """Process PLAY_JOINT command for joint-space trajectory execution.
+        
+        Args:
+            status: CommandStatus object to update
+            target_pose: Target end-effector pose
+            speed: Movement speed for trajectory
+        """
         self.tcp_speed = speed * SPEED_CORRECTION_FACTOR
         self.current_target_pose = target_pose
         
@@ -492,7 +592,12 @@ class WeldingCommandHandlerNode(Node):
         status.message = "Joint trajectory started"
 
     
-    def _update_state_machine(self):
+    def _update_state_machine(self) -> None:
+        """Update robot state machine and handle state transitions.
+        
+        Manages transitions between IDLE, PAUSE, DYNAMIC_MOVEMENT, 
+        CARTESIAN_TRAJECTORY, JOINT_TRAJECTORY, and MODULAR_CONTROL states.
+        """
         initial_state = self.current_state
         
         if self.current_state == RobotState.IDLE:
@@ -534,7 +639,12 @@ class WeldingCommandHandlerNode(Node):
         self.robotState_pub.publish(robotState_msg)
    
 
-    def _is_cartesian_trajectory_complete(self):
+    def _is_cartesian_trajectory_complete(self) -> None:
+        """Execute and check if cartesian trajectory execution is complete.
+        
+        Returns:
+            True if trajectory is finished or should be stopped, False otherwise
+        """
         if self.current_state == RobotState.CARTESIAN_TRAJECTORY:
             current_pose = self._get_current_pose(mimic=False)
             if self.stop_command_counter > 0:
@@ -546,7 +656,12 @@ class WeldingCommandHandlerNode(Node):
         return False
 
     
-    def _is_joint_trajectory_complete(self):
+    def _is_joint_trajectory_complete(self) -> None:
+        """Execute and check if joint trajectory execution is complete.
+        
+        Returns:
+            True if trajectory is finished or should be stopped, False otherwise
+        """
         if self.stop_command_counter > 0:
             return True
         if self.current_state == RobotState.JOINT_TRAJECTORY:
@@ -582,7 +697,12 @@ class WeldingCommandHandlerNode(Node):
         return False
 
     
-    def _is_dynamic_movement_complete(self):
+    def _is_dynamic_movement_complete(self) -> None:
+        """Execute and check if dynamic cartesian movement should continue or stop.
+        
+        Returns:
+            True if movement should stop, False if it should continue
+        """
         if self.current_state != RobotState.DYNAMIC_MOVEMENT:
             return False
         if self.current_speed_vector != Twist():
@@ -598,7 +718,18 @@ class WeldingCommandHandlerNode(Node):
         return False
 
 
-    def _detect_modular_command_toggle(self, speed_vector):
+    def _detect_modular_command_toggle(self, speed_vector: Twist) -> tuple:
+        """Detect toggle events in modular command inputs from speed vector.
+        
+        Processes speed vector components into discrete modular commands
+        and detects rising/falling edge transitions.
+        
+        Args:
+            speed_vector: Input velocity commands in 6DOF
+            
+        Returns:
+            Tuple of (toggles dict, current_commands dict)
+        """
         # Processing current_speed_vector into modular command instructions
         # Possible values for each instruction : [1, 0, -1]
         current_commands = {
@@ -632,7 +763,12 @@ class WeldingCommandHandlerNode(Node):
         return toggles, current_commands
 
     
-    def _process_modular_control(self):
+    def _process_modular_control(self) -> None:
+        """Process modular control commands for continuum robot manipulation.
+        
+        Handles direct joint-level control of robot modules including
+        azimuth/tilt movements and wrist control.
+        """
         if self.__q_desired is None:
             self.get_logger().info('Waiting /nb/desired_trajectory to be populated')
             return
@@ -644,7 +780,15 @@ class WeldingCommandHandlerNode(Node):
         self._execute_modular_movement()
 
     
-    def _handle_modular_commands(self):
+    def _handle_modular_commands(self) -> None:
+        """Handle modular control command processing and state updates.
+        
+        Processes toggle events to update:
+        - Module/section selection
+        - Velocity settings
+        - Command mode (azimuth/tilt)
+        - Selection mode (module/section)
+        """
         toggles, current_commands = self._detect_modular_command_toggle(self.current_speed_vector)
 
         if toggles['select_module'] == 'rise':
@@ -673,7 +817,12 @@ class WeldingCommandHandlerNode(Node):
             self.get_logger().info(f"Selection mode changed to {'MODULE' if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND  else 'SECTION'}")
 
     
-    def _execute_modular_movement(self):
+    def _execute_modular_movement(self) -> None:
+        """Execute modular movement commands by publishing joint trajectories.
+        
+        Generates and publishes joint-level commands for selected modules
+        based on current modular control state and velocity settings.
+        """
         turn_module = self.current_modular_states['turn_module']
         wrist_command = self.current_modular_states['wrist_command']
 
@@ -741,7 +890,18 @@ class WeldingCommandHandlerNode(Node):
         
  
     def _get_current_pose(self, mimic: bool, timeout_sec: int = SERVICE_TIMEOUT) -> PoseStamped:
-        """Get the current pose of the end-effector in the base frame."""
+        """Get current end-effector pose in base frame.
+        
+        Args:
+            mimic: If True, use mimic frame; if False, use actual robot frame
+            timeout_sec: Timeout for transform lookup
+            
+        Returns:
+            Current pose of end-effector
+            
+        Raises:
+            LookupError: If transform lookup fails
+        """
         ee_frame = self.__ee_frame_mimic if mimic else self.__ee_frame_robot
 
         try:
@@ -750,8 +910,8 @@ class WeldingCommandHandlerNode(Node):
                                                              Time(),
                                                              Duration(seconds=timeout_sec)
                                                              )
-        except:
-            raise LookupError(f"Waiting transform of {ee_frame}")
+        except Exception as e:
+            raise LookupError(f"Waiting transform of {ee_frame}, {e}")
 
         current_pose = PoseStamped(
             header=Header(frame_id=self.__base_frame_robot,
@@ -765,11 +925,19 @@ class WeldingCommandHandlerNode(Node):
                 orientation=current_pose.transform.rotation
             )
         )
-
         return current_pose
 
     
-    def _get_position_error(self, current_pose, target_pose):
+    def _get_position_error(self, current_pose: Pose, target_pose: Pose) -> float:
+        """Calculate euclidean distance between current and target positions.
+        
+        Args:
+            current_pose: Current end-effector pose
+            target_pose: Target end-effector pose
+            
+        Returns:
+            Distance in meters between positions
+        """
         error_vector = [
                     target_pose.position.x - current_pose.position.x,
                     target_pose.position.y - current_pose.position.y,
@@ -778,7 +946,15 @@ class WeldingCommandHandlerNode(Node):
         return np.linalg.norm(error_vector)
 
 
-    def compute_target_pose(self):
+    def compute_target_pose(self) -> Optional["PoseStamped"]:
+        """Compute target pose for dynamic cartesian movement.
+        
+        Integrates current speed vector to generate incremental pose updates
+        for real-time cartesian control.
+        
+        Returns:
+            Target pose message, or None if no movement commanded
+        """
         if self.current_speed_vector == Twist():
             return None
         
@@ -850,7 +1026,15 @@ class WeldingCommandHandlerNode(Node):
         return target_pose_msg
 
     
-    def execute_line(self, current_pose):
+    def execute_line(self, current_pose: Pose) -> bool:
+        """Execute linear trajectory between current and target poses.
+        
+        Args:
+            current_pose: Current end-effector pose
+            
+        Returns:
+            True if trajectory execution is complete, False otherwise
+        """
         try:
             if self.interpolated_line_poses is None:
                 self.interpolated_line_poses = self.generate_interpolated_line(current_pose, self.current_target_pose)
@@ -878,7 +1062,19 @@ class WeldingCommandHandlerNode(Node):
                 return False
 
     
-    def generate_interpolated_line(self, pose1, pose2):
+    def generate_interpolated_line(self, pose1: Pose, pose2: Pose) -> List["PoseStamped"]:
+        """Generate interpolated trajectory between two poses.
+        
+        Creates smooth trajectory with position and orientation interpolation
+        based on configured TCP speed.
+        
+        Args:
+            pose1: Start pose
+            pose2: End pose
+            
+        Returns:
+            List of interpolated poses forming the trajectory
+        """
         pos1 = np.array([
                 pose1.position.x,
                 pose1.position.y,
@@ -932,8 +1128,12 @@ class WeldingCommandHandlerNode(Node):
         return interpolated_line_poses
 
 
-    def _finalize_movement(self):
-        """Finalize a movement and publish status."""
+    def _finalize_movement(self) -> None:
+        """Finalize trajectory execution and publish completion status.
+        
+        Called when a trajectory (cartesian or joint) completes successfully.
+        Publishes status message with robot data.
+        """
         status_msg = CommandStatus()
         status_msg.command_type = Command.COMMAND_PLAY_CARTESIAN if self.current_state == RobotState.CARTESIAN_TRAJECTORY else Command.COMMAND_PLAY_JOINT
         status_msg.success = True
@@ -944,7 +1144,12 @@ class WeldingCommandHandlerNode(Node):
         self.get_logger().info('Movement finished')
 
     
-    def _create_robot_data(self):
+    def _create_robot_data(self) -> RobotData:
+        """Create robot data message with current state.
+        
+        Returns:
+            RobotData message containing current pose, fault status, and error info
+        """
         robot_data = RobotData()
         try:
             current_pose = self._get_current_pose(mimic=False)
@@ -966,7 +1171,15 @@ class WeldingCommandHandlerNode(Node):
         return robot_data
     
 
-    def switch_control_mode(self, mode):
+    def switch_control_mode(self, mode: int) -> Optional[Any]:
+        """Switch robot control mode defined in the multiple command code.
+        
+        Args:
+            mode: Control mode (0=PAUSE, 1=CARTESIAN, 2=MODULAR)
+            
+        Returns:
+            Service call future, or None if failed
+        """
         try:
             if self.current_control_mode == mode:
                 return
@@ -993,7 +1206,19 @@ class WeldingCommandHandlerNode(Node):
             return None
 
    
-    def on_set_zeros(self, request, response):
+    def on_set_zeros(self, request: Empty_srv.Request, response: Empty_srv.Response) -> Empty_srv.Response:
+        """Handle set zeros calibration service request.
+        
+        Calibrates robot joint positions to zero configuration.
+        Must be called in modular control mode.
+        
+        Args:
+            request: Empty service request
+            response: Service response to populate
+            
+        Returns:
+            Service response with success status
+        """
         try:
             if self.current_state != RobotState.MODULAR_CONTROL:
                 self.get_logger().error("Cannot set zeros: robot must be in modular mode")
@@ -1034,7 +1259,12 @@ class WeldingCommandHandlerNode(Node):
             return response
         
 
-    def on_clear_tcp_trace(self, _):
+    def on_clear_tcp_trace(self, msg: Empty) -> None:
+        """Handle TCP trace clearing command from RViz plugin.
+        
+        Args:
+            msg: Empty message triggering trace clear
+        """
         try:
             self.tf_path_trail_nb_base_link_to_nb_tcp_client_clear_path.call_async(Empty_srv.Request())
             self.tf_path_trail_nb_mimic_base_link_to_nb_mimic_tcp_wrist_client_clear_path.call_async(Empty_srv.Request())
@@ -1044,29 +1274,55 @@ class WeldingCommandHandlerNode(Node):
 
 
     def on_desired_trajectory(self, msg: JointTrajectory) -> None:
-        """Update the current pose of the robot."""
+        """Update current joint positions from trajectory feedback.
+        
+        Args:
+            msg: Joint trajectory message with current positions
+        """
         self.__q_desired = list(msg.points[0].positions)
 
 
-    def on_pos_gain_changed(self, msg):
+    def on_pos_gain_changed(self, msg: Float64) -> None:
+        """Handle position gain parameter update from RViz plugin.
+        
+        Args:
+            msg: New position gain value
+        """
         new_gain = msg.data
         self.set_parameters([RclpyParameter('pos_gain', RclpyParameter.Type.DOUBLE, new_gain)])
         self.get_logger().info(f"Position gain updated to: {new_gain:.2f}")
 
 
-    def on_quat_gain_changed(self, msg):
+    def on_quat_gain_changed(self, msg: Float64) -> None:
+        """Handle quaternion gain parameter update from RViz plugin.
+        
+        Args:
+            msg: New quaternion gain value
+        """
         new_gain = msg.data
         self.set_parameters([RclpyParameter('quat_gain', RclpyParameter.Type.DOUBLE, new_gain)])
         self.get_logger().info(f"Quaternion gain updated to: {new_gain:.2f}")
     
     
-    def on_modular_gain_changed(self, msg):
+    def on_modular_gain_changed(self, msg: Float64) -> None:
+        """Handle modular gain parameter update from RViz plugin.
+        
+        Args:
+            msg: New modular gain value
+        """
         new_gain = msg.data
         self.set_parameters([RclpyParameter('modular_gain', RclpyParameter.Type.DOUBLE, new_gain)])
         self.get_logger().info(f"Modular gain updated to: {new_gain:.2f}")
 
     
-    def on_modular_command_toggle(self, msg):
+    def on_modular_command_toggle(self, msg: Bool) -> None:
+        """Handle modular command mode toggle from RViz plugin.
+        
+        Switches between cartesian and modular control modes.
+        
+        Args:
+            msg: Boolean indicating modular mode state
+        """
         try:
             self.modular_control_enabled = msg.data
            
@@ -1086,7 +1342,14 @@ class WeldingCommandHandlerNode(Node):
             self.get_logger().error(f"Error toggling modular mode : {e}")
 
     
-    def on_emergency_stop(self, msg):
+    def on_emergency_stop(self, msg: Bool) -> None:
+        """Handle emergency stop signal from RViz plugin.
+        
+        Immediately stops robot motion and switches to pause mode when activated.
+        
+        Args:
+            msg: Boolean indicating emergency stop state
+        """
         self.emergency_stop = msg.data
         if self.emergency_stop:
             self.get_logger().info('EMERGENCY STOP')
