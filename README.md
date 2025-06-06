@@ -9,13 +9,13 @@ This repository contains all the code necessary to use the WeezTouch controller 
 - A custom RViz plugin `interface_rviz_plugin` and a custom RViz configuration file `projet_soudure.rviz` are included in the repository
 - Mesh publishing for concrete welding applications is available to test the trajectories proposed by WeezU-Welding
 
-Here is the current complete documentation of the project for more information about its features, architecture, and code:
+The complete documentation of the project is available inside the repository at [`documentation/html/`](documentation/html/). After cloning the repository, you can open the `index.html` file in your browser for detailed information.
 
 ## Requirements 
 
 1. Complete the ROS2 configuration page in Notion
 2. Use the upcoming release of the `feat/cartesian_control` branch of the `nimblbot-ros2` packages directory with a `nimblbot_cartesian_command` package that contains a node called `multiple_command.py`
-3. You also need to have the NimblBot-WeezTouch electrical armory connected to your computer with an ethernet cable. To set up the required TCP/IP connection between the two systems, follow these steps: [NimblBot Welding Documentation](https://tcourtois.gitlab.nimbl-bot.com/nimblbot-welding/index.html)
+3. You also need to have the NimblBot-WeezTouch electrical armory connected to your computer with an ethernet cable. To set up the required TCP/IP connection between the two systems, follow these steps: 
 
 ### TCP/IP Connection Setup
 
