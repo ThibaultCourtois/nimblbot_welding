@@ -15,7 +15,7 @@ Here is the current complete documentation of the project for more information a
 
 1. Complete the ROS2 configuration page in Notion
 2. Use the upcoming release of the `feat/cartesian_control` branch of the `nimblbot-ros2` packages directory with a `nimblbot_cartesian_command` package that contains a node called `multiple_command.py`
-3. You also need to have the NimblBot-WeezTouch electrical armory connected to your computer with an ethernet cable. To set up the required TCP/IP connection between the two systems, follow these steps: [NimblBot Welding Documentation](documentation/html/index.html)
+3. You also need to have the NimblBot-WeezTouch electrical armory connected to your computer with an ethernet cable. To set up the required TCP/IP connection between the two systems, follow these steps: [NimblBot Welding Documentation](https://tcourtois.gitlab.io/nimblbot-welding/index.html)
 
 ### TCP/IP Connection Setup
 
