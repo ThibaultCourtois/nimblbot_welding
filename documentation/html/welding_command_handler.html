@@ -1,0 +1,1029 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Welding Command Handler Module &#8212; Telesoud NimblBot Interface 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'welding_command_handler';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interface_Custom_Msgs" href="interface_custom_msgs.html" />
+    <link rel="prev" title="Translator Module" href="translator.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">NimblBot Welding</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="usage.html">
+    Usage Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="packages.html">
+    Packages overview
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="usage.html">
+    Usage Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="packages.html">
+    Packages overview
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Packages:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="telesoud_api.html">Telesoud API Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpio_controllers_iron_all.html">GPIO Controllers Iron Port</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="telesoud_nimblbot_interface.html">Telesoud NimblBot Interface Packages</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="translator.html">Translator Module</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Welding Command Handler Module</a></li>
+</ul><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="interface_custom_msgs.html">Interface_Custom_Msgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface_rviz_plugin.html">Interface Rviz Plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="launch.html">Launch Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="welding_scene_publisher.html">Welding Scene Publisher</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="packages.html" class="nav-link">Packages overview</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="telesoud_nimblbot_interface.html" class="nav-link">Telesoud NimblBot Interface Packages</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Welding Command Handler Module</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-telesoud_nimblbot_interface.welding_command_handler">
+<span id="welding-command-handler-module"></span><h1>Welding Command Handler Module<a class="headerlink" href="#module-telesoud_nimblbot_interface.welding_command_handler" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.ControlMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">telesoud_nimblbot_interface.welding_command_handler.</span></span><span class="sig-name descname"><span class="pre">ControlMode</span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#ControlMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.ControlMode.PAUSE">
+<span class="sig-name descname"><span class="pre">PAUSE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode.PAUSE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.ControlMode.MODULAR">
+<span class="sig-name descname"><span class="pre">MODULAR</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode.MODULAR" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.ControlMode.CARTESIAN">
+<span class="sig-name descname"><span class="pre">CARTESIAN</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode.CARTESIAN" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">telesoud_nimblbot_interface.welding_command_handler.</span></span><span class="sig-name descname"><span class="pre">RobotState</span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#RobotState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Enum-like class for robot state machine</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState.IDLE">
+<span class="sig-name descname"><span class="pre">IDLE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.IDLE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState.DYNAMIC_MOVEMENT">
+<span class="sig-name descname"><span class="pre">DYNAMIC_MOVEMENT</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.DYNAMIC_MOVEMENT" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState.CARTESIAN_TRAJECTORY">
+<span class="sig-name descname"><span class="pre">CARTESIAN_TRAJECTORY</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.CARTESIAN_TRAJECTORY" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState.JOINT_TRAJECTORY">
+<span class="sig-name descname"><span class="pre">JOINT_TRAJECTORY</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.JOINT_TRAJECTORY" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState.MODULAR_CONTROL">
+<span class="sig-name descname"><span class="pre">MODULAR_CONTROL</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.MODULAR_CONTROL" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.RobotState.PAUSE">
+<span class="sig-name descname"><span class="pre">PAUSE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.PAUSE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">telesoud_nimblbot_interface.welding_command_handler.</span></span><span class="sig-name descname"><span class="pre">WeldingCommandHandlerNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the WeldingCommandHandlerNode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_name</strong> – Name of the ROS2 node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._initialize_basic_parameters">
+<span class="sig-name descname"><span class="pre">_initialize_basic_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._initialize_basic_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._initialize_basic_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Initialize basic node parameters and state variables.</p>
+<p>Sets up modular control parameters, command handling state,
+robot state machine variables, and movement parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._setup_transform_infrastructure">
+<span class="sig-name descname"><span class="pre">_setup_transform_infrastructure</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._setup_transform_infrastructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._setup_transform_infrastructure" title="Link to this definition">#</a></dt>
+<dd><p>Setup transform infrastructure and robot configuration.</p>
+<p>Loads robot configuration, sets up TF listeners, and initializes
+kinematic model for the specified robot type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_publishers">
+<span class="sig-name descname"><span class="pre">_create_publishers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._create_publishers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_publishers" title="Link to this definition">#</a></dt>
+<dd><p>Create ROS2 publishers for robot control and status communication.</p>
+<p>Sets up publishers for:
+- Motor lock commands
+- Desired pose commands
+- Joint trajectory commands for modular control
+- Command status feedback
+- Robot state visualization
+- Modular control mode and velocity indicators
+- TCP pose feedback</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_subscriptions">
+<span class="sig-name descname"><span class="pre">_create_subscriptions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._create_subscriptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_subscriptions" title="Link to this definition">#</a></dt>
+<dd><p>Create ROS2 subscriptions for incoming control signals and parameters.</p>
+<p>Sets up subscriptions for:
+- Joint trajectory feedback
+- RViz plugin parameter updates (gains, modular commands)
+- Emergency stop signals
+- TCP trace clearing commands
+- Robot commands from translator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_clients">
+<span class="sig-name descname"><span class="pre">_create_clients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._create_clients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_clients" title="Link to this definition">#</a></dt>
+<dd><p>Create ROS2 service clients for robot control and configuration.</p>
+<p>Sets up clients for:
+- Control mode switching
+- TCP trace path clearing
+- Robot calibration (set zeros)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_services">
+<span class="sig-name descname"><span class="pre">_create_services</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._create_services"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_services" title="Link to this definition">#</a></dt>
+<dd><p>Create ROS2 services provided by this node.</p>
+<p>Sets up services for:
+- Robot calibration (set zeros) requests</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_param">
+<span class="sig-name descname"><span class="pre">_get_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ParameterValue</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._get_param"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_param" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve parameter value from a specified ROS2 node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_name</strong> – Name of the target ROS2 node</p></li>
+<li><p><strong>parameters</strong> – Name of the parameter to retrieve</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parameter value, or empty ParameterValue if failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_command">
+<span class="sig-name descname"><span class="pre">on_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Command</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_command" title="Link to this definition">#</a></dt>
+<dd><p>Handle incoming robot commands from translator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – Command message with type, pose, speed, and other parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.process_pending_command">
+<span class="sig-name descname"><span class="pre">process_pending_command</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.process_pending_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.process_pending_command" title="Link to this definition">#</a></dt>
+<dd><p>Process pending robot command and execute appropriate action.</p>
+<p>Routes commands to specific handlers based on command type and
+publishes command status feedback.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_stop_command">
+<span class="sig-name descname"><span class="pre">_process_stop_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CommandStatus</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_stop_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_stop_command" title="Link to this definition">#</a></dt>
+<dd><p>Process STOP command and handle safety timeout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>status</strong> – CommandStatus object to update with execution result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_get_robot_data">
+<span class="sig-name descname"><span class="pre">_process_get_robot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CommandStatus</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_get_robot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_get_robot_data" title="Link to this definition">#</a></dt>
+<dd><p>Process GET_ROBOT_DATA command and retrieve current robot state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>status</strong> – CommandStatus object to populate with robot data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_set_dynamic">
+<span class="sig-name descname"><span class="pre">_process_set_dynamic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CommandStatus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Twist</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_set_dynamic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_set_dynamic" title="Link to this definition">#</a></dt>
+<dd><p>Process SET_DYNAMIC command to update cartesian speed vector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status</strong> – CommandStatus object to update</p></li>
+<li><p><strong>speed_vector</strong> – Target velocity in cartesian coordinates</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_start_dynamic">
+<span class="sig-name descname"><span class="pre">_process_start_dynamic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CommandStatus</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_start_dynamic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_start_dynamic" title="Link to this definition">#</a></dt>
+<dd><p>Process START_DYNAMIC command to begin dynamic cartesian movement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>status</strong> – CommandStatus object to update with execution result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_play_cartesian">
+<span class="sig-name descname"><span class="pre">_process_play_cartesian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CommandStatus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_play_cartesian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_play_cartesian" title="Link to this definition">#</a></dt>
+<dd><p>Process PLAY_CARTESIAN command for cartesian trajectory execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status</strong> – CommandStatus object to update</p></li>
+<li><p><strong>target_pose</strong> – Target end-effector pose</p></li>
+<li><p><strong>speed</strong> – Movement speed for trajectory</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_play_joint">
+<span class="sig-name descname"><span class="pre">_process_play_joint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CommandStatus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_play_joint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_play_joint" title="Link to this definition">#</a></dt>
+<dd><p>Process PLAY_JOINT command for joint-space trajectory execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status</strong> – CommandStatus object to update</p></li>
+<li><p><strong>target_pose</strong> – Target end-effector pose</p></li>
+<li><p><strong>speed</strong> – Movement speed for trajectory</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._update_state_machine">
+<span class="sig-name descname"><span class="pre">_update_state_machine</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._update_state_machine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._update_state_machine" title="Link to this definition">#</a></dt>
+<dd><p>Update robot state machine and handle state transitions.</p>
+<p>Manages transitions between IDLE, PAUSE, DYNAMIC_MOVEMENT,
+CARTESIAN_TRAJECTORY, JOINT_TRAJECTORY, and MODULAR_CONTROL states.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_cartesian_trajectory_complete">
+<span class="sig-name descname"><span class="pre">_is_cartesian_trajectory_complete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._is_cartesian_trajectory_complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_cartesian_trajectory_complete" title="Link to this definition">#</a></dt>
+<dd><p>Execute and check if cartesian trajectory execution is complete.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if trajectory is finished or should be stopped, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_joint_trajectory_complete">
+<span class="sig-name descname"><span class="pre">_is_joint_trajectory_complete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._is_joint_trajectory_complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_joint_trajectory_complete" title="Link to this definition">#</a></dt>
+<dd><p>Execute and check if joint trajectory execution is complete.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if trajectory is finished or should be stopped, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_dynamic_movement_complete">
+<span class="sig-name descname"><span class="pre">_is_dynamic_movement_complete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._is_dynamic_movement_complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_dynamic_movement_complete" title="Link to this definition">#</a></dt>
+<dd><p>Execute and check if dynamic cartesian movement should continue or stop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if movement should stop, False if it should continue</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._detect_modular_command_toggle">
+<span class="sig-name descname"><span class="pre">_detect_modular_command_toggle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">speed_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Twist</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._detect_modular_command_toggle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._detect_modular_command_toggle" title="Link to this definition">#</a></dt>
+<dd><p>Detect toggle events in modular command inputs from speed vector.</p>
+<p>Processes speed vector components into discrete modular commands
+and detects rising/falling edge transitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>speed_vector</strong> – Input velocity commands in 6DOF</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of (toggles dict, current_commands dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_modular_control">
+<span class="sig-name descname"><span class="pre">_process_modular_control</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._process_modular_control"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_modular_control" title="Link to this definition">#</a></dt>
+<dd><p>Process modular control commands for continuum robot manipulation.</p>
+<p>Handles direct joint-level control of robot modules including
+azimuth/tilt movements and wrist control.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._handle_modular_commands">
+<span class="sig-name descname"><span class="pre">_handle_modular_commands</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._handle_modular_commands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._handle_modular_commands" title="Link to this definition">#</a></dt>
+<dd><p>Handle modular control command processing and state updates.</p>
+<p>Processes toggle events to update:
+- Module/section selection
+- Velocity settings
+- Command mode (azimuth/tilt)
+- Selection mode (module/section)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._execute_modular_movement">
+<span class="sig-name descname"><span class="pre">_execute_modular_movement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._execute_modular_movement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._execute_modular_movement" title="Link to this definition">#</a></dt>
+<dd><p>Execute modular movement commands by publishing joint trajectories.</p>
+<p>Generates and publishes joint-level commands for selected modules
+based on current modular control state and velocity settings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_current_pose">
+<span class="sig-name descname"><span class="pre">_get_current_pose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mimic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_sec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PoseStamped</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._get_current_pose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_current_pose" title="Link to this definition">#</a></dt>
+<dd><p>Get current end-effector pose in base frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mimic</strong> – If True, use mimic frame; if False, use actual robot frame</p></li>
+<li><p><strong>timeout_sec</strong> – Timeout for transform lookup</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Current pose of end-effector</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>LookupError</strong> – If transform lookup fails</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_position_error">
+<span class="sig-name descname"><span class="pre">_get_position_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._get_position_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_position_error" title="Link to this definition">#</a></dt>
+<dd><p>Calculate euclidean distance between current and target positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>current_pose</strong> – Current end-effector pose</p></li>
+<li><p><strong>target_pose</strong> – Target end-effector pose</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Distance in meters between positions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.compute_target_pose">
+<span class="sig-name descname"><span class="pre">compute_target_pose</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PoseStamped</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.compute_target_pose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.compute_target_pose" title="Link to this definition">#</a></dt>
+<dd><p>Compute target pose for dynamic cartesian movement.</p>
+<p>Integrates current speed vector to generate incremental pose updates
+for real-time cartesian control.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Target pose message, or None if no movement commanded</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.execute_line">
+<span class="sig-name descname"><span class="pre">execute_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.execute_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.execute_line" title="Link to this definition">#</a></dt>
+<dd><p>Execute linear trajectory between current and target poses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>current_pose</strong> – Current end-effector pose</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if trajectory execution is complete, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.generate_interpolated_line">
+<span class="sig-name descname"><span class="pre">generate_interpolated_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pose1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pose</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">PoseStamped</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.generate_interpolated_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.generate_interpolated_line" title="Link to this definition">#</a></dt>
+<dd><p>Generate interpolated trajectory between two poses.</p>
+<p>Creates smooth trajectory with position and orientation interpolation
+based on configured TCP speed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pose1</strong> – Start pose</p></li>
+<li><p><strong>pose2</strong> – End pose</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of interpolated poses forming the trajectory</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._finalize_movement">
+<span class="sig-name descname"><span class="pre">_finalize_movement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._finalize_movement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._finalize_movement" title="Link to this definition">#</a></dt>
+<dd><p>Finalize trajectory execution and publish completion status.</p>
+<p>Called when a trajectory (cartesian or joint) completes successfully.
+Publishes status message with robot data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_robot_data">
+<span class="sig-name descname"><span class="pre">_create_robot_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">RobotData</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode._create_robot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_robot_data" title="Link to this definition">#</a></dt>
+<dd><p>Create robot data message with current state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>RobotData message containing current pose, fault status, and error info</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.switch_control_mode">
+<span class="sig-name descname"><span class="pre">switch_control_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.switch_control_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.switch_control_mode" title="Link to this definition">#</a></dt>
+<dd><p>Switch robot control mode defined in the multiple command code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mode</strong> – Control mode (0=PAUSE, 1=CARTESIAN, 2=MODULAR)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Service call future, or None if failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_set_zeros">
+<span class="sig-name descname"><span class="pre">on_set_zeros</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Empty_Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Empty_Response</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Empty_Response</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_set_zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_set_zeros" title="Link to this definition">#</a></dt>
+<dd><p>Handle set zeros calibration service request.</p>
+<p>Calibrates robot joint positions to zero configuration.
+Must be called in modular control mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> – Empty service request</p></li>
+<li><p><strong>response</strong> – Service response to populate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Service response with success status</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_clear_tcp_trace">
+<span class="sig-name descname"><span class="pre">on_clear_tcp_trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Empty</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_clear_tcp_trace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_clear_tcp_trace" title="Link to this definition">#</a></dt>
+<dd><p>Handle TCP trace clearing command from RViz plugin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – Empty message triggering trace clear</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_desired_trajectory">
+<span class="sig-name descname"><span class="pre">on_desired_trajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JointTrajectory</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_desired_trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_desired_trajectory" title="Link to this definition">#</a></dt>
+<dd><p>Update current joint positions from trajectory feedback.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – Joint trajectory message with current positions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_pos_gain_changed">
+<span class="sig-name descname"><span class="pre">on_pos_gain_changed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Float64</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_pos_gain_changed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_pos_gain_changed" title="Link to this definition">#</a></dt>
+<dd><p>Handle position gain parameter update from RViz plugin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – New position gain value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_quat_gain_changed">
+<span class="sig-name descname"><span class="pre">on_quat_gain_changed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Float64</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_quat_gain_changed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_quat_gain_changed" title="Link to this definition">#</a></dt>
+<dd><p>Handle quaternion gain parameter update from RViz plugin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – New quaternion gain value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_modular_gain_changed">
+<span class="sig-name descname"><span class="pre">on_modular_gain_changed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Float64</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_modular_gain_changed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_modular_gain_changed" title="Link to this definition">#</a></dt>
+<dd><p>Handle modular gain parameter update from RViz plugin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – New modular gain value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_modular_command_toggle">
+<span class="sig-name descname"><span class="pre">on_modular_command_toggle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_modular_command_toggle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_modular_command_toggle" title="Link to this definition">#</a></dt>
+<dd><p>Handle modular command mode toggle from RViz plugin.</p>
+<p>Switches between cartesian and modular control modes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – Boolean indicating modular mode state</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_emergency_stop">
+<span class="sig-name descname"><span class="pre">on_emergency_stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#WeldingCommandHandlerNode.on_emergency_stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_emergency_stop" title="Link to this definition">#</a></dt>
+<dd><p>Handle emergency stop signal from RViz plugin.</p>
+<p>Immediately stops robot motion and switches to pause mode when activated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> – Boolean indicating emergency stop state</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="telesoud_nimblbot_interface.welding_command_handler.main">
+<span class="sig-prename descclassname"><span class="pre">telesoud_nimblbot_interface.welding_command_handler.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telesoud_nimblbot_interface/welding_command_handler.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telesoud_nimblbot_interface.welding_command_handler.main" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="translator.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Translator Module</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="interface_custom_msgs.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Interface_Custom_Msgs</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode"><code class="docutils literal notranslate"><span class="pre">ControlMode</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode.PAUSE"><code class="docutils literal notranslate"><span class="pre">ControlMode.PAUSE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode.MODULAR"><code class="docutils literal notranslate"><span class="pre">ControlMode.MODULAR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.ControlMode.CARTESIAN"><code class="docutils literal notranslate"><span class="pre">ControlMode.CARTESIAN</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState"><code class="docutils literal notranslate"><span class="pre">RobotState</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.IDLE"><code class="docutils literal notranslate"><span class="pre">RobotState.IDLE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.DYNAMIC_MOVEMENT"><code class="docutils literal notranslate"><span class="pre">RobotState.DYNAMIC_MOVEMENT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.CARTESIAN_TRAJECTORY"><code class="docutils literal notranslate"><span class="pre">RobotState.CARTESIAN_TRAJECTORY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.JOINT_TRAJECTORY"><code class="docutils literal notranslate"><span class="pre">RobotState.JOINT_TRAJECTORY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.MODULAR_CONTROL"><code class="docutils literal notranslate"><span class="pre">RobotState.MODULAR_CONTROL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.RobotState.PAUSE"><code class="docutils literal notranslate"><span class="pre">RobotState.PAUSE</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.__init__"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._initialize_basic_parameters"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._initialize_basic_parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._setup_transform_infrastructure"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._setup_transform_infrastructure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_publishers"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._create_publishers()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_subscriptions"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._create_subscriptions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_clients"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._create_clients()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_services"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._create_services()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_param"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._get_param()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_command"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_command()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.process_pending_command"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.process_pending_command()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_stop_command"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_stop_command()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_get_robot_data"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_get_robot_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_set_dynamic"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_set_dynamic()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_start_dynamic"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_start_dynamic()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_play_cartesian"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_play_cartesian()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_play_joint"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_play_joint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._update_state_machine"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._update_state_machine()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_cartesian_trajectory_complete"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._is_cartesian_trajectory_complete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_joint_trajectory_complete"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._is_joint_trajectory_complete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._is_dynamic_movement_complete"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._is_dynamic_movement_complete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._detect_modular_command_toggle"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._detect_modular_command_toggle()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._process_modular_control"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._process_modular_control()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._handle_modular_commands"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._handle_modular_commands()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._execute_modular_movement"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._execute_modular_movement()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_current_pose"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._get_current_pose()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._get_position_error"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._get_position_error()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.compute_target_pose"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.compute_target_pose()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.execute_line"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.execute_line()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.generate_interpolated_line"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.generate_interpolated_line()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._finalize_movement"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._finalize_movement()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode._create_robot_data"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode._create_robot_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.switch_control_mode"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.switch_control_mode()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_set_zeros"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_set_zeros()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_clear_tcp_trace"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_clear_tcp_trace()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_desired_trajectory"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_desired_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_pos_gain_changed"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_pos_gain_changed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_quat_gain_changed"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_quat_gain_changed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_modular_gain_changed"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_modular_gain_changed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_modular_command_toggle"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_modular_command_toggle()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.WeldingCommandHandlerNode.on_emergency_stop"><code class="docutils literal notranslate"><span class="pre">WeldingCommandHandlerNode.on_emergency_stop()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoud_nimblbot_interface.welding_command_handler.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/welding_command_handler.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

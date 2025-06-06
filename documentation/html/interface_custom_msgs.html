@@ -1,0 +1,600 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Interface_Custom_Msgs &#8212; Telesoud NimblBot Interface 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'interface_custom_msgs';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interface Rviz Plugin" href="interface_rviz_plugin.html" />
+    <link rel="prev" title="Welding Command Handler Module" href="welding_command_handler.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">NimblBot Welding</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="usage.html">
+    Usage Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="packages.html">
+    Packages overview
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="usage.html">
+    Usage Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="packages.html">
+    Packages overview
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Packages:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="telesoud_api.html">Telesoud API Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpio_controllers_iron_all.html">GPIO Controllers Iron Port</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="telesoud_nimblbot_interface.html">Telesoud NimblBot Interface Packages</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="translator.html">Translator Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welding_command_handler.html">Welding Command Handler Module</a></li>
+</ul><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Interface_Custom_Msgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface_rviz_plugin.html">Interface Rviz Plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="launch.html">Launch Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="welding_scene_publisher.html">Welding Scene Publisher</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="packages.html" class="nav-link">Packages overview</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Interface_Custom_Msgs</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="interface-custom-msgs">
+<h1>Interface_Custom_Msgs<a class="headerlink" href="#interface-custom-msgs" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The Telesoud NimblBot Interface uses custom ROS2 message definitions to handle
+communication between the Telesoud system and robot control components. These
+messages provide structured data exchange with proper type safety and compatibility.</p>
+</section>
+<section id="message-architecture">
+<h2>Message Architecture<a class="headerlink" href="#message-architecture" title="Link to this heading">#</a></h2>
+<p>The message flow follows this pattern:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TelesoudInstruction → Command → CommandStatus → RobotData
+(from Telesoud)      (to robot)  (feedback)     (status)
+</pre></div>
+</div>
+</section>
+<section id="message-definitions">
+<h2>Message Definitions<a class="headerlink" href="#message-definitions" title="Link to this heading">#</a></h2>
+<section id="telesoudinstruction-msg">
+<h3>TelesoudInstruction.msg<a class="headerlink" href="#telesoudinstruction-msg" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Receives instructions from Telesoud system via RPC interface.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>uint16 instruction_code      # Telesoud command type
+float64[6] pose1            # Target pose [x,y,z,roll,pitch,yaw]
+float64[6] speed_vector     # Velocity vector [vx,vy,vz,wx,wy,wz]
+float64 speed               # Movement speed (m/s)
+bool free_drive_btn_status  # Free drive button state
+</pre></div>
+</div>
+<p><strong>Usage</strong>: Published on <code class="docutils literal notranslate"><span class="pre">/telesoud/instructions</span></code> topic by the API node.</p>
+<dl class="simple">
+<dt><strong>Coordinate System</strong>:</dt><dd><ul class="simple">
+<li><p>Position: meters (x, y, z)</p></li>
+<li><p>Orientation: radians (roll, pitch, yaw)</p></li>
+<li><p>Velocity: m/s and rad/s</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="command-msg">
+<h3>Command.msg<a class="headerlink" href="#command-msg" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Internal robot commands translated from Telesoud instructions.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>uint8 command_type                # Robot command type
+uint8 COMMAND_STOP=0             # Stop all movement
+uint8 COMMAND_GET_ROBOT_DATA=1   # Request robot status
+uint8 COMMAND_SET_DYNAMIC=7      # Set dynamic velocity
+uint8 COMMAND_START_DYNAMIC=8    # Start dynamic movement
+uint8 COMMAND_PLAY_CARTESIAN=15  # Execute cartesian trajectory
+uint8 COMMAND_PLAY_JOINT=16      # Execute joint trajectory
+geometry_msgs/Pose target_pose   # Target end-effector pose
+float64 speed                    # Movement speed
+geometry_msgs/Twist speed_vector # Cartesian velocity vector
+uint32 command_id               # Unique command identifier
+</pre></div>
+</div>
+<p><strong>Usage</strong>: Published on <code class="docutils literal notranslate"><span class="pre">/translator/command</span></code> topic by TranslatorNode.</p>
+<p><strong>Command Types</strong>:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Command Type Reference</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 10.0%" />
+<col style="width: 20.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Code</p></th>
+<th class="head"><p>Command</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>STOP</p></td>
+<td><p>Emergency stop all robot movements</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>GET_ROBOT_DATA</p></td>
+<td><p>Request current robot state and pose</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>SET_DYNAMIC</p></td>
+<td><p>Update dynamic movement velocity vector</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>START_DYNAMIC</p></td>
+<td><p>Begin real-time cartesian velocity control</p></td>
+</tr>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>PLAY_CARTESIAN</p></td>
+<td><p>Execute cartesian trajectory to target pose</p></td>
+</tr>
+<tr class="row-odd"><td><p>16</p></td>
+<td><p>PLAY_JOINT</p></td>
+<td><p>Execute joint-space trajectory to target pose</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="commandstatus-msg">
+<h3>CommandStatus.msg<a class="headerlink" href="#commandstatus-msg" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Execution feedback from robot control system.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>uint32 command_id        # Matching command identifier
+bool success            # Execution success/failure
+string message          # Status description or error details
+uint8 command_type      # Echo of original command type
+RobotData robot_data    # Current robot state (optional)
+</pre></div>
+</div>
+<p><strong>Usage</strong>: Published on <code class="docutils literal notranslate"><span class="pre">/welding_command_handler/command_status</span></code> topic.</p>
+<dl class="simple">
+<dt><strong>Status Flow</strong>:</dt><dd><ol class="arabic simple">
+<li><p>Command received with unique ID</p></li>
+<li><p>Execution attempted by robot controller</p></li>
+<li><p>Status published with same ID for tracking</p></li>
+<li><p>Includes current robot data if available</p></li>
+</ol>
+</dd>
+</dl>
+</section>
+<section id="robotdata-msg">
+<h3>RobotData.msg<a class="headerlink" href="#robotdata-msg" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Comprehensive robot state and pose information.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Position data
+geometry_msgs/Pose pose          # Current pose (position + quaternion)
+float64[] xyzwpr                # Euler format [x,y,z,roll,pitch,yaw]
+
+# Robot states
+bool robot_in_fault_status      # Hardware fault detected
+string error_message            # Fault description
+bool robot_in_slave_mode_status # Compatibility field (unused)
+bool collision_status           # Compatibility field (unused)
+bool emergency_stop             # Compatibility field (unused)
+bool welding_trigger_plc_signal # Welding activation signal
+uint8 operation_mode           # Welding operation mode
+
+# Timestamp
+builtin_interfaces/Time timestamp # Data acquisition time
+</pre></div>
+</div>
+<dl class="simple">
+<dt><strong>Usage</strong>:</dt><dd><ul class="simple">
+<li><p>Embedded in CommandStatus messages</p></li>
+<li><p>Published on <code class="docutils literal notranslate"><span class="pre">/translator/robotData</span></code> topic for Telesoud feedback</p></li>
+</ul>
+</dd>
+<dt><strong>Pose Formats</strong>:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pose</span></code>: Standard ROS geometry_msgs/Pose (quaternion orientation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xyzwpr</span></code>: Telesoud-compatible format (Euler angles in radians)</p></li>
+</ul>
+</dd>
+<dt><strong>Operation Modes</strong>:</dt><dd><ul class="simple">
+<li><p>0 = Auto mode</p></li>
+<li><p>1 = 4T welding mode</p></li>
+<li><p>2 = 2T welding mode</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="message-flow-example">
+<h2>Message Flow Example<a class="headerlink" href="#message-flow-example" title="Link to this heading">#</a></h2>
+<section id="cartesian-movement">
+<h3>Cartesian Movement<a class="headerlink" href="#cartesian-movement" title="Link to this heading">#</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1. Telesoud → TelesoudInstruction (instruction_code=15, pose1=[0.5,0.2,0.3,0,0,1.57])
+2. Translator → Command (COMMAND_PLAY_CARTESIAN, target_pose, command_id=123)
+3. Robot Controller → CommandStatus (command_id=123, success=true, robot_data)
+4. Translator → RobotData (current pose, status)
+</pre></div>
+</div>
+<p>The messages are defined in the <code class="docutils literal notranslate"><span class="pre">interface_custom_msgs</span></code> package and must be
+built before the main telesoud_nimblbot_interface package.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="welding_command_handler.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Welding Command Handler Module</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="interface_rviz_plugin.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Interface Rviz Plugin</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#message-architecture">Message Architecture</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#message-definitions">Message Definitions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#telesoudinstruction-msg">TelesoudInstruction.msg</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#command-msg">Command.msg</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commandstatus-msg">CommandStatus.msg</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#robotdata-msg">RobotData.msg</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#message-flow-example">Message Flow Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cartesian-movement">Cartesian Movement</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/interface_custom_msgs.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

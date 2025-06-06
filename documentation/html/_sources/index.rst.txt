@@ -1,0 +1,28 @@
+Nimbl'bot Welding Documentation
+===============================
+**Project Description** : 
+This project provides a complete interface between Telesoud welding systems and 
+NimblBot robots, enabling trajectory generation from robot teleoperation and there execution.
+
+- **Project repository** : https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding
+- **Additional informations**: :download:`Documentary package<_static/20250321 - Weez-U Welding - Package documentaire pour Nimbl'bot.pptx.pdf>` 
+
+**Documentation Description** :  
+This documentation provides comprehensive coverage of the Telesoud/NimblBot 
+interface system, including all API components and detailed focus on the 
+:doc:`telesoud_nimblbot_interface` package - the core ROS2 Python package of 
+this repository.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents of this documentation:
+   
+   usage
+   packages
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+
