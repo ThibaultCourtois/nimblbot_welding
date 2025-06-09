@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-
+import os
 import rclpy
 from rclpy.node import Node
 from rclpy.duration import Duration
 from visualization_msgs.msg import Marker, MarkerArray
+from ament_index_python.packages import get_package_share_directory
 
-class welding_scene_publisher(Node):
+CYLINDRE_PATH = 'file://' + os.path.join(get_package_share_directory('welding_scene_publisher'), 'scene_meshes', 'Cylindre.stl')
+SADDLE_PATH = 'file://' + os.path.join(get_package_share_directory('welding_scene_publisher'), 'scene_meshes', 'SoudureSelleCheval.stl')
+
+class welding_mesh_publisher(Node):
     def __init__(self):
         super().__init__('welding_scene_publisher')
         
@@ -15,26 +19,26 @@ class welding_scene_publisher(Node):
     def publish_stls(self):
         marker_array = MarkerArray()
         
-        marker1 = self.create_stl_marker(
+        cylindre = self.create_stl_marker(
             id=0,
-            mesh_path='file:///home/thibault/Documents/Cylindre.stl',
+            mesh_path=CYLINDRE_PATH,
             pos_x=0.0, pos_y=-0.3, pos_z=0.0,
             ori_x=0.0, ori_y=0.0, ori_z=0.0, ori_w=1.0,
             scale_x=0.001, scale_y=0.001, scale_z=0.001,
             color_r=0.7, color_g=0.7, color_b=0.7, color_a=1.0
         )
         
-        marker2 = self.create_stl_marker(
+        saddle = self.create_stl_marker(
             id=1,
-            mesh_path='file:///home/thibault/Documents/SoudureSelleCheval.stl',
+            mesh_path=SADDLE_PATH,
             pos_x=0.0, pos_y=0.3, pos_z=0.0,
             ori_x=0.0, ori_y=0.0, ori_z=0.7071068, ori_w=0.7071068,
             scale_x=0.001, scale_y=0.001, scale_z=0.001,
             color_r=0.7, color_g=0.7, color_b=0.7, color_a=1.0
         )
         
-        marker_array.markers.append(marker1)
-        marker_array.markers.append(marker2)
+        marker_array.markers.append(cylindre)
+        marker_array.markers.append(saddle)
         self.marker_pub_.publish(marker_array)
 
     def create_stl_marker(self, id, mesh_path, pos_x, pos_y, pos_z,
@@ -45,7 +49,7 @@ class welding_scene_publisher(Node):
         marker = Marker()
         
         # Header
-        marker.header.frame_id = "/nb/base_link"
+        marker.header.frame_id = "nb/base_link"
         marker.header.stamp = self.get_clock().now().to_msg()
         
         # Marker properties
@@ -84,7 +88,7 @@ class welding_scene_publisher(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = welding_scene_publisher()
+    node = welding_mesh_publisher()
     
     try:
         rclpy.spin(node)

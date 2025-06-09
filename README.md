@@ -19,86 +19,71 @@ The complete documentation of the project is available inside the repository at 
 
 ### TCP/IP Connection Setup
 
-1. **Power on the electrical armory** (this will start the WeezTouch, which will remain on its starting menu)
+1. **Power on the electrical armory** 
+    - This will turn on the WeezTouch controller and the Telesoud system especielly the AEON industrial computer.
 
-2. **Find your computer's IP address:**
-   - On the NimblBot computer, open a terminal and run `ip addr show`
-   - Look for the IP address of interface `enp58s0` with status `<BROADCAST, MULTICAST, UP, LOWER_UP>`
-   - Note down this IP address (format: xxx.xxx.xxx.xxx)
-
-3. **Access the Telesoud computer:**
-   - Use the keyboard of the electrical armory and press `Ctrl+Alt+F2` to open a session on the Telesoud computer
-   - Login credentials: 
-     - Username: `weez-u-welding`
-     - Password: `0000`
-
-4. **Configure the WeezTouch IP settings:**
-   - Run the following command to open the WeezTouch configuration file:
-     ```bash
-     nano ../runtime/Telesoud_V1/_runtime/user-config/welding-config.yml
-     ```
-   - Find the following section:
-     ```yaml
-     robot:
-       type: WeezLite
-     ```
-   - Locate the `weezliteConfig` section and update the IP address to match the one you found in step 2:
-     ```yaml
-     weezliteConfig:
-       loopPeriod: 25
-       tcpConnectionConfig:
-         ipAddress: xxx.xxx.xxx.xxx  # Replace with your computer's IP
-     ```
-
-5. **Save and restart:**
-   - Save the file (`Ctrl+X`, then `Y`, then `Enter`)
-   - Reboot the electrical armory for the changes to take effect
-
-You should now be able to fully use the WeezTouch controller and pass the starting screen you had before the IP setup.
+2. **Set up computer's IP address:**
+   - On the NimblBot computer, open a terminal and run `ip link show`
+   - Look for the device name of the interface with status `<BROADCAST, MULTICAST, UP, LOWER_UP>` corresponding to the cabled ethernet interface (it should begin with `enp`)
+   - Then configure your IP adress for the Telesoud computer network (`192.168.10.1`) by running the following line : 
+   ```bash
+   sudo ip addr add 192.168.10.2 dev <your device name>
+   sudo ip link set <your device name> up
+   ```
+   - Now you should be able to ping the Telesoud computer `ping 192.168.10.1` from Nimbl'bot computer, the TCP/IP connexion is estalished
 
 ## Installation
 1. Clone this repository into your ROS2 workspace: 
     
-    ``` bash
+    ```bash
     roscd
     cd src
     git clone ssh://git@gitlab.nimbl-bot.com:9022/tcourtois/nimblbot-welding.git
     ```
 
-2. First build the following packages :
-  
-    ``` bash
-    roscd
-    colcon build --packages_select custom_control_msgs custom_realtime_tools --symlink-install
+2. By cloning this repository you downloaded the following file : `rcplib_2.3.0-1_amd64.deb`. This C++ library is required for the RPC communication protocole used by the package `telesoud_api`. Run the following command to install it in your home directory : 
+    ```
+    mkdir -p ~/.local && dpkg-deb -x rpclib_2.3.0-1_amd64.deb temp && cp -r temp/usr/local/* ~/.local/ && rm -rf temp
+    ```
+    
+3. Next install the following dependencies required for the installation (`test-msgs` is necessary for `gpio_controllers_iron` and `ros-iron-usb-cam` is used for NB-55 torch laser device) :
+    ```bash
+    cd ~
+    sudo apt install ros-iron-test-msgs
+    sudo apt install ros-iron-usb-cam
     ```
 
-3. Then you can build gpio_controllers_iron : 
-
-    ``` bash
+4. Build the two dependencies of gpio_controllers_iron : 
+    ```bash
     roscd
-    colcon build --packages_select gpio_controllers_iron --symlink-install
+    colcon build --packages-select custom_control_msgs custom_realtime_tools --symlink-install
     ```
 
-4. Finally you can build every other packages of the repository : 
+5. Then you can build gpio_controllers_iron : 
 
-    ``` bash
+    ```bash
     roscd
-    colcon build --packages_select interface_custom_msgs interface_rviz_plugin telesoud_api telesoud_nimblbot_interface welding_scene_publisher --symlink-install
+    colcon build --packages-select gpio_controllers_iron --symlink-install
+    ```
+
+6. Finally you can build every other packages of the repository : 
+
+    ```bash
+    roscd
+    colcon build --packages-select interface_custom_msgs interface_rviz_plugin telesoud_api telesoud_nimblbot_interface welding_scene_publisher --symlink-install
     ```
 
 ## Usage
 
 ### Launch in simulation only with a NB-55:
 
-    ``` bash
-    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=True
-    ```
+    `ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=True`
+    
 
 ### Launch with a real NB-120 robot : 
 
-    ```bash
-    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_120.launch.py simulation:=False
-    ```
+    `ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_120.launch.py simulation:=False`
+    
 
 ## Rviz Plugin
 In Rviz if the custom panel don't show up directly go to `Panels`,  `Add New Panel` and select the panel inside the `interface_rviz_plugin directory`
