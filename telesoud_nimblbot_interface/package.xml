@@ -14,7 +14,7 @@
   <depend>tf2_ros</depend>
   <depend>moveit_msgs</depend>
   <depend>tf_transformations</depend>
-  <depend>interface_custom_mgs</depend>
+  <depend>interface_custom_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>rcl_interfaces</depend>

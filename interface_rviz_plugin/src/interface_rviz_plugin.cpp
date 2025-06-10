@@ -388,7 +388,7 @@ namespace interface_rviz_plugin
     if (config.mapGetFloat("modular_gain", &modular_gain))
     {
       modular_gain_ = modular_gain;
-      modular_gain_slider_->setValue(static_cast<int>(modular_gain_ * 10.0));
+      modular_gain_slider_->setValue(static_cast<int>(modular_gain_));
     }
     bool modular_command_active;
     if (config.mapGetBool("modular_command_active", &modular_command_active))

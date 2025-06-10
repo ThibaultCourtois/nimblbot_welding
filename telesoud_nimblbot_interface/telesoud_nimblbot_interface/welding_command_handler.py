@@ -1156,9 +1156,6 @@ class WeldingCommandHandlerNode(Node):
             robot_data.pose = current_pose.pose
             self.tcp_pose = current_pose.pose
             
-            if self.current_state == RobotState.DYNAMIC_MOVEMENT and self.virtual_pose_initialized:
-                robot_data.pose = self.virtual_pose.pose
-        
         except Exception as e:
             self.get_logger().debug(f'Transform not available yet : {e}')
             default_pose = Pose()

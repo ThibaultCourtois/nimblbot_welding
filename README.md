@@ -51,12 +51,14 @@ The complete documentation of the project is available inside the repository at 
     cd ~
     sudo apt install ros-iron-test-msgs
     sudo apt install ros-iron-usb-cam
+    source ~/.zshrc
     ```
 
 4. Build the two dependencies of gpio_controllers_iron : 
     ```bash
     roscd
     colcon build --packages-select custom_control_msgs custom_realtime_tools --symlink-install
+    source ~/.zshrc
     ```
 
 5. Then you can build gpio_controllers_iron : 
@@ -64,6 +66,7 @@ The complete documentation of the project is available inside the repository at 
     ```bash
     roscd
     colcon build --packages-select gpio_controllers_iron --symlink-install
+    source ~/.zshrc
     ```
 
 6. Finally you can build every other packages of the repository : 
@@ -71,18 +74,19 @@ The complete documentation of the project is available inside the repository at 
     ```bash
     roscd
     colcon build --packages-select interface_custom_msgs interface_rviz_plugin telesoud_api telesoud_nimblbot_interface welding_scene_publisher --symlink-install
+    source ~/.zshrc
     ```
 
 ## Usage
 
 ### Launch in simulation only with a NB-55:
 
-    `ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=True`
+    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=True
     
 
 ### Launch with a real NB-120 robot : 
 
-    `ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_120.launch.py simulation:=False`
+    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_120.launch.py simulation:=False
     
 
 ## Rviz Plugin
