@@ -51,8 +51,8 @@ ALL_SELECT_COMMAND = 2
 
 class ControlMode:
     PAUSE: int=0
-    MODULAR: int=1
-    CARTESIAN : int=2
+    TELEOP_XYZ: int=1
+    TELEOP_MODULE : int=2
 
 class RobotState:
     """Enum-like class for robot state machine"""
@@ -436,7 +436,6 @@ class WeldingCommandHandlerNode(Node):
             'speed_vector': msg.speed_vector,
         }
         self.pending_command = True
-        return
 
     
     def process_pending_command(self) -> None:
@@ -514,7 +513,7 @@ class WeldingCommandHandlerNode(Node):
             self.last_command_type = 0
 
         if self.stop_command_counter >= STOP_COMMAND_THRESHOLD and not self.current_control_mode == ControlMode.PAUSE and not self.emergency_stop:
-            self.switch_control_mode(0) # ControlMode.PAUSE
+            self.switch_control_mode(ControlMode.PAUSE)
             self.current_state = RobotState.PAUSE
             self.stop_command_counter = 0
 
@@ -556,7 +555,7 @@ class WeldingCommandHandlerNode(Node):
         Args:
             status: CommandStatus object to update with execution result
         """
-        self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
+        self.switch_control_mode(ControlMode.TELEOP_XYZ)
         self.current_state = RobotState.DYNAMIC_MOVEMENT
         status.success = True
         status.message = "Dynamic cartesian movement started"
@@ -573,7 +572,7 @@ class WeldingCommandHandlerNode(Node):
         self.tcp_speed = speed * SPEED_CORRECTION_FACTOR
         self.current_target_pose = target_pose
         
-        self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
+        self.switch_control_mode(ControlMode.TELEOP_XYZ)
 
         self.interpolated_line_poses = None
         self.line_progression_index = 0
@@ -594,7 +593,7 @@ class WeldingCommandHandlerNode(Node):
         self.tcp_speed = speed * SPEED_CORRECTION_FACTOR
         self.current_target_pose = target_pose
         
-        self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
+        self.switch_control_mode(ControlMode.TELEOP_XYZ)
 
         self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg()
         self._pose_stamped_msg.pose = self.current_target_pose
@@ -685,8 +684,6 @@ class WeldingCommandHandlerNode(Node):
                 current_pose = self._get_current_pose(mimic=False)
                 if current_pose:
                     error = self._get_position_error(current_pose.pose, self.current_target_pose)
-                    POSITION_EPSILON = 0.001
-
                     if error <= POSITION_EPSILON:
                         request = SetParameters.Request()
                         param_value = ParameterValue()
@@ -1055,8 +1052,6 @@ class WeldingCommandHandlerNode(Node):
 
             if self.line_progression_index >= len(self.interpolated_line_poses) - 1:
                 error = self._get_position_error(current_pose, self.current_target_pose)
-                POSITION_EPSILON = 0.001
-
                 if error <= POSITION_EPSILON:
                     self._finalize_movement()
                     self.get_logger().info('Linear welding finished')
@@ -1186,7 +1181,7 @@ class WeldingCommandHandlerNode(Node):
                 return
             
             self.resuming_flag = (self.current_control_mode == ControlMode.PAUSE and mode != ControlMode.PAUSE) 
-            self.modular_control_enabled &= (mode != ControlMode.MODULAR)
+            self.modular_control_enabled &= (mode != ControlMode.TELEOP_MODULE)
             self.current_control_mode = mode
 
             if not self.change_control_mode_client.wait_for_service(timeout_sec = SERVICE_TIMEOUT):
@@ -1331,11 +1326,11 @@ class WeldingCommandHandlerNode(Node):
                 self.previous_state = self.current_state
                 self.current_state = RobotState.MODULAR_CONTROL
                 
-                self.switch_control_mode(2) #ControlMode.TELEOP_MODULE
+                self.switch_control_mode(ControlMode.TELEOP_MODULE) 
                 self.get_logger().info("Switched to modular command mode")
             else:
                 if self.current_state == RobotState.MODULAR_CONTROL:
-                    self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
+                    self.switch_control_mode(ControlMode.TELEOP_XYZ) 
                     self.current_state = RobotState.IDLE
 
                 self.get_logger().info("Switched to cartesian control mode")
