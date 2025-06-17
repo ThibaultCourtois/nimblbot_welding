@@ -480,7 +480,6 @@ class WeldingCommandHandlerNode(Node):
                 self.get_logger().error(f"Error in command processing: {e}")
         
         self.status_pub.publish(status)
-        self.tcp_pose_pub.publish(self.tcp_pose)
 
 
     def _process_stop_command(self, status: CommandStatus) -> None:
@@ -636,6 +635,8 @@ class WeldingCommandHandlerNode(Node):
         
         robotState_msg = String() 
         robotState_msg.data = STATE_NAMES[self.current_state]
+        if self.tcp_pose:
+            self.tcp_pose_pub.publish(self.tcp_pose)
         self.robotState_pub.publish(robotState_msg)
    
 
@@ -711,6 +712,7 @@ class WeldingCommandHandlerNode(Node):
                 target_pose_msg.header.stamp = self.get_clock().now().to_msg() 
                 self.desired_pose_pub.publish(target_pose_msg)
         if self.stop_command_counter > 0:
+            self.get_logger().info('OUI')
             self.current_state = RobotState.IDLE
             self.virtual_pose_initialized = False
             self.virtual_pose = None
@@ -894,13 +896,13 @@ class WeldingCommandHandlerNode(Node):
         
         Args:
             mimic: If True, use mimic frame; if False, use actual robot frame
-            timeout_sec: Timeout for transform lookup
+            timeout_sec: Timeout for trarnsform lookup
             
         Returns:
             Current pose of end-effector
             
         Raises:
-            LookupError: If transform lookup fails
+            LookupError: If transform looekup fails
         """
         ee_frame = self.__ee_frame_mimic if mimic else self.__ee_frame_robot
 
@@ -1153,7 +1155,7 @@ class WeldingCommandHandlerNode(Node):
         robot_data = RobotData()
         try:
             current_pose = self._get_current_pose(mimic=False)
-            robot_data.pose = current_pose.pose
+            robot_data.pose = self.virtual_pose.pose if self.virtual_pose_initialized else current_pose.pose
             self.tcp_pose = current_pose.pose
             
         except Exception as e:

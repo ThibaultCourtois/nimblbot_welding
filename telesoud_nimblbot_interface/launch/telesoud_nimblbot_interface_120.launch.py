@@ -111,7 +111,7 @@ def generate_launch_description():
                     '0.075',
                     '0.0',
                     '1.5707',
-                    '0.0',
+                    '3.14159265359',
                     'nb/wrist',
                     'file://' + os.path.join(get_package_share_directory('telesoud_nimblbot_interface'), 'welding_meshes', 'TorchBracket.stl'),
                     '0.001',
