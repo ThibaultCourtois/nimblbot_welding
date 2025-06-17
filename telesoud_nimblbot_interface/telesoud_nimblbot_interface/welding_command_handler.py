@@ -20,7 +20,6 @@ from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from rcl_interfaces.srv import GetParameters, SetParameters
 from nimblpy.common.robot_loader import load_robot_config
-from nimblpy.kinematics.kin_model import KinematicModel
 from interface_custom_msgs.msg import RobotData, Command, CommandStatus
 from typing import List, Optional, Any
 
@@ -199,7 +198,6 @@ class WeldingCommandHandlerNode(Node):
             self.__num_modules = conf["robot_configuration"]["num_modules"]
             self.__num_sections = self.__num_modules // 3
             self.__num_joints = 2 * self.__num_modules + self.__terminal_wrist
-            self.__model = KinematicModel(conf, None)
             
             # Get joint names
             alias = conf['low_level_control']['alias']
@@ -295,35 +293,35 @@ class WeldingCommandHandlerNode(Node):
         )
 
         # Rviz plugin 
-        self.pos_gain_sub = self.create_subscription(
+        _ = self.create_subscription(
             Float64,
             '/rviz_plugin/pos_gain',
             self.on_pos_gain_changed,
             10
         )
 
-        self.quat_gain_sub = self.create_subscription(
+        _ = self.create_subscription(
             Float64,
             '/rviz_plugin/quat_gain',
             self.on_quat_gain_changed,
             10
         )
 
-        self.modular_gain_sub = self.create_subscription(
+        _ = self.create_subscription(
             Float64,
             'rviz_plugin/modular_gain',
             self.on_modular_gain_changed,
             10
         )
 
-        self.modular_command_toggle_sub = self.create_subscription(
+        _ = self.create_subscription(
             Bool, 
             '/rviz_plugin/modular_command_state',
             self.on_modular_command_toggle,
             10
         )
 
-        self.emergency_stop_sub = self.create_subscription(
+        _ = self.create_subscription(
             Bool,
             '/rviz_plugin/emergency_stop',
             self.on_emergency_stop,
@@ -339,7 +337,7 @@ class WeldingCommandHandlerNode(Node):
         )
 
         # Telesoud interface subscribers
-        self.command_sub = self.create_subscription(
+        _ = self.create_subscription(
             Command,
             '/translator/command',
             self.on_command,

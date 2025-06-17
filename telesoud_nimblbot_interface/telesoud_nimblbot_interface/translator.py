@@ -5,6 +5,14 @@ from interface_custom_msgs.msg import TelesoudInstruction, RobotData, Command, C
 from typing import List
 from geometry_msgs.msg import Pose
 
+# Hard-coded unused Telesoud parameters
+ROBOT_IN_SLAVE_MODE_STATUS = False
+COLLISION_STATUS = False
+EMERGENCY_STOP = False
+WELDING_TRIGGER_PLC_SIGNAL = False
+OPERATION_MODE = 2 # 0 = Auto, 1 = 4T, 2 = 2T
+
+
 class TranslatorNode(Node):
     def __init__(self) -> None:
         """Initialize the TranslatorNode.
@@ -43,14 +51,14 @@ class TranslatorNode(Node):
         - Telesoud instructions
         - Command status feedback from welding command handler
         """
-        self.instruction_sub = self.create_subscription(
+        _ = self.create_subscription(
             TelesoudInstruction, 
             '/telesoud/instructions',
             self._on_telesoud_instructions,
             10
         )
 
-        self.command_status_sub = self.create_subscription(
+        _ = self.create_subscription(
             CommandStatus,
             '/welding_command_handler/command_status',
             self._on_command_status,
@@ -226,11 +234,12 @@ class TranslatorNode(Node):
             self._robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
             self._robot_data_msg.error_message = robot_data.error_message
             self._robot_data_msg.xyzwpr = xyzwpr
-            self._robot_data_msg.robot_in_slave_mode_status = False
-            self._robot_data_msg.collision_status = False
-            self._robot_data_msg.emergency_stop = False
-            self._robot_data_msg.welding_trigger_plc_signal = False
-            self._robot_data_msg.operation_mode = 1
+
+            self._robot_data_msg.robot_in_slave_mode_status = ROBOT_IN_SLAVE_MODE_STATUS
+            self._robot_data_msg.collision_status = COLLISION_STATUS
+            self._robot_data_msg.emergency_stop = EMERGENCY_STOP
+            self._robot_data_msg.welding_trigger_plc_signal = WELDING_TRIGGER_PLC_SIGNAL
+            self._robot_data_msg.operation_mode = OPERATION_MODE
             
             self.robot_data_pub.publish(self._robot_data_msg)
             
