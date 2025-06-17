@@ -171,7 +171,8 @@ class WeldingCommandHandlerNode(Node):
         # Cartesian movement interpolation
         self.interpolated_line_poses = None
         self.line_progression_index = 0
-
+        # timestamp
+        self.command_start_timestamp = None
     
     def _setup_transform_infrastructure(self) -> None:
         """Setup transform infrastructure and robot configuration.
@@ -451,6 +452,8 @@ class WeldingCommandHandlerNode(Node):
         command_type = data['command_type']
         command_id = data['command_id']
 
+        self.command_start_timestamp = self.get_clock().now().to_msg()
+
         if command_type != 0:
             self.stop_command_counter = 0
             self.last_command_type = command_type
@@ -595,8 +598,8 @@ class WeldingCommandHandlerNode(Node):
         
         self.switch_control_mode(ControlMode.TELEOP_XYZ)
 
-        self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg()
         self._pose_stamped_msg.pose = self.current_target_pose
+        self._pose_stamped_msg.header.stamp = self.command_start_timestamp
         
         self.desired_pose_pub.publish(self._pose_stamped_msg)
         
@@ -699,8 +702,8 @@ class WeldingCommandHandlerNode(Node):
                         self.current_state = RobotState.IDLE
                         return True
 
-                self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg()
                 self._pose_stamped_msg.pose = self.current_target_pose
+                self._pose_stamped_msg.header.stamp = self.command_start_timestamp
 
                 self.desired_pose_pub.publish(self._pose_stamped_msg)
             except Exception as e:
@@ -719,7 +722,6 @@ class WeldingCommandHandlerNode(Node):
         if self.current_speed_vector != self._twist_msg:
             target_pose_msg = self.compute_target_pose()
             if target_pose_msg:
-                target_pose_msg.header.stamp = self.get_clock().now().to_msg() 
                 self.desired_pose_pub.publish(target_pose_msg)
         if self.stop_command_counter > 0:
             self.get_logger().info('OUI')
@@ -1163,7 +1165,7 @@ class WeldingCommandHandlerNode(Node):
 
         self._robot_data_msg.robot_in_fault_status = self.robot_in_fault_status
         self._robot_data_msg.error_message = self.current_error
-        self._robot_data_msg.timestamp = self.get_clock().now().to_msg()
+        self._robot_data_msg.timestamp = current_pose.header.stamp
         return self._robot_data_msg
     
 
