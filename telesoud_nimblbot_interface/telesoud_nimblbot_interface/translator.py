@@ -273,7 +273,7 @@ class TranslatorNode(Node):
             if len(pose) < 6:
                 raise ValueError(f'Pose array too short: {len(pose)} element, need 6')
            
-           x, y, z, roll, pitch, yaw = [float(val) for val in pose[:6]]
+            x, y, z, roll, pitch, yaw = [float(val) for val in pose[:6]]
 
         except (ValueError, TypeError, IndexError) as e:
             raise ValueError(f'Invalid pose data: {e}')
