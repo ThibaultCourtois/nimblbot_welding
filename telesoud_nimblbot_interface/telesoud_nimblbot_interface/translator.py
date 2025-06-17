@@ -22,12 +22,19 @@ class TranslatorNode(Node):
         # Command for welding_command
         self.next_command_id = 0
         self.pending_commands = {}
-
-        self.instruction_timer = self.create_timer(0.02, self.process_pending_instruction)
         
         self._create_subscriptions()
         self._create_publishers()
-                       
+        self._initialize_reusable_ros_msg_objects()
+
+        self.instruction_timer = self.create_timer(0.02, self.process_pending_instruction)
+        
+
+    def _initialize_reusable_ros_msg_objects(self) -> None:
+        ''' Initialize reusable ROS message objects to avoid repeated instantiation'''
+        self._command_msg = Command()
+        self._robot_data_msg = RobotData()
+        
     
     def _create_subscriptions(self) -> None:
         """Create ROS2 subscriptions for incoming messages.
@@ -109,11 +116,10 @@ class TranslatorNode(Node):
 
         self.pending_instruction = False
 
-        command = Command()
-        command.command_id = self.next_command_id
+        self._command_msg.command_id = self.next_command_id
         self.next_command_id += 1
 
-        self.pending_commands[command.command_id] = {
+        self.pending_commands[self._command_msg.command_id] = {
             'instruction': instruction,
             'timestamp': self.get_clock().now()
         }
@@ -121,50 +127,50 @@ class TranslatorNode(Node):
         if instruction is not None:
             match instruction:
                 case 0:
-                    command.command_type = Command.COMMAND_STOP
+                    self._command_msg.command_type = Command.COMMAND_STOP
                     self.get_logger().debug('Instruction STOP')
                     
                 case 1:
-                    command.command_type = Command.COMMAND_GET_ROBOT_DATA
+                    self._command_msg.command_type = Command.COMMAND_GET_ROBOT_DATA
                     self.get_logger().debug('Instruction GET ROBOT DATA')
                     
                 case 7:
-                    command.command_type = Command.COMMAND_SET_DYNAMIC
+                    self._command_msg.command_type = Command.COMMAND_SET_DYNAMIC
                     self.get_logger().debug('Instruction SET DYNAMIC CARTESIAN MOVEMENT')
 
                     if tcp_speed_vector is not None and len(pose1) > 0:
-                        command.speed_vector.linear.x = tcp_speed_vector[0]
-                        command.speed_vector.linear.y = tcp_speed_vector[1]
-                        command.speed_vector.linear.z = tcp_speed_vector[2]
-                        command.speed_vector.angular.x = tcp_speed_vector[3]
-                        command.speed_vector.angular.y = tcp_speed_vector[4]
-                        command.speed_vector.angular.z = tcp_speed_vector[5]
+                        self._command_msg.speed_vector.linear.x = tcp_speed_vector[0]
+                        self._command_msg.speed_vector.linear.y = tcp_speed_vector[1]
+                        self._command_msg.speed_vector.linear.z = tcp_speed_vector[2]
+                        self._command_msg.speed_vector.angular.x = tcp_speed_vector[3]
+                        self._command_msg.speed_vector.angular.y = tcp_speed_vector[4]
+                        self._command_msg.speed_vector.angular.z = tcp_speed_vector[5]
                         
                 case 8:
-                    command.command_type = Command.COMMAND_START_DYNAMIC
+                    self._command_msg.command_type = Command.COMMAND_START_DYNAMIC
                     self.get_logger().debug('Instruction START DYNAMIC CARTESIAN MOVEMENT')
                     
                 case 15:
-                    command.command_type = Command.COMMAND_PLAY_CARTESIAN
+                    self._command_msg.command_type = Command.COMMAND_PLAY_CARTESIAN
                     self.get_logger().info('Instruction PLAY CARTESIAN TRAJECTORY')
 
                     if tcp_speed is not None:
-                        command.speed = tcp_speed
+                        self._command_msg.speed = tcp_speed
 
                     if pose1 is not None and len(pose1) > 0:
-                        command.target_pose = self._construct_command_pose(pose1)
+                        self._command_msg.target_pose = self._construct_command_pose(pose1)
                         
                 case 16:
-                    command.command_type = Command.COMMAND_PLAY_JOINT
+                    self._command_msg.command_type = Command.COMMAND_PLAY_JOINT
                     self.get_logger().info('Instruction PLAY JOINT TRAJECTORY')
 
                     if tcp_speed is not None:
-                        command.speed = tcp_speed
+                        self._command_msg.speed = tcp_speed
 
                     if pose1 is not None and len(pose1) > 0:
-                        command.target_pose = self._construct_command_pose(pose1)
+                        self._command_msg.target_pose = self._construct_command_pose(pose1)
         
-        self.command_pub.publish(command)
+        self.command_pub.publish(self._command_msg)
         self.last_instruction_code = instruction
 
     
@@ -199,35 +205,34 @@ class TranslatorNode(Node):
             robot_data: RobotData message from welding command handler
         """
         try:
-            robot_data_msg = RobotData()
-            robot_data_msg.pose = robot_data.pose
+            self._robot_data_msg.pose = robot_data.pose
             
             euler = euler_from_quaternion([
-                robot_data.pose.orientation.x,
-                robot_data.pose.orientation.y,
-                robot_data.pose.orientation.z,
-                robot_data.pose.orientation.w
+                self._robot_data_msg.pose.orientation.x,
+                self._robot_data_msg.pose.orientation.y,
+                self._robot_data_msg.pose.orientation.z,
+                self._robot_data_msg.pose.orientation.w
             ])
                 
             xyzwpr = [
-                robot_data.pose.position.x,
-                robot_data.pose.position.y,
-                robot_data.pose.position.z,
+                self._robot_data_msg.pose.position.x,
+                self._robot_data_msg.pose.position.y,
+                self._robot_data_msg.pose.position.z,
                 euler[0],  # Telesoud expects radians for the orientation
                 euler[1],
                 euler[2]
             ]
                 
-            robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
-            robot_data_msg.error_message = robot_data.error_message
-            robot_data_msg.xyzwpr = xyzwpr
-            robot_data_msg.robot_in_slave_mode_status = False
-            robot_data_msg.collision_status = False
-            robot_data_msg.emergency_stop = False
-            robot_data_msg.welding_trigger_plc_signal = False
-            robot_data_msg.operation_mode = 1
+            self._robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
+            self._robot_data_msg.error_message = robot_data.error_message
+            self._robot_data_msg.xyzwpr = xyzwpr
+            self._robot_data_msg.robot_in_slave_mode_status = False
+            self._robot_data_msg.collision_status = False
+            self._robot_data_msg.emergency_stop = False
+            self._robot_data_msg.welding_trigger_plc_signal = False
+            self._robot_data_msg.operation_mode = 1
             
-            self.robot_data_pub.publish(robot_data_msg)
+            self.robot_data_pub.publish(self._robot_data_msg)
             
         except Exception as e:
             self.get_logger().error(f'Error forwarding robot data: {e}')
@@ -245,20 +250,18 @@ class TranslatorNode(Node):
         Returns:
             Pose message with position and quaternion orientation
         """
-        command = Command()
-        
-        command.target_pose.position.x = pose[0]
-        command.target_pose.position.y = pose[1]
-        command.target_pose.position.z = pose[2]
+        self._command_msg.target_pose.position.x = pose[0]
+        self._command_msg.target_pose.position.y = pose[1]
+        self._command_msg.target_pose.position.z = pose[2]
 
         quaternion = quaternion_from_euler(pose[3], pose[4], pose[5])
 
-        command.target_pose.orientation.x = quaternion[0]
-        command.target_pose.orientation.y = quaternion[1]
-        command.target_pose.orientation.z = quaternion[2]
-        command.target_pose.orientation.w = quaternion[3]
+        self._command_msg.target_pose.orientation.x = quaternion[0]
+        self._command_msg.target_pose.orientation.y = quaternion[1]
+        self._command_msg.target_pose.orientation.z = quaternion[2]
+        self._command_msg.target_pose.orientation.w = quaternion[3]
         
-        return command.target_pose
+        return self._command_msg.target_pose
 
 
 def main(args=None):
@@ -273,6 +276,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-
-

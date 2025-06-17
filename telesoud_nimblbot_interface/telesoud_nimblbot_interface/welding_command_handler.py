@@ -83,8 +83,9 @@ class WeldingCommandHandlerNode(Node):
             node_name: Name of the ROS2 node
         """
         super().__init__(node_name)
-        self._initialize_basic_parameters()
         self._setup_transform_infrastructure()
+        self._initialize_reusable_ros_msg_objects()
+        self._initialize_basic_parameters()
         self._create_publishers()
         self._create_subscriptions()
         self._create_clients()
@@ -92,6 +93,26 @@ class WeldingCommandHandlerNode(Node):
 
         self.__timer_state_machine = self.create_timer(TIMER_PERIOD, self._update_state_machine)
         self.command_timer = self.create_timer(TIMER_PERIOD, self.process_pending_command)
+
+
+    def _initialize_reusable_ros_msg_objects(self) -> None:
+        """Initialize reusable ROS message objects to avoid repeated instantiation."""
+        self._command_status_msg = CommandStatus()
+        self._robot_data_msg = RobotData()
+        self._robot_state_msg = String()
+        self._modular_mode_msg = String()
+        self._modular_velocity_indicator_msg = Float64()
+        self._motor_lock_msg = Int8MultiArray()
+        self._twist_msg = Twist()
+        
+        self._pose_stamped_msg = PoseStamped()
+        self._pose_stamped_msg.header.frame_id = self.__base_frame_robot  # Frame constant
+
+        self._target_pose_msg = PoseStamped()
+        self._target_pose_msg.header.frame_id = self.__base_frame_robot
+
+        self._current_pose_msg = PoseStamped()
+        self._current_pose_msg.header.frame_id = self.__base_frame_robot
 
 
     def _initialize_basic_parameters(self) -> None:
@@ -147,7 +168,7 @@ class WeldingCommandHandlerNode(Node):
         self.declare_parameter('modular_gain', 1.0)
         self.declare_parameter('pos_gain', 1.0)
         self.declare_parameter('quat_gain', 1.0)
-        self.current_speed_vector = Twist()
+        self.current_speed_vector = self._twist_msg
         # Cartesian movement interpolation
         self.interpolated_line_poses = None
         self.line_progression_index = 0
@@ -439,47 +460,46 @@ class WeldingCommandHandlerNode(Node):
 
         self.pending_command = False
 
-        status = CommandStatus()
-        status.command_id = command_id
-        status.command_type = command_type
+        self._command_status_msg.command_id = command_id
+        self._command_status_msg.command_type = command_type
         
         try: 
-            status.robot_data = self._create_robot_data()
+            self._command_status_msg.robot_data = self._create_robot_data()
         except Exception as e:
             self.get_logger().warn(f'Could not create robot data : {e}')
     
         if self.modular_control_enabled:
             if command_type == 0:
-                self.current_speed_vector = Twist()
+                self.current_speed_vector = self._twist_msg
             if command_type == 7:
-                self._process_set_dynamic(status, data['speed_vector'])
-            status.success = True
-            status.message = "Modular command"
+                self._process_set_dynamic(self._command_status_msg, data['speed_vector'])
+            self._command_status_msg.success = True
+            self._command_status_msg.message = "Modular command"
         
         else: 
             try:
                 match command_type:
                     case 0:
-                        self._process_stop_command(status)
+                        self._process_stop_command(self._command_status_msg)
                     case 1:
-                        self._process_get_robot_data(status)
+                        self._process_get_robot_data(self._command_status_msg)
                     case 7:
-                        self._process_set_dynamic(status, data['speed_vector'])
+                        self._process_set_dynamic(self._command_status_msg, data['speed_vector'])
                     case 8:
-                        self._process_start_dynamic(status)
+                        self._process_start_dynamic(self._command_status_msg)
                     case 15:
-                        self._process_play_cartesian(status, data['target_pose'], data['speed'])
+                        self._process_play_cartesian(self._command_status_msg, data['target_pose'], data['speed'])
                     case 16:
-                        self._process_play_joint(status, data['target_pose'], data['speed'])
+                        self._process_play_joint(self._command_status_msg, data['target_pose'], data['speed'])
                     case _:
-                        status.success = False
-                        status.message = f"Unknown command type: {command_type}"
+                        self._command_status_msg.success = False
+                        self._command_status_msg.message = f"Unknown command type: {command_type}"
             except Exception as e:
-                status.success = False
-                status.message = f"Error processing command: {str(e)}"
+                self._command_status_msg.success = False
+                self._command_status_msg.message = f"Error processing command: {str(e)}"
                 self.get_logger().error(f"Error in command processing: {e}")
         
-        self.status_pub.publish(status)
+        self.status_pub.publish(self._command_status_msg)
 
 
     def _process_stop_command(self, status: CommandStatus) -> None:
@@ -488,7 +508,7 @@ class WeldingCommandHandlerNode(Node):
         Args:
             status: CommandStatus object to update with execution result
         """
-        self.current_speed_vector = Twist()
+        self.current_speed_vector = self._twist_msg
         if self.last_command_type == 0:
             self.stop_command_counter += 1
         else:
@@ -578,12 +598,10 @@ class WeldingCommandHandlerNode(Node):
         
         self.switch_control_mode(1) #ControlMode.TELEOP_XYZ
 
-        pose_msg = PoseStamped()
-        pose_msg.header.stamp = self.get_clock().now().to_msg()
-        pose_msg.header.frame_id = self.__base_frame_robot
-        pose_msg.pose = self.current_target_pose
+        self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg()
+        self._pose_stamped_msg.pose = self.current_target_pose
         
-        self.desired_pose_pub.publish(pose_msg)
+        self.desired_pose_pub.publish(self._pose_stamped_msg)
         
         self.current_state = RobotState.JOINT_TRAJECTORY
         
@@ -633,11 +651,10 @@ class WeldingCommandHandlerNode(Node):
             self.previous_state = initial_state
             self.get_logger().info(f'{STATE_NAMES[self.current_state]}')
         
-        robotState_msg = String() 
-        robotState_msg.data = STATE_NAMES[self.current_state]
+        self._robot_state_msg.data = STATE_NAMES[self.current_state]
         if self.tcp_pose:
             self.tcp_pose_pub.publish(self.tcp_pose)
-        self.robotState_pub.publish(robotState_msg)
+        self.robotState_pub.publish(self._robot_state_msg)
    
 
     def _is_cartesian_trajectory_complete(self) -> None:
@@ -687,12 +704,10 @@ class WeldingCommandHandlerNode(Node):
                         self.current_state = RobotState.IDLE
                         return True
 
-                pose_msg = PoseStamped()
-                pose_msg.header.stamp = self.get_clock().now().to_msg()
-                pose_msg.header.frame_id = self.__base_frame_robot
-                pose_msg.pose = self.current_target_pose
+                self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg()
+                self._pose_stamped_msg.pose = self.current_target_pose
 
-                self.desired_pose_pub.publish(pose_msg)
+                self.desired_pose_pub.publish(self._pose_stamped_msg)
             except Exception as e:
                 self.get_logger().error(f'Error during joint trajectory execution {e}')
         return False
@@ -706,7 +721,7 @@ class WeldingCommandHandlerNode(Node):
         """
         if self.current_state != RobotState.DYNAMIC_MOVEMENT:
             return False
-        if self.current_speed_vector != Twist():
+        if self.current_speed_vector != self._twist_msg:
             target_pose_msg = self.compute_target_pose()
             if target_pose_msg:
                 target_pose_msg.header.stamp = self.get_clock().now().to_msg() 
@@ -809,9 +824,8 @@ class WeldingCommandHandlerNode(Node):
 
         if toggles['select_command_type'] == 'rise':
             self.__modular_command_mode = self.__modular_command_mode[1:] + [self.__modular_command_mode[0]]
-            modular_mode_msg = String()
-            modular_mode_msg.data = 'TILT' if self.__modular_command_mode[0] == TILT else 'AZIMUTH'
-            self.modular_mode_pub.publish(modular_mode_msg)
+            self._modular_mode_msg.data = 'TILT' if self.__modular_command_mode[0] == TILT else 'AZIMUTH'
+            self.modular_mode_pub.publish(self._modular_mode_msg)
             self.get_logger().info(f"Switched to {'TILT' if self.__modular_command_mode[0] == TILT else 'AZIMUTH'} mode")
 
         if toggles['selection_mode'] == 'rise':
@@ -886,9 +900,8 @@ class WeldingCommandHandlerNode(Node):
             self.joints_trajectory_pub.publish(self.joints_trajectory)
         
         # For visualization purposes
-        msg = Float64()
-        msg.data = self.amplified_modular_velocity
-        self.modular_velocity_indicator_pub.publish(msg)
+        self._modular_velocity_indicator_msg.data = self.amplified_modular_velocity
+        self.modular_velocity_indicator_pub.publish(self._modular_velocity_indicator_msg)
         
  
     def _get_current_pose(self, mimic: bool, timeout_sec: int = SERVICE_TIMEOUT) -> PoseStamped:
@@ -907,7 +920,7 @@ class WeldingCommandHandlerNode(Node):
         ee_frame = self.__ee_frame_mimic if mimic else self.__ee_frame_robot
 
         try:
-            current_pose = self.__tf_buffer.lookup_transform(self.__base_frame_robot,
+            transform_result = self.__tf_buffer.lookup_transform(self.__base_frame_robot,
                                                              ee_frame,
                                                              Time(),
                                                              Duration(seconds=timeout_sec)
@@ -915,18 +928,13 @@ class WeldingCommandHandlerNode(Node):
         except Exception as e:
             raise LookupError(f"Waiting transform of {ee_frame}, {e}")
 
-        current_pose = PoseStamped(
-            header=Header(frame_id=self.__base_frame_robot,
-                          stamp=self.get_clock().now().to_msg()),
-            pose=Pose(
-                position=Point(
-                    x=current_pose.transform.translation.x,
-                    y=current_pose.transform.translation.y,
-                    z=current_pose.transform.translation.z
-                ),
-                orientation=current_pose.transform.rotation
-            )
-        )
+        current_pose = self._current_pose_msg
+        current_pose.header.stamp = self.get_clock().now().to_msg()
+        current_pose.pose.position.x = transform_result.transform.translation.x
+        current_pose.pose.position.y = transform_result.transform.translation.y
+        current_pose.pose.position.z = transform_result.transform.translation.z
+        current_pose.pose.orientation = transform_result.transform.rotation
+
         return current_pose
 
     
@@ -957,7 +965,7 @@ class WeldingCommandHandlerNode(Node):
         Returns:
             Target pose message, or None if no movement commanded
         """
-        if self.current_speed_vector == Twist():
+        if self.current_speed_vector == self._twist_msg:
             return None
         
         pos_gain = self.get_parameter('pos_gain').value  
@@ -977,7 +985,8 @@ class WeldingCommandHandlerNode(Node):
                 ),
                 orientation=current_pose.pose.orientation
             )
-            self.virtual_pose_initialized = True
+        
+        self.virtual_pose_initialized = True 
         
         working_pose = self.virtual_pose
         dt = 1.0 / TELESOUD_RATE
@@ -1002,9 +1011,8 @@ class WeldingCommandHandlerNode(Node):
         
         new_quat = quaternion_multiply(current_quat, dquat)
         
-        target_pose_msg = PoseStamped()
+        target_pose_msg = self._target_pose_msg
         target_pose_msg.header.stamp = self.get_clock().now().to_msg()
-        target_pose_msg.header.frame_id = self.__base_frame_robot
         
         self.virtual_pose.pose.position.x += dx
         self.virtual_pose.pose.position.y += dy
@@ -1041,7 +1049,7 @@ class WeldingCommandHandlerNode(Node):
             if self.interpolated_line_poses is None:
                 self.interpolated_line_poses = self.generate_interpolated_line(current_pose, self.current_target_pose)
 
-            pose_stamped:PoseStamped = self.interpolated_line_poses[self.line_progression_index]
+            pose_stamped = self.interpolated_line_poses[self.line_progression_index]
             pose_stamped.header.stamp = self.get_clock().now().to_msg()
             self.desired_pose_pub.publish(pose_stamped)
 
@@ -1116,17 +1124,14 @@ class WeldingCommandHandlerNode(Node):
         for increments in range(num_points + 1):
             point = pos1 + (increments/num_points) * (pos2 - pos1)
             quat = rotation_interpolation(increments).as_quat()
-            interpolated_line_poses.append(PoseStamped(header=Header(frame_id=self.__base_frame_robot),
-                                          pose=Pose(position=Point(x=point[0],
-                                                                   y=point[1],
-                                                                   z=point[2]),
-                                                    orientation=Quaternion(x=quat[0],
-                                                                           y=quat[1],
-                                                                           z=quat[2],
-                                                                           w=quat[3])
-                                                    )
-                                            )
-                                )
+            intermediate_pose = PoseStamped(
+                header=Header(frame_id=self.__base_frame_robot),
+                pose=Pose(
+                    position=Point(x=point[0], y=point[1], z=point[2]),
+                    orientation=Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
+                )
+            )
+            interpolated_line_poses.append(intermediate_pose)
         return interpolated_line_poses
 
 
@@ -1152,22 +1157,21 @@ class WeldingCommandHandlerNode(Node):
         Returns:
             RobotData message containing current pose, fault status, and error info
         """
-        robot_data = RobotData()
         try:
             current_pose = self._get_current_pose(mimic=False)
-            robot_data.pose = self.virtual_pose.pose if self.virtual_pose_initialized else current_pose.pose
+            self._robot_data_msg.pose = self.virtual_pose.pose if self.virtual_pose_initialized else current_pose.pose
             self.tcp_pose = current_pose.pose
             
         except Exception as e:
             self.get_logger().debug(f'Transform not available yet : {e}')
             default_pose = Pose()
-            robot_data.pose = default_pose
+            self._robot_data_msg.pose = default_pose
             self.tcp_pose = default_pose
 
-        robot_data.robot_in_fault_status = self.robot_in_fault_status
-        robot_data.error_message = self.current_error
-        robot_data.timestamp = self.get_clock().now().to_msg()
-        return robot_data
+        self._robot_data_msg.robot_in_fault_status = self.robot_in_fault_status
+        self._robot_data_msg.error_message = self.current_error
+        self._robot_data_msg.timestamp = self.get_clock().now().to_msg()
+        return self._robot_data_msg
     
 
     def switch_control_mode(self, mode: int) -> Optional[Any]:
@@ -1196,7 +1200,7 @@ class WeldingCommandHandlerNode(Node):
             self.get_logger().info(f'Switched control mode to {mode}')
             
             time.sleep(0.5)
-            self.motor_lock_pub.publish(Int8MultiArray())
+            self.motor_lock_pub.publish(self._motor_lock_msg)
             return future
         
         except Exception as e:
