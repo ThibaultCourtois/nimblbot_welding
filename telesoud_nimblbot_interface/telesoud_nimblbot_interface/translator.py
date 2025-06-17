@@ -115,16 +115,16 @@ class TranslatorNode(Node):
         """
         if not self.pending_instruction:
             return
-            
+        
         data = self.instruction_data
         instruction = data['instruction']
         pose1 = data['pose1']
         tcp_speed_vector = data['tcp_speed_vector']
         tcp_speed = data['tcp_speed']
-
+        
         self.pending_instruction = False
-
         self._command_msg.command_id = self.next_command_id
+        
         self.next_command_id += 1
 
         self.pending_commands[self._command_msg.command_id] = {
@@ -145,41 +145,49 @@ class TranslatorNode(Node):
                 case 7:
                     self._command_msg.command_type = Command.COMMAND_SET_DYNAMIC
                     self.get_logger().debug('Instruction SET DYNAMIC CARTESIAN MOVEMENT')
-
-                    if tcp_speed_vector is not None and len(pose1) > 0:
-                        self._command_msg.speed_vector.linear.x = tcp_speed_vector[0]
-                        self._command_msg.speed_vector.linear.y = tcp_speed_vector[1]
-                        self._command_msg.speed_vector.linear.z = tcp_speed_vector[2]
-                        self._command_msg.speed_vector.angular.x = tcp_speed_vector[3]
-                        self._command_msg.speed_vector.angular.y = tcp_speed_vector[4]
-                        self._command_msg.speed_vector.angular.z = tcp_speed_vector[5]
+                    
+                    try:
+                        if tcp_speed_vector is not None and len(pose1) > 0:
+                            self._command_msg.speed_vector.linear.x = tcp_speed_vector[0]
+                            self._command_msg.speed_vector.linear.y = tcp_speed_vector[1]
+                            self._command_msg.speed_vector.linear.z = tcp_speed_vector[2]
+                            self._command_msg.speed_vector.angular.x = tcp_speed_vector[3]
+                            self._command_msg.speed_vector.angular.y = tcp_speed_vector[4]
+                            self._command_msg.speed_vector.angular.z = tcp_speed_vector[5]
+                        else: 
+                            self.get_logger().error('Invalid speed vector -must contain 6 elements')
+                            return
+                    except (IndexError, ValueError, TypeError) as e:
+                        self.get_logger().error(f'Error assigning speed vector: {e}')
+                        return
                         
                 case 8:
                     self._command_msg.command_type = Command.COMMAND_START_DYNAMIC
                     self.get_logger().debug('Instruction START DYNAMIC CARTESIAN MOVEMENT')
                     
-                case 15:
-                    self._command_msg.command_type = Command.COMMAND_PLAY_CARTESIAN
-                    self.get_logger().info('Instruction PLAY CARTESIAN TRAJECTORY')
+                case 15 | 16:
+                    if instruction == 15:
+                        self._command_msg.command_type = Command.COMMAND_PLAY_CARTESIAN
+                        self.get_logger().debug('Instruction PLAY CARTESIAN')
+                    else: 
+                        self._command_msg.command_type = Command.COMMAND_PLAY_JOINT
+                        self.get_logger().debug('Instruction PLAY JOINT')
 
                     if tcp_speed is not None:
                         self._command_msg.speed = tcp_speed
-
-                    if pose1 is not None and len(pose1) > 0:
-                        self._command_msg.target_pose = self._construct_command_pose(pose1)
-                        
-                case 16:
-                    self._command_msg.command_type = Command.COMMAND_PLAY_JOINT
-                    self.get_logger().info('Instruction PLAY JOINT TRAJECTORY')
-
-                    if tcp_speed is not None:
-                        self._command_msg.speed = tcp_speed
-
-                    if pose1 is not None and len(pose1) > 0:
-                        self._command_msg.target_pose = self._construct_command_pose(pose1)
-        
-        self.command_pub.publish(self._command_msg)
-        self.last_instruction_code = instruction
+                    try:
+                        if pose1 is not None and len(pose1) > 0:
+                            self._command_msg.target_pose = self._construct_command_pose(pose1)
+                        else:
+                            self.get_logger().error('Invalid pose - must contain 6 elements')
+                    except Exception as e:
+                        self.get_logger().error(f'Error constructing pose: {e}')
+                        return
+        try:
+            self.command_pub.publish(self._command_msg)
+            self.last_instruction_code = instruction
+        except Exception as e:
+            self.get_logger().error(f'Failed to publish command {e}')
 
     
     def _on_command_status(self, msg: CommandStatus) -> None:
@@ -231,20 +239,22 @@ class TranslatorNode(Node):
                 euler[2]
             ]
                 
-            self._robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
-            self._robot_data_msg.error_message = robot_data.error_message
-            self._robot_data_msg.xyzwpr = xyzwpr
-
-            self._robot_data_msg.robot_in_slave_mode_status = ROBOT_IN_SLAVE_MODE_STATUS
-            self._robot_data_msg.collision_status = COLLISION_STATUS
-            self._robot_data_msg.emergency_stop = EMERGENCY_STOP
-            self._robot_data_msg.welding_trigger_plc_signal = WELDING_TRIGGER_PLC_SIGNAL
-            self._robot_data_msg.operation_mode = OPERATION_MODE
-            
-            self.robot_data_pub.publish(self._robot_data_msg)
-            
         except Exception as e:
-            self.get_logger().error(f'Error forwarding robot data: {e}')
+            self.get_logger().error(f'Failed to convert robot pose: {e}')
+            return
+            
+        self._robot_data_msg.robot_in_fault_status = robot_data.robot_in_fault_status
+        self._robot_data_msg.error_message = robot_data.error_message
+        self._robot_data_msg.xyzwpr = xyzwpr
+
+        self._robot_data_msg.robot_in_slave_mode_status = ROBOT_IN_SLAVE_MODE_STATUS
+        self._robot_data_msg.collision_status = COLLISION_STATUS
+        self._robot_data_msg.emergency_stop = EMERGENCY_STOP
+        self._robot_data_msg.welding_trigger_plc_signal = WELDING_TRIGGER_PLC_SIGNAL
+        self._robot_data_msg.operation_mode = OPERATION_MODE
+        
+        self.robot_data_pub.publish(self._robot_data_msg)
+            
 
     
     def _construct_command_pose(self, pose: List[float]) -> Pose:
@@ -259,6 +269,16 @@ class TranslatorNode(Node):
         Returns:
             Pose message with position and quaternion orientation
         """
+        try: 
+            if len(pose) < 6:
+                raise ValueError(f'Pose array too short: {len(pose)} element, need 6')
+           
+           x, y, z, roll, pitch, yaw = [float(val) for val in pose[:6]]
+
+        except (ValueError, TypeError, IndexError) as e:
+            raise ValueError(f'Invalid pose data: {e}')
+
+
         self._command_msg.target_pose.position.x = pose[0]
         self._command_msg.target_pose.position.y = pose[1]
         self._command_msg.target_pose.position.z = pose[2]
