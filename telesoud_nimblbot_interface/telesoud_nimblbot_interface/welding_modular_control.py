@@ -67,6 +67,7 @@ class WeldingModularControlNode(Node):
 
     
     def _initialize_basic_parameters(self) -> None:
+        """Sets up basic parameters for modular control command"""
         self.__modular_command_mode = [AZIMUTH, TILT]
         self.__modular_selector_mode = [MODULE_SELECT_COMMAND, SECTION_SELECT_COMMAND]
         self.__modular_selection_module = 0
@@ -102,7 +103,14 @@ class WeldingModularControlNode(Node):
 
     
     def _create_publishers(self) -> None:
+        """Create ROS2 publishers for robot control and status communication.
         
+        Sets up publishers for:
+        - Joints trajectory
+        - Modular velocity indicator
+        - Control mode switch request
+        """
+
         self.joints_trajectory_pub = self.create_publisher(
             JointTrajectory,
             '/nb/desired_trajectory_modular',
@@ -135,7 +143,15 @@ class WeldingModularControlNode(Node):
     
 
     def _create_subscriptions(self) -> None:
+        """Create ROS2 subscriptions for incoming control signals and parameters.
         
+        Sets up subscriptions for:
+        - RViz plugin parameter updates
+        - Joint trajectory
+        - Modular command button from Rviz
+        - Speed vectors
+        """
+
         _ = self.create_subscription(
                 Float64,
             'rviz_plugin/modular_gain',
@@ -166,7 +182,11 @@ class WeldingModularControlNode(Node):
     
 
     def _create_clients(self) -> None:
+        """Create ROS2 service clients for robot control and configuration.
 
+        Sets up client for : 
+        - Robot calibration (set zeros)
+        """
         # Luos wrapper node
         self.set_zeros_client = self.create_client(
             Empty_srv,

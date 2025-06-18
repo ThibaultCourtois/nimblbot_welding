@@ -105,7 +105,7 @@ class WeldingCommandHandlerNode(Node):
     def _initialize_basic_parameters(self) -> None:
         """Initialize basic node parameters and state variables.
         
-        Sets up modular control parameters, command handling state,
+        Sets up command handling state,
         robot state machine variables, and movement parameters.
         """
         # Command handling
@@ -156,6 +156,7 @@ class WeldingCommandHandlerNode(Node):
         - Command status feedback
         - Robot state visualization
         - TCP pose feedback
+        - Speed vectors
         """
         # Multiple command publishers
         self.motor_lock_pub = self.create_publisher(
@@ -201,11 +202,11 @@ class WeldingCommandHandlerNode(Node):
         """Create ROS2 subscriptions for incoming control signals and parameters.
         
         Sets up subscriptions for:
-        - Joint trajectory feedback
         - RViz plugin parameter updates
         - Emergency stop signals
         - TCP trace clearing commands
         - Robot commands from translator
+        - Control mode switch request from welding modular control 
         """
         # Rviz plugin 
         _ = self.create_subscription(
@@ -267,7 +268,6 @@ class WeldingCommandHandlerNode(Node):
         Sets up clients for:
         - Control mode switching
         - TCP trace path clearing
-        - Robot calibration (set zeros)
         """
         # Multiple command client
         self.change_control_mode_client = self.create_client(
