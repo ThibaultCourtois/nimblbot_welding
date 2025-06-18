@@ -50,13 +50,13 @@ namespace interface_rviz_plugin
         );
     
     modular_velocity_indicator_subscriber_ = node_->create_subscription<std_msgs::msg::Float64>(
-        "/welding_command_handler/modular_velocity_indicator", 
+        "/welding_modular_control/modular_velocity_indicator", 
         10,
         std::bind(&TeleopGainPanel::modularVelocityIndicatorCallback, this, std::placeholders::_1)
         );
     
     modular_mode_subscriber_ = node_->create_subscription<std_msgs::msg::String>(
-        "/welding_command_handler/modular_mode", 
+        "/welding_modular_control/modular_mode", 
         10, 
         std::bind(&TeleopGainPanel::modularModeCallback, this, std::placeholders::_1)
         );

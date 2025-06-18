@@ -70,6 +70,13 @@ def generate_launch_description():
             executable= 'welding_command_handler',
             name='welding_command_handler_node',
             output='log',
+            )
+    
+    welding_modular_control = Node(
+            package='telesoud_nimblbot_interface',
+            executable= 'welding_modular_control',
+            name='welding_modular_control_node',
+            output='log',
             parameters=[{
                 'robot_type':robot_type,
                 }]
@@ -181,7 +188,7 @@ def generate_launch_description():
             mesh_torche_soudure, 
             robot_moveit_nodes,
             TimerAction(period=5.0, 
-                actions=[telesoud_api, translator, welding_command_handler]
+                actions=[telesoud_api, translator, welding_command_handler, welding_modular_control]
             ),
             usb_cam_node,
             tf_path_trail_base_link_wrist,
