@@ -204,9 +204,12 @@ class WeldingCommandHandlerNode(Node):
             alias = conf['low_level_control']['alias']
             self.__joint_names_alias = [alias + str(i) if i != 0 else alias for i in range(self.__num_joints)]
 
+        except (KeyError, TypeError, FileNotFoundError) as e:
+            self.get_logger().fatal(f'Failed to load robot configuration "{robot_type}" : {e}')
+            exit(1)
         except Exception as e:
-            self.get_logger().fatal(f'robot_type not define for cartesian or modular command : {e}')
-            exit()
+            self.get_logger().fatal(f'Unxpected error loading robot config: {e}')
+            exit(1)
         
         # Set up transform infrastructure
         self.__tf_buffer = Buffer()
@@ -847,46 +850,63 @@ class WeldingCommandHandlerNode(Node):
         joint_names = []
         positions = []
         velocities = []
-
-        if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND:
-            joint_inf_idx = int(self.__modular_selection_module) * 2
-            joint_sup_idx = joint_inf_idx + 2
-        else:
-            joint_inf_idx = 6 * int(self.__modular_selection_section)
-            joint_sup_idx = joint_inf_idx + 6
+        
+        try:
+            if self.__modular_selector_mode[0] == MODULE_SELECT_COMMAND:
+                joint_inf_idx = int(self.__modular_selection_module) * 2
+                joint_sup_idx = joint_inf_idx + 2
+            else:
+                joint_inf_idx = 6 * int(self.__modular_selection_section)
+                joint_sup_idx = joint_inf_idx + 6
             
-        module_joint_names = self.__joint_names_alias[joint_inf_idx:joint_sup_idx]
+            if joint_sup_idx > len(self.__q_desired) or joint_inf_idx < 0:
+                self.get_logger().error(f'Invalid joint indices: [{joint_inf_idx}:{joint_sup_idx}] for {len(self.__q_desired)} joints')
+                return
+                
+            module_joint_names = self.__joint_names_alias[joint_inf_idx:joint_sup_idx]
+        
+        except (IndexError, ValueError, TypeError) as e:
+            self.get_logger().error(f'Error calculating modular joint indces: {e}')
+            return 
+
         module_command = turn_module * self.amplified_modular_velocity
         module_velocities = [module_command] * len(module_joint_names)
 
         if self.__modular_command_mode[0] == TILT:
             # alternate velocity direction for TILT mode (opposing pairs)
             module_velocities = [v if i % 2 == 0 else -v for i, v in enumerate(module_velocities)]
-
-        if turn_module != 0:
-            module_positions = [self.__q_desired[joint_inf_idx + i] + v / ROBOT_RATE for i, v in enumerate(module_velocities)] 
-        else : 
-            module_positions = [self.__q_desired[joint_inf_idx + i] for i in range(len(module_velocities))]
+        
+        try:
+            if turn_module != 0:
+                module_positions = [self.__q_desired[joint_inf_idx + i] + v / ROBOT_RATE for i, v in enumerate(module_velocities)] 
+            else : 
+                module_positions = [self.__q_desired[joint_inf_idx + i] for i in range(len(module_velocities))]
+        except (IndexError, TypeError) as e:
+            self.get_logger().error(f'Error accessing joint positions: {e}')
+            return
 
         joint_names.extend(module_joint_names)
         positions.extend(module_positions)
         velocities.extend(module_velocities)
 
         if self.__terminal_wrist:
-            wrist_joint_idx = len(self.__q_desired) - 1
-            wrist_joint_name = self.__joint_names_alias[-1]
+            try:
+                wrist_joint_idx = len(self.__q_desired) - 1
+                wrist_joint_name = self.__joint_names_alias[-1]
 
-            if wrist_command != 0:
-                wrist_velocity = wrist_command * self.amplified_modular_velocity
-                wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / ROBOT_RATE
-            else:
-                wrist_velocity = 0.0
-                wrist_position = self.__q_desired[wrist_joint_idx]
+                if wrist_command != 0:
+                    wrist_velocity = wrist_command * self.amplified_modular_velocity
+                    wrist_position = self.__q_desired[wrist_joint_idx] + wrist_velocity / ROBOT_RATE
+                else:
+                    wrist_velocity = 0.0
+                    wrist_position = self.__q_desired[wrist_joint_idx]
 
-            joint_names.append(wrist_joint_name)
-            positions.append(wrist_position)
-            velocities.append(wrist_velocity)
-        
+                joint_names.append(wrist_joint_name)
+                positions.append(wrist_position)
+                velocities.append(wrist_velocity)
+            except (IndexError, TypeError) as e:
+                self.get_logger().error(f'Error handling wrist joint: {e}')
+
         if len(joint_names) > 0:
             self.joints_trajectory.joint_names = joint_names
             trajectory_point = JointTrajectoryPoint()
@@ -1080,54 +1100,80 @@ class WeldingCommandHandlerNode(Node):
         Returns:
             List of interpolated poses forming the trajectory
         """
-        pos1 = np.array([
-                pose1.position.x,
-                pose1.position.y,
-                pose1.position.z
-            ])
-
-        pos2 = np.array([
-                pose2.position.x,
-                pose2.position.y,
-                pose2.position.z
-            ])
-
-        self.position_distance = np.linalg.norm(pos1 - pos2)
-
-        quat1 = np.array([
-                pose1.orientation.x,
-                pose1.orientation.y,
-                pose1.orientation.z,
-                pose1.orientation.w
+        try:
+            pos1 = np.array([
+                    pose1.position.x,
+                    pose1.position.y,
+                    pose1.position.z
                 ])
 
-        quat2 = np.array([
-                pose2.orientation.x,
-                pose2.orientation.y,
-                pose2.orientation.z,
-                pose2.orientation.w
+            pos2 = np.array([
+                    pose2.position.x,
+                    pose2.position.y,
+                    pose2.position.z
                 ])
 
-        orientation_distance = np.arccos(np.clip(np.abs(np.dot(quat1/np.linalg.norm(quat2), quat2/np.linalg.norm(quat2))), -1.0, 1.0)) / pi
+            self.position_distance = np.linalg.norm(pos1 - pos2)
 
-        max_distance = self.tcp_speed * 1/ROBOT_RATE
-        num_points = int(max(self.position_distance, orientation_distance) / max_distance + 2)
+            if self.position_distance < 1e-10:
+                self.get_logger().warning("Start and end position are identical")
+                return [PoseStamped(
+                    header=Header(frame_id=self.__base_frame_robot),
+                    pose=pose1
+                )]
 
-        rotation_interpolation = Slerp([0, num_points], R.from_quat([list(quat1), list(quat2)]))
+            quat1 = np.array([
+                    pose1.orientation.x,
+                    pose1.orientation.y,
+                    pose1.orientation.z,
+                    pose1.orientation.w
+                    ])
 
-        interpolated_line_poses = []
-        for increments in range(num_points + 1):
-            point = pos1 + (increments/num_points) * (pos2 - pos1)
-            quat = rotation_interpolation(increments).as_quat()
-            intermediate_pose = PoseStamped(
-                header=Header(frame_id=self.__base_frame_robot),
-                pose=Pose(
-                    position=Point(x=point[0], y=point[1], z=point[2]),
-                    orientation=Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
+            quat2 = np.array([
+                    pose2.orientation.x,
+                    pose2.orientation.y,
+                    pose2.orientation.z,
+                    pose2.orientation.w
+                    ])
+
+            quat1_norm = np.linalg.norm(quat1)
+            quat2_norm = np.linalg.norm(quat2)
+
+            if quat1_norm < 1e-10 or quat2_norm < 1e-10:
+                raise ValueError("Invalid quaternion with zero norm")
+
+            quat1 = quat1 / quat1_norm
+            quat2 = quat2 / quat2_norm
+
+            dot_product = np.clip(np.abs(np.dot(quat1, quat2)), 0.0, 1.0)
+            orientation_distance = np.arccos(dot_product) / pi
+
+            max_distance = self.tcp_speed * 1/ROBOT_RATE
+
+            if max_distance <=0:
+                raise ValueError(f'Invalid TCP speed {self.tcp_speed}')
+
+            num_points = int(max(self.position_distance, orientation_distance) / max_distance + 2)
+
+            rotation_interpolation = Slerp([0, num_points], R.from_quat([list(quat1), list(quat2)]))
+
+            interpolated_line_poses = []
+            for increments in range(num_points + 1):
+                point = pos1 + (increments/num_points) * (pos2 - pos1)
+                quat = rotation_interpolation(increments).as_quat()
+                intermediate_pose = PoseStamped(
+                    header=Header(frame_id=self.__base_frame_robot),
+                    pose=Pose(
+                        position=Point(x=point[0], y=point[1], z=point[2]),
+                        orientation=Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
+                    )
                 )
-            )
-            interpolated_line_poses.append(intermediate_pose)
-        return interpolated_line_poses
+                interpolated_line_poses.append(intermediate_pose)
+            return interpolated_line_poses
+        except (ValueError, ZeroDivisionError, np.linalg.LinAlgError) as e:
+            raise ValueError(f"Mathematical error in linear trajectory generation: {e}")
+        except Exception as e:
+            raise RuntimeError(f'Unexpected error in linear trajectory generation: {e}')
 
 
     def _finalize_movement(self) -> None:
@@ -1156,16 +1202,23 @@ class WeldingCommandHandlerNode(Node):
             current_pose = self._get_current_pose(mimic=False)
             self._robot_data_msg.pose = self.virtual_pose.pose if self.virtual_pose_initialized else current_pose.pose
             self.tcp_pose = current_pose.pose
+            self._robot_data_msg.timestamp = current_pose.header.stamp
             
-        except Exception as e:
-            self.get_logger().debug(f'Transform not available yet : {e}')
+        except LookupError as e:
+            self.get_logger().debug(f'Transform not available : {e}')
             default_pose = Pose()
             self._robot_data_msg.pose = default_pose
             self.tcp_pose = default_pose
-
+            self._robot_data_msg.timestamp = self.get_clock().now().to_msg()
+        except Exception as e:
+            self.get_logger().error(f'Unexpected error creating robot data: {e}')
+            default_pose = Pose()
+            self._robot_data_msg.pose = default_pose
+            self.tcp_pose = default_pose
+            self._robot_data_msg.timestamp = self.get_clock().now().to_msg()
+        
         self._robot_data_msg.robot_in_fault_status = self.robot_in_fault_status
         self._robot_data_msg.error_message = self.current_error
-        self._robot_data_msg.timestamp = current_pose.header.stamp
         return self._robot_data_msg
     
 
@@ -1178,19 +1231,19 @@ class WeldingCommandHandlerNode(Node):
         Returns:
             Service call future, or None if failed
         """
+        if self.current_control_mode == mode:
+            return
+
         try:
-            if self.current_control_mode == mode:
-                return
+            if not self.change_control_mode_client.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
+                raise RuntimeError(f"Control mode service not available after {SERVICE_TIMEOUT}s")
+            
+            request = ServoCommandType.Request(command_type = mode)
+            future = self.change_control_mode_client.call_async(request)
             
             self.resuming_flag = (self.current_control_mode == ControlMode.PAUSE and mode != ControlMode.PAUSE) 
             self.modular_control_enabled &= (mode != ControlMode.TELEOP_MODULE)
             self.current_control_mode = mode
-
-            if not self.change_control_mode_client.wait_for_service(timeout_sec = SERVICE_TIMEOUT):
-                raise RuntimeError("Failed to switch control mode: service not available")
-
-            request = ServoCommandType.Request(command_type = mode)
-            future = self.change_control_mode_client.call_async(request)
 
             self.get_logger().info(f'Switched control mode to {mode}')
             
@@ -1199,8 +1252,9 @@ class WeldingCommandHandlerNode(Node):
             return future
         
         except Exception as e:
-            self.current_error = str(e)
-            self.get_logger().error(f'{e}')
+            self.current_error = f"Failed to switch control mode: {e}"
+            self.get_logger().error(self.current_error)
+            self.robot_in_fault_status = True
             return None
 
    
