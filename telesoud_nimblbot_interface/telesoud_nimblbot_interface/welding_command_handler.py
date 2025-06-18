@@ -13,7 +13,6 @@ from std_srvs.srv import Empty as Empty_srv
 from std_msgs.msg import Empty, Header, Float64, Bool, String, Int8MultiArray, Int8
 from moveit_msgs.srv import ServoCommandType
 from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Twist 
-from trajectory_msgs.msg import JointTrajectory
 from tf_transformations import quaternion_from_euler, quaternion_multiply
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
@@ -21,6 +20,7 @@ from scipy.spatial.transform import Rotation as R
 from rcl_interfaces.srv import GetParameters, SetParameters
 from interface_custom_msgs.msg import RobotData, Command, CommandStatus
 from typing import List, Optional, Any
+from collections import deque
 
 SERVO_NODE = '/servo_node'
 
@@ -113,6 +113,7 @@ class WeldingCommandHandlerNode(Node):
         self.last_command_type = None
         self.pending_command = None
         self.command_data = None
+        self.critical_commands = deque()
         # State machine variables
         self.current_state = RobotState.PAUSE
         self.previous_state = RobotState.PAUSE
@@ -323,15 +324,18 @@ class WeldingCommandHandlerNode(Node):
         Args:
             msg: Command message with type, pose, speed, and other parameters
         """
-        self.command_data = {
+        command_data = {
             'command_type': msg.command_type,
             'command_id': msg.command_id,
             'target_pose': msg.target_pose,
             'speed': msg.speed,
             'speed_vector': msg.speed_vector,
         }
+        if msg.command_type >= 8:
+            self.critical_commands.append(command_data)
+        else:
+            self.command_data = command_data
         self.pending_command = True
-
     
     def process_pending_command(self) -> None:
         """Process pending robot command and execute appropriate action.
@@ -339,10 +343,15 @@ class WeldingCommandHandlerNode(Node):
         Routes commands to specific handlers based on command type and
         publishes command status feedback.
         """
-        if not self.pending_command:
+        if self.critical_commands:
+            data = self.critical_commands.popleft()
+        elif self.command_data:
+            data = self.command_data
+            self.command_data = None
+        else:
+            self.pending_command = False
             return
 
-        data = self.command_data
         command_type = data['command_type']
         command_id = data['command_id']
 
