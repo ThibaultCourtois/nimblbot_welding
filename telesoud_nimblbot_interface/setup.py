@@ -27,6 +27,7 @@ setup(
         'console_scripts': [
             'translator = telesoud_nimblbot_interface.translator:main',
             'welding_command_handler = telesoud_nimblbot_interface.welding_command_handler:main',
+            'welding_modular_control = telesoud_nimblbot_interface.welding_modular_control:main',
         ],
     },
 )
