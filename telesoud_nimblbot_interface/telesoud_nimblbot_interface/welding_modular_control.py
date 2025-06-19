@@ -458,7 +458,7 @@ class WeldingModularControlNode(Node):
             self.modular_command_request_pub.publish(self._switch_mode_msg)
 
             self.get_logger().info('Setting pause mode before zeros')
-            time.sleep(0.25)
+            time.sleep(0.35)
 
 
             self.get_logger().info('Calling set_zeros service...')
@@ -472,10 +472,15 @@ class WeldingModularControlNode(Node):
                 raise RuntimeError(f'Failed service call: {future.exception()}')
 
             self.get_logger().info("Set zeros successful")
-            time.sleep(0.25)
+            time.sleep(0.35)
 
             self._switch_mode_msg.data = ControlMode.TELEOP_XYZ
             self.modular_command_request_pub.publish(self._switch_mode_msg)
+            
+            self.modular_control_enabled = False
+            self._status_msg.data = self.modular_control_enabled
+            self.modular_status_pub.publish(self._status_msg)
+
             self.get_logger().info('Setting cartesian mode ...')
 
             return response

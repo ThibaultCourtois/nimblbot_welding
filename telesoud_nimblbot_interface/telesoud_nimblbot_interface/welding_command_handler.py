@@ -502,8 +502,7 @@ class WeldingCommandHandlerNode(Node):
         self.switch_control_mode(ControlMode.TELEOP_XYZ)
 
         self._pose_stamped_msg.pose = self.current_target_pose
-        self._pose_stamped_msg.header.stamp = self.command_start_timestamp
-        
+        self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg() 
         self.desired_pose_pub.publish(self._pose_stamped_msg)
         
         self.current_state = RobotState.JOINT_TRAJECTORY
@@ -612,8 +611,7 @@ class WeldingCommandHandlerNode(Node):
                         return True
 
                 self._pose_stamped_msg.pose = self.current_target_pose
-                self._pose_stamped_msg.header.stamp = self.command_start_timestamp
-
+                self._pose_stamped_msg.header.stamp = self.get_clock().now().to_msg()
                 self.desired_pose_pub.publish(self._pose_stamped_msg)
             except Exception as e:
                 self.get_logger().error(f'Error during joint trajectory execution {e}')
