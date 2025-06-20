@@ -9,14 +9,11 @@ This repository contains all the code necessary to use the WeezTouch controller 
 - A custom RViz plugin `interface_rviz_plugin` and a custom RViz configuration file `projet_soudure.rviz` are included in the repository
 - Mesh publishing for concrete welding applications is available to test the trajectories proposed by WeezU-Welding
 
-The complete documentation of the project is available inside the repository at [`documentation/html/`](documentation/html/). After cloning the repository, you can open the `index.html` file in your browser for detailed information.
-
 ## Requirements 
 
 1. Complete the ROS2 configuration page in Notion
 2. Use the upcoming release of the `feat/cartesian_control` branch of the `nimblbot-ros2` packages directory with a `nimblbot_cartesian_command` package that contains a node called `multiple_command.py`
 3. This installation guide assumes you have a working Nimbl'Bot system with functional `NimblPy` and `PyLuos` libraries. Ensure you can successfully run the `teleop_demo_launch` from the `nimblbot-ros2` packages directory.
-4. If not already installed on your system you will also need : `libcap-dev`, `libc6-dev`, `build-essential`, `ros-iron-controller-interface`, `ros-iron-controller-manager` and `ros-iron-generate-parameter-library` packages.
 5. You also need to have the NimblBot-WeezTouch electrical armory connected to your computer with an ethernet cable. To set up the required TCP/IP connection between the two systems, follow these steps: 
 
 ### TCP/IP Connection Setup
@@ -42,38 +39,18 @@ The complete documentation of the project is available inside the repository at 
     cd src
     git clone ssh://git@gitlab.nimbl-bot.com:9022/tcourtois/nimblbot-welding.git
     ```
-2. By cloning this repository you downloaded the following file : `rcplib_2.3.0-1_amd64.deb`. This C++ library is required for the RPC communication protocole used by the package `telesoud_api`. Run the following commands to install it : 
-    ```
+2. Now you can run the automatic installation script: 
+    
+    ```bash
     cd nimblbot-welding
-    sudo dpkg -i rpclib_2.3.0-1_amd64.deb
+    make
     ```
-3. Next install the following dependencies required for the installation (`test-msgs` is necessary for `gpio_controllers_iron` and `ros-iron-usb-cam` is used for NB-55 torch laser device) :
-    ```bash
-    cd ~
-    sudo apt install ros-iron-test-msgs
-    sudo apt install ros-iron-usb-cam
-    source ~/.zshrc
-    ```
-4. Build the two dependencies of gpio_controllers_iron : 
-    ```bash
-    roscd
-    colcon build --packages-select custom_control_msgs custom_realtime_tools --symlink-install
-    source ~/.zshrc
-    ```
-5. Then you can build gpio_controllers_iron : 
+3. Finally you can source your environment: 
 
     ```bash
-    roscd
-    colcon build --packages-select gpio_controllers_iron --symlink-install
     source ~/.zshrc
     ```
-6. Finally you can build every other packages of the repository : 
 
-    ```bash
-    roscd
-    colcon build --packages-select interface_custom_msgs interface_rviz_plugin telesoud_api telesoud_nimblbot_interface welding_scene_publisher --symlink-install
-    source ~/.zshrc
-    ```
 ## Usage
 
 ### Launch in simulation only with a NB-55:
