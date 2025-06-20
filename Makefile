@@ -160,7 +160,15 @@ manual-deps: repos
 	@echo "Installing MoveIt packages..."
 	@sudo apt install -y \
 		ros-iron-moveit-msgs \
-		|| echo "MoveIt packages failed to install"
+		ros-iron-moveit-core \
+		ros-iron-moveit-ros-planning \
+		ros-iron-moveit-ros-planning-interface \
+		ros-iron-moveit-common \
+		ros-iron-moveit-planners \
+		ros-iron-moveit-ros-move-group \
+		ros-iron-moveit-kinematics \
+		ros-iron-moveit-servo \
+		|| echo "Some MoveIt packages failed to install"
 	
 	# RViz packages
 	@echo "Installing RViz packages..."
@@ -201,7 +209,7 @@ manual-deps: repos
 .PHONY: build
 build: repos manual-deps
 	@echo "Building cloned packages ..."
-	@cd ../.. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers telesoud_api telesoud_nimblbot_interface welding_scene_publisher interface_rviz_plugin interface_custom_msgs
+	@cd ../.. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers telesoud_api telesoud_nimblbot_interface welding_scene_publisher interface_rviz_plugin interface_custom_msgs --allow-overriding control_msgs realtime_tools
 	@echo "Cloned packages built"
 
 .PHONY: clean
