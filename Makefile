@@ -1,8 +1,8 @@
 NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS/download
 DEB_FILE = rpclib_2.3.0-1_amd64.deb
 
-ROBOT_CONFIGS = https://files.nimbl-bot.com/s/xigrwDftgS6isK3/download \
-								https://files.nimbl-bot.com/s/RdAszgMj5MjALLF/download
+ROBOT_CONFIGS = nb120_3m_welding.yaml:https://files.nimbl-bot.com/s/xigrwDftgS6isK3/download \
+								nb55_v7_welding.yaml:https://files.nimbl-bot.com/s/RdAszgMj5MjALLF/download
 
 ROBOT_CONFIG_DIR = $(or $(NB_ROBOTS_CONFIGS),$(HOME)/NimblBot/nimblbot-robots/conf)
 
