@@ -73,13 +73,13 @@ rosdep-install: repos
 		sudo rosdep init || true; \
 	fi
 	@rosdep update
-	@cd .. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding --ignore-src -r -y
+	@cd .. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding/telesoud_api src/nimblbot-welding/telesoud_nimblbot_interface src/nimblbot-welding/welding_scene_publisher src/nimblbot-welding/interface_rviz_plugin src/nimblbot-welding/interface_custom_msgs --ignore-src -r -y
 	@echo "Dependancies installed"
 
 .PHONY: build
 build: repos rosdep-install
 	@echo "Building cloned packages ..."
-	@cd .. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers nimblbot-welding
+	@cd .. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers telesoud_api telesoud_nimblbot_interface welding_scene_publisher interface_rviz_plugin interface_custom_msgs
 	@echo "Cloned packages built"
 
 .PHONY: clean
