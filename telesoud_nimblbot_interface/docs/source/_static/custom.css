@@ -1,0 +1,29 @@
+/* Augmenter la taille de police générale */
+body {
+    font-size: 22px !important;  /* Par défaut c'est ~14px */
+}
+
+/* Titres plus grands */
+h1 { font-size: 4rem !important; }
+h2 { font-size: 3.5rem !important; }
+h3 { font-size: 3rem !important; }
+
+/* Contenu principal */
+.bd-main .bd-content {
+    font-size: 21px !important;
+}
+
+/* Navigation */
+.navbar-nav .nav-link {
+    font-size: 21px !important;
+}
+
+/* Sidebar */
+.bd-sidebar {
+    font-size: 21px !important;
+}
+
+/* Code blocks */
+pre, code {
+    font-size: 20px !important;
+}
