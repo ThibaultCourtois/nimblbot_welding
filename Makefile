@@ -1,4 +1,4 @@
-NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS
+NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS/download
 DEB_FILE = rpclib_2.3.0-1_amd64.deb 
 
 .ONESHELL:
