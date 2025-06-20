@@ -1,4 +1,4 @@
-NEXTCLOUD_URL = https://files.nimbl-bot.com/apps/files/files/392633?dir=/A%20-%20Stagiaires/tcourtois
+NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS
 DEB_FILE = rpclib_2.3.0-1_amd64.deb 
 
 .ONESHELL:
@@ -31,7 +31,7 @@ deps: $(DEB_FILE)
 
 $(DEB_FILE):
 	@echo "Downloading $(DEB_FILE) ..."
-	@if wget -q "$(NEXTCLOUD_URL)" -O $(DEB_FILE); then \
+	@if wget -q "$(NEXTCLOUD_SHARE_LINK)" -O $(DEB_FILE); then \
 		echo "Downloading succeed"; \
 	else \
 		echo "Downloading failed"; \
