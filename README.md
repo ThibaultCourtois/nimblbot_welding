@@ -9,6 +9,20 @@ This repository contains all the code necessary to use the WeezTouch controller 
 - A custom RViz plugin `interface_rviz_plugin` and a custom RViz configuration file `projet_soudure.rviz` are included in the repository
 - Mesh publishing for concrete welding applications is available to test the trajectories proposed by WeezU-Welding
 
+After cloning the repository, you can build the documentation by running the following commands :
+
+```bash
+roscd 
+cd src/nimblbot-welding/telesoud_nimblbot_interface/docs
+make html
+```
+
+Then you can open the generated html documentation on your browser. For example : 
+
+```bash
+firefox build/html/index.html
+```
+
 ## Requirements 
 
 1. Complete the ROS2 configuration page in Notion
