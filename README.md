@@ -11,13 +11,21 @@ This repository contains all the code necessary to use the WeezTouch controller 
 
 After cloning the repository, you can build the documentation by running the following commands :
 
+- Sphinx and Pydata theme installation : 
+
+```bash
+pip install sphinx==8.1.3 pydata-sphinx-theme==0.16.1
+```
+
+- Documentation building : 
+
 ```bash
 roscd 
 cd src/nimblbot-welding/telesoud_nimblbot_interface/docs
 make html
 ```
 
-Then you can open the generated html documentation on your browser. For example : 
+- Opening documentation in your browser (ex - firefox) : 
 
 ```bash
 firefox build/html/index.html
@@ -53,13 +61,13 @@ firefox build/html/index.html
     cd src
     git clone ssh://git@gitlab.nimbl-bot.com:9022/tcourtois/nimblbot-welding.git
     ```
-2. Now you can run the automatic installation script: 
+2. Now you can run the automatic installation script : 
     
     ```bash
     cd nimblbot-welding
     make
     ```
-3. Finally you can source your environment: 
+3. Finally you can source your environment : 
 
     ```bash
     source ~/.zshrc
@@ -67,7 +75,7 @@ firefox build/html/index.html
 
 ## Usage
 
-### Launch in simulation only with a NB-55:
+### Launch in simulation only with a NB-55 :
 
     ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=true
     
