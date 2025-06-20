@@ -6,7 +6,9 @@ DEB_FILE = rpclib_2.3.0-1_amd64.deb
 .PHONY: install
 install: check-deps deps repos rosdep-install build
 	@echo "Installation succeed"
-	@echo "You can now use NimblBot Welding !"
+	@echo "Please run the following command to update your environment:"
+	@echo "source ~/.zshrc"
+	@echo "You will then be able to use Nimblbot Welding :) !"
 
 .PHONY: check-deps
 check-deps:
