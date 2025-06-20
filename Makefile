@@ -109,7 +109,7 @@ rosdep-install: repos
 	@rosdep update
 	@echo "Installing missing ROS2 Iron packages..."
 	@sudo apt install -y ros-iron-test-msgs ros-iron-hardware-interface-testing || echo "Some packages failed to install"
-	@cd ../.. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding/telesoud_api src/nimblbot-welding/telesoud_nimblbot_interface src/nimblbot-welding/welding_scene_publisher src/nimblbot-welding/interface_rviz_plugin src/nimblbot-welding/interface_custom_msgs --ignore-src -r -y --include-eol-distros --allow-overriding
+	@cd ../.. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding/telesoud_api src/nimblbot-welding/telesoud_nimblbot_interface src/nimblbot-welding/welding_scene_publisher src/nimblbot-welding/interface_rviz_plugin src/nimblbot-welding/interface_custom_msgs --ignore-src --rosdistro iron -y 
 	@echo "Dependancies installed"
 
 .PHONY: build
