@@ -9,7 +9,7 @@ ROBOT_CONFIG_DIR = $(or $(NB_ROBOTS_CONFIGS),$(HOME)/NimblBot/nimblbot-robots/co
 .ONESHELL:
 
 .PHONY: install
-install: check-deps deps robot-configs repos rosdep-install build
+install: check-deps deps robot-configs repos manual_deps build
 	@echo "Installation succeed"
 	@echo "Please run the following command to update your environment:"
 	@echo "source ~/.zshrc"
@@ -99,21 +99,107 @@ gpio_controllers:
 		echo "gpio_controllers already cloned"; \
 	fi
 
-.PHONY: rosdep-install
-rosdep-install: repos
-	@echo "Installing packages dependancies ..."
-	@if [ ! -d "/etc/ros/rosdep" ]; then \
-		echo "Initializing rosdep..."; \
-		sudo rosdep init || true; \
-	fi
-	@rosdep update
-	@echo "Installing missing ROS2 Iron packages..."
-	@sudo apt install -y ros-iron-test-msgs ros-iron-hardware-interface-testing || echo "Some packages failed to install"
-	@cd ../.. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding/telesoud_api src/nimblbot-welding/telesoud_nimblbot_interface src/nimblbot-welding/welding_scene_publisher src/nimblbot-welding/interface_rviz_plugin src/nimblbot-welding/interface_custom_msgs --ignore-src --rosdistro iron -y 
-	@echo "Dependancies installed"
+.PHONY: manual-deps
+manual-deps: repos
+	@echo "Installing ROS2 Iron dependencies manually..."
+	@sudo apt update
+	
+	# Core build tools
+	@echo "Installing core build tools..."
+	@sudo apt install -y \
+		ros-iron-ament-cmake \
+		ros-iron-rosidl-default-generators \
+		ros-iron-rosidl-default-runtime \
+		|| echo "Some core build tools failed to install"
+	
+	# ROS2 Core packages
+	@echo "Installing ROS2 core packages..."
+	@sudo apt install -y \
+		ros-iron-rclcpp \
+		ros-iron-rclcpp-lifecycle \
+		ros-iron-rclcpp-action \
+		ros-iron-rclpy \
+		ros-iron-rcutils \
+		ros-iron-rcl-interfaces \
+		|| echo "Some ROS2 core packages failed to install"
+	
+	# Standard message packages
+	@echo "Installing message packages..."
+	@sudo apt install -y \
+		ros-iron-std-msgs \
+		ros-iron-std-srvs \
+		ros-iron-builtin-interfaces \
+		ros-iron-geometry-msgs \
+		ros-iron-sensor-msgs \
+		ros-iron-trajectory-msgs \
+		ros-iron-visualization-msgs \
+		ros-iron-lifecycle-msgs \
+		ros-iron-test-msgs \
+		|| echo "Some message packages failed to install"
+	
+	# TF2 packages
+	@echo "Installing TF2 packages..."
+	@sudo apt install -y \
+		ros-iron-tf2 \
+		ros-iron-tf2-ros \
+		ros-iron-tf2-geometry-msgs \
+		|| echo "Some TF2 packages failed to install"
+	
+	# Control and hardware interface packages
+	@echo "Installing control and hardware packages..."
+	@sudo apt install -y \
+		ros-iron-controller-interface \
+		ros-iron-hardware-interface \
+		ros-iron-controller-manager \
+		ros-iron-hardware-interface-testing \
+		ros-iron-ros2-control-test-assets \
+		ros-iron-generate-parameter-library \
+		|| echo "Some control packages failed to install"
+	
+	# MoveIt packages
+	@echo "Installing MoveIt packages..."
+	@sudo apt install -y \
+		ros-iron-moveit-msgs \
+		|| echo "MoveIt packages failed to install"
+	
+	# RViz packages
+	@echo "Installing RViz packages..."
+	@sudo apt install -y \
+		ros-iron-rviz-common \
+		ros-iron-pluginlib \
+		|| echo "RViz packages failed to install"
+	
+	# System libraries
+	@echo "Installing system dependencies..."
+	@sudo apt install -y \
+		libboost-dev \
+		libcap-dev \
+		qtbase5-dev \
+		python3-numpy \
+		python3-scipy \
+		python3-pytest \
+		|| echo "Some system libraries failed to install"
+	
+	# Testing and linting tools
+	@echo "Installing testing and linting tools..."
+	@sudo apt install -y \
+		ros-iron-ament-cmake-gmock \
+		ros-iron-ament-lint-auto \
+		ros-iron-ament-lint-common \
+		ros-iron-ament-copyright \
+		ros-iron-ament-flake8 \
+		ros-iron-ament-pep257 \
+		|| echo "Some testing tools failed to install"
+	
+	# Additional Python dependencies for tf_transformations
+	@echo "Installing additional Python dependencies..."
+	@pip3 install tf-transformations || echo "tf-transformations installation failed"
+	
+	@echo "Manual dependencies installation completed!"
+	@echo "Note: 'nimblpy' is a custom dependency and needs to be installed separately"
 
 .PHONY: build
-build: repos rosdep-install
+build: repos manual_deps
 	@echo "Building cloned packages ..."
 	@cd ../.. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers telesoud_api telesoud_nimblbot_interface welding_scene_publisher interface_rviz_plugin interface_custom_msgs
 	@echo "Cloned packages built"
