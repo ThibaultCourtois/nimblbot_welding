@@ -9,7 +9,7 @@ ROBOT_CONFIG_DIR = $(or $(NB_ROBOTS_CONFIGS),$(HOME)/NimblBot/nimblbot-robots/co
 .ONESHELL:
 
 .PHONY: install
-install: check-deps deps robot-configs repos manual_deps build
+install: check-deps deps robot-configs repos manual-deps build
 	@echo "Installation succeed"
 	@echo "Please run the following command to update your environment:"
 	@echo "source ~/.zshrc"
