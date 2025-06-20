@@ -1,10 +1,15 @@
 NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS/download
-DEB_FILE = rpclib_2.3.0-1_amd64.deb 
+DEB_FILE = rpclib_2.3.0-1_amd64.deb
+
+ROBOT_CONFIGS = https://files.nimbl-bot.com/s/xigrwDftgS6isK3/download \
+								https://files.nimbl-bot.com/s/RdAszgMj5MjALLF/download
+
+ROBOT_CONFIG_DIR = $(or $(NB_ROBOTS_CONFIGS),$(HOME)/NimblBot/nimblbot-robots/conf)
 
 .ONESHELL:
 
 .PHONY: install
-install: check-deps deps repos rosdep-install build
+install: check-deps deps robot-configs repos rosdep-install build
 	@echo "Installation succeed"
 	@echo "Please run the following command to update your environment:"
 	@echo "source ~/.zshrc"
@@ -39,6 +44,33 @@ $(DEB_FILE):
 		echo "Downloading failed"; \
 		exit 1; \
 	fi
+
+.PHONY: robot-configs
+robot-configs:
+	@if [ -z "$(NB_ROBOTS_CONFIGS)" ]; then \
+		echo "NB_ROBOTS_CONFIGS not set, using default: $(ROBOT_CONFIG_DIR)"; \
+		echo "Consider adding 'export NB_ROBOTS_CONFIGS=~/NimblBot/nimblbot-robots/conf' to your ~/.zshrc"; \
+	else \
+		echo "Using NB_ROBOTS_CONFIGS: $(ROBOT_CONFIG_DIR)"; \
+	fi
+	@if [ ! -d "$(ROBOT_CONFIG_DIR)" ]; then \
+		echo "Directory $(ROBOT_CONFIG_DIR) does not exist!"; \
+		echo "Please create it first or set NB_ROBOTS_CONFIGS properly."; \
+		exit 1; \
+	fi
+	@echo "Downloading robot configuration files to $(ROBOT_CONFIG_DIR)..."
+	@for config in $(ROBOT_CONFIGS); do \
+		filename=$$(echo $$config | cut -d: -f1); \
+		url=$$(echo $$config | cut -d: -f2-); \
+		echo "Downloading $$filename..."; \
+		if wget -q "$$url" -O $(ROBOT_CONFIG_DIR)/$$filename; then \
+			echo "$$filename downloaded successfully"; \
+		else \
+			echo "Failed to download $$filename"; \
+			exit 1; \
+		fi; \
+	done
+	@echo "All robot configurations downloaded"
 
 .PHONY: repos
 repos: control_msgs realtime_tools gpio_controllers
