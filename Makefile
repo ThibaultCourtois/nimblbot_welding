@@ -75,7 +75,7 @@ rosdep-install: repos
 		sudo rosdep init || true; \
 	fi
 	@rosdep update
-	@cd ../.. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding/telesoud_api src/nimblbot-welding/telesoud_nimblbot_interface src/nimblbot-welding/welding_scene_publisher src/nimblbot-welding/interface_rviz_plugin src/nimblbot-welding/interface_custom_msgs --ignore-src -r -y
+	@cd ../.. && rosdep install --from-paths src/control_msgs src/realtime_tools src/gpio_controllers src/nimblbot-welding/telesoud_api src/nimblbot-welding/telesoud_nimblbot_interface src/nimblbot-welding/welding_scene_publisher src/nimblbot-welding/interface_rviz_plugin src/nimblbot-welding/interface_custom_msgs --ignore-src -r -y --include-eol-distros
 	@echo "Dependancies installed"
 
 .PHONY: build
