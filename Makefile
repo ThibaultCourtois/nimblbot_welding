@@ -199,7 +199,7 @@ manual-deps: repos
 	@echo "Note: 'nimblpy' is a custom dependency and needs to be installed separately"
 
 .PHONY: build
-build: repos manual_deps
+build: repos manual-deps
 	@echo "Building cloned packages ..."
 	@cd ../.. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers telesoud_api telesoud_nimblbot_interface welding_scene_publisher interface_rviz_plugin interface_custom_msgs
 	@echo "Cloned packages built"
