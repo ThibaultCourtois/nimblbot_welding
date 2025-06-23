@@ -69,7 +69,7 @@ firefox build/html/index.html
 3. Finally you can source your environment:
 
     ```bash
-    source ~/.zshrc
+    source install/setup.zsh  # or setup.bash if using bash
     ```
 
 ## Usage
