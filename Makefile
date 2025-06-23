@@ -88,6 +88,7 @@ manual-deps:
 		ros-iron-hardware-interface-testing \
 		ros-iron-ros2-control-test-assets \
 		ros-iron-generate-parameter-library \
+    --no-install-recommends \
 		|| echo "Some control packages failed to install"
 	
 	# MoveIt packages
