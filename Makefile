@@ -174,11 +174,16 @@ robot-configs:
 		exit 1; \
 	fi
 	@echo "Copying robot configuration files from $(LOCAL_CONFIG_SOURCE) to $(ROBOT_CONFIG_DIR) ..."
-	@cp $(LOCAL_CONFIG_SOURCE)/*.yaml $(ROBOT_CONFIG_DIR) / 2>/dev/null || { \
+	@if ls $(LOCAL_CONFIG_SOURCE)/*.yaml >/dev/null 2>&1; then \
+		for file in $(LOCAL_CONFIG_SOURCE)/*.yaml; do \
+			echo "Copying $file..."; \
+			cp "$file" "$(ROBOT_CONFIG_DIR)/"; \
+		done; \
+		echo "Robot configuration files copied successfully:"; \
+	else \
 		echo "No .yaml files found in $(LOCAL_CONFIG_SOURCE)"; \
 		exit 1; \
-	}
-	@echo "Robot configuration files copied successfully:"
+	fi
 
 .PHONY: repos
 repos: control_msgs realtime_tools gpio_controllers
