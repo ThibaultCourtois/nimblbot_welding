@@ -1,109 +1,42 @@
 NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS/download
 DEB_FILE = rpclib_2.3.0-1_amd64.deb
 
-ROBOT_CONFIGS = nb120_3m_welding.yaml:https://files.nimbl-bot.com/s/xigrwDftgS6isK3/download \
-								nb55_v7_welding.yaml:https://files.nimbl-bot.com/s/RdAszgMj5MjALLF/download
+ROBOT_CONFIGS = https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/raw/main/welding_robot_configurations/nb120_3m_welding.yaml?ref_type=heads&inline=false \
+								https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/raw/main/welding_robot_configurations/nb55_v7_welding.yaml?ref_type=heads&inline=false
 
 ROBOT_CONFIG_DIR = $(or $(NB_ROBOTS_CONFIGS),$(HOME)/NimblBot/nimblbot-robots/conf)
+
+CONFLICTING_PACKAGES = ros-iron-control-msgs ros-iron-realtime-tools
 
 .ONESHELL:
 
 .PHONY: install
-install: check-deps deps robot-configs repos manual-deps build
+install: check-ros manual-deps deps robot-configs repos remove-conflicting-packages build
 	@echo "Installation succeed"
 	@echo "Please run the following command to update your environment:"
 	@echo "source ~/.zshrc"
 	@echo "You will then be able to use Nimblbot Welding :) !"
 
-.PHONY: check-deps
-check-deps:
-	@echo "Prerequities verification ..."
-	@command -v git >/dev/null 2>&1 || { echo "Git is not installed"; exit 1; }
-	@command -v wget >/dev/null 2>&1 || { echo "wget is not installed"; exit 1; }
-	@command -v make >/dev/null 2>&1 || { echo "make is not installed"; exit 1; }
-	@command -v colcon >/dev/null 2>&1 || { echo "colcon is not installed"; exit 1; }
-	@command -v rosdep >/dev/null 2>&1 || { echo "rosdep is not installed"; exit 1; }
-	@echo "Prerequities checked"
-
-.PHONY: deps
-deps: $(DEB_FILE)
-	@echo "RPC C++ library installation ..."
-	@if sudo dpkg -i $(DEB_FILE); then \
-		echo "Library installation succeed"; \
-	else \
-		echo "Error during C++ library installation"; \
-		exit 1; \
-	fi
-	@sudo apt-get install -f
-
-$(DEB_FILE):
-	@echo "Downloading $(DEB_FILE) ..."
-	@if wget -q "$(NEXTCLOUD_SHARE_LINK)" -O $(DEB_FILE); then \
-		echo "Downloading succeed"; \
-	else \
-		echo "Downloading failed"; \
-		exit 1; \
-	fi
-
-.PHONY: robot-configs
-robot-configs:
-	@if [ -z "$(NB_ROBOTS_CONFIGS)" ]; then \
-		echo "NB_ROBOTS_CONFIGS not set, using default: $(ROBOT_CONFIG_DIR)"; \
-		echo "Consider adding 'export NB_ROBOTS_CONFIGS=~/NimblBot/nimblbot-robots/conf' to your ~/.zshrc"; \
-	else \
-		echo "Using NB_ROBOTS_CONFIGS: $(ROBOT_CONFIG_DIR)"; \
-	fi
-	@if [ ! -d "$(ROBOT_CONFIG_DIR)" ]; then \
-		echo "Directory $(ROBOT_CONFIG_DIR) does not exist!"; \
-		echo "Please create it first or set NB_ROBOTS_CONFIGS properly."; \
-		exit 1; \
-	fi
-	@echo "Downloading robot configuration files to $(ROBOT_CONFIG_DIR)..."
-	@for config in $(ROBOT_CONFIGS); do \
-		filename=$$(echo $$config | cut -d: -f1); \
-		url=$$(echo $$config | cut -d: -f2-); \
-		echo "Downloading $$filename..."; \
-		if wget -q "$$url" -O $(ROBOT_CONFIG_DIR)/$$filename; then \
-			echo "$$filename downloaded successfully"; \
-		else \
-			echo "Failed to download $$filename"; \
+.PHONY: check-ros
+check-ros:
+	@echo "ROS2 verification ..."
+	@if ! command -v colcon >/dev/null 2>&1 || ! command -v rosdep >/dev/null 2>&1; then \
+			echo "Warning, before installing this repository, you need to complete the ROS2 installation"; \
+			echo "Link to ROS2 iron installation : https://docs.ros.org/en/iron/Installation.html"
 			exit 1; \
-		fi; \
-	done
-	@echo "All robot configurations downloaded"
-
-.PHONY: repos
-repos: control_msgs realtime_tools gpio_controllers
-
-control_msgs:
-	@if [ ! -d "../control_msgs" ]; then \
-		echo "Cloning control_msgs (master branch) ..."; \
-		git clone -b master https://gitlab.nimbl-bot.com/tcourtois/control_msgs.git ../control_msgs; \
-	else \
-		echo "control_msgs already cloned"; \
-	fi
-
-realtime_tools:
-	@if [ ! -d "../realtime_tools" ]; then \
-		echo "Cloning realtime_tools (iron branch) ..."; \
-		git clone -b iron https://gitlab.nimbl-bot.com/tcourtois/realtime_tools.git ../realtime_tools; \
-	else \
-		echo "realtime_tools already cloned"; \
-	fi
-
-gpio_controllers:
-	@if [ ! -d "../gpio_controllers" ]; then \
-		echo "Cloning gpio_controllers (iron branch) ..."; \
-		git clone -b iron https://gitlab.nimbl-bot.com/tcourtois/gpio_controllers.git ../gpio_controllers; \
-	else \
-		echo "gpio_controllers already cloned"; \
 	fi
 
 .PHONY: manual-deps
-manual-deps: repos
+manual-deps:
 	@echo "Installing ROS2 Iron dependencies manually..."
 	@sudo apt update
-	
+  
+	#Prerequities
+	@echo "Installing prerquities ..."
+	@sudo apt install -y \
+	  git  \
+		wget \
+
 	# Core build tools
 	@echo "Installing core build tools..."
 	@sudo apt install -y \
@@ -206,8 +139,95 @@ manual-deps: repos
 	@echo "Manual dependencies installation completed!"
 	@echo "Note: 'nimblpy' is a custom dependency and needs to be installed separately"
 
+.PHONY: deps
+deps: $(DEB_FILE)
+	@echo "RPC C++ library installation ..."
+	@if sudo dpkg -i $(DEB_FILE); then \
+		echo "Library installation succeed"; \
+	else \
+		echo "Error during C++ library installation"; \
+		exit 1; \
+	fi
+	@sudo apt-get install -f
+
+$(DEB_FILE):
+	@echo "Downloading $(DEB_FILE) ..."
+	@if wget -q "$(NEXTCLOUD_SHARE_LINK)" -O $(DEB_FILE); then \
+		echo "Downloading succeed"; \
+	else \
+		echo "Downloading failed"; \
+		exit 1; \
+	fi
+
+.PHONY: robot-configs
+robot-configs:
+	@if [ -z "$(NB_ROBOTS_CONFIGS)" ]; then \
+		echo "NB_ROBOTS_CONFIGS not set, using default: $(ROBOT_CONFIG_DIR)"; \
+		echo "Consider adding 'export NB_ROBOTS_CONFIGS=~/NimblBot/nimblbot-robots/conf' to your ~/.zshrc"; \
+	else \
+		echo "Using NB_ROBOTS_CONFIGS: $(ROBOT_CONFIG_DIR)"; \
+	fi
+	@if [ ! -d "$(ROBOT_CONFIG_DIR)" ]; then \
+		echo "Directory $(ROBOT_CONFIG_DIR) does not exist!"; \
+		echo "Please create it first or set NB_ROBOTS_CONFIGS properly."; \
+		exit 1; \
+	fi
+	@echo "Downloading robot configuration files to $(ROBOT_CONFIG_DIR)..."
+	@for config in $(ROBOT_CONFIGS); do \
+		filename=$$(echo $$config | cut -d: -f1); \
+		url=$$(echo $$config | cut -d: -f2-); \
+		echo "Downloading $$filename..."; \
+		if wget -q "$$url" -O $(ROBOT_CONFIG_DIR)/$$filename; then \
+			echo "$$filename downloaded successfully"; \
+		else \
+			echo "Failed to download $$filename"; \
+			exit 1; \
+		fi; \
+	done
+	@echo "All robot configurations downloaded"
+
+.PHONY: repos
+repos: control_msgs realtime_tools gpio_controllers
+
+control_msgs:
+	@if [ ! -d "../control_msgs" ]; then \
+		echo "Cloning control_msgs (master branch) ..."; \
+		git clone -b master https://gitlab.nimbl-bot.com/tcourtois/control_msgs.git ../control_msgs; \
+	else \
+		echo "control_msgs already cloned"; \
+	fi
+
+realtime_tools:
+	@if [ ! -d "../realtime_tools" ]; then \
+		echo "Cloning realtime_tools (iron branch) ..."; \
+		git clone -b iron https://gitlab.nimbl-bot.com/tcourtois/realtime_tools.git ../realtime_tools; \
+	else \
+		echo "realtime_tools already cloned"; \
+	fi
+
+gpio_controllers:
+	@if [ ! -d "../gpio_controllers" ]; then \
+		echo "Cloning gpio_controllers (iron branch) ..."; \
+		git clone -b iron https://gitlab.nimbl-bot.com/tcourtois/gpio_controllers.git ../gpio_controllers; \
+	else \
+		echo "gpio_controllers already cloned"; \
+	fi
+
+.PHONY: remove-conflicting-packages
+remove-conflicting-packages:
+	@echo "Removing potentially conflicting debian packages ..."
+	@for package in $(CONFLICTING_PACKAGES); do \
+		if dpkg -l | grep -q $$package; then \
+		  echo "Removing $$package ..."; \
+			sudo apt remove -y $$package || echo "Failed to remove $$package (might not be installed)"; \
+		else \
+		  echo "$$package not installed, skipping"; \
+		fi; \
+	done
+	@echo "Conflicting packages removal completed"
+
 .PHONY: build
-build: repos manual-deps
+build: repos
 	@echo "Building cloned packages ..."
 	@cd ../.. && colcon build --symlink-install --packages-select control_msgs realtime_tools gpio_controllers telesoud_api telesoud_nimblbot_interface welding_scene_publisher interface_rviz_plugin interface_custom_msgs --allow-overriding control_msgs realtime_tools
 	@echo "Cloned packages built"
@@ -222,10 +242,11 @@ clean:
 .PHONY: help
 help:
 	@echo "Available commands:"
-	@echo "  make install       - Complete installation"
-	@echo "  make deps         - Install only the C++ library"
+	@echo "  make install      - Complete installation"
+	@echo "  make check-ros    - Checks if ROS2 is installed"
+	@echo "  make manual-deps  - Install dependencies"
 	@echo "  make repos        - Clone only the repositories"
-	@echo "  make rosdep-install - Install ROS2 dependencies"
+	@echo "  make remove-conflicting-packages - Remove conflicting debian packages"
 	@echo "  make build        - Build selected packages"
 	@echo "  make clean        - Remove cloned packages"
 	@echo "  make help         - Show this help"	
