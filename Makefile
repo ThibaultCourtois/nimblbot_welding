@@ -176,8 +176,8 @@ robot-configs:
 	@echo "Copying robot configuration files from $(LOCAL_CONFIG_SOURCE) to $(ROBOT_CONFIG_DIR) ..."
 	@if ls $(LOCAL_CONFIG_SOURCE)/*.yaml >/dev/null 2>&1; then \
 		for file in $(LOCAL_CONFIG_SOURCE)/*.yaml; do \
-			echo "Copying $file..."; \
-			cp "$file" "$(ROBOT_CONFIG_DIR)/"; \
+			echo "Copying $$file..."; \
+			cp "$$file" "$(ROBOT_CONFIG_DIR)/"; \
 		done; \
 		echo "Robot configuration files copied successfully:"; \
 	else \
