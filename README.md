@@ -32,8 +32,7 @@ firefox build/html/index.html
 ```
 
 ## Requirements
-
-1. Complete the ROS 2 configuration page in Notion
+1. Complete the ROS 2 configuration page in Notion. When using the Makefile, the two welding robot YAML files from the [welding robot configurations](https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/tree/main/welding_robot_configurations?ref_type=heads) will be automatically copied into your configuration repository. You can then edit them according to your needs using the [`nbrobotseditor`](https://gitlab.nimbl-bot.com/nimbl-bot/gui/nimblbot-robots-gui) tool.
 2. Use the upcoming release of the `feat/cartesian_control` branch of the `nimblbot-ros2` packages directory with a `nimblbot_cartesian_command` package that contains a node called `multiple_command.py`
 3. This installation guide assumes you have a working Nimbl'Bot system with functional `NimblPy` and `PyLuos` libraries. Ensure you can successfully run the `teleop_demo_launch` from the `nimblbot-ros2` packages directory.
 5. You also need to have the NimblBot-WeezTouch electrical cabinet connected to your computer with an ethernet cable. To set up the required TCP/IP connection between the two systems, follow these steps:
