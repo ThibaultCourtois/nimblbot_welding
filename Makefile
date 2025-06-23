@@ -12,7 +12,7 @@ CONFLICTING_PACKAGES = ros-iron-control-msgs ros-iron-realtime-tools
 .ONESHELL:
 
 .PHONY: install
-install: check-ros manual-deps deps robot-configs repos remove-conflicting-packages build
+install: check-ros manual-deps deps robot-configs repos build
 	@echo "Installation succeed"
 	@echo "Please run the following command to update your environment:"
 	@echo "source ~/.zshrc"
@@ -212,19 +212,6 @@ gpio_controllers:
 	else \
 		echo "gpio_controllers already cloned"; \
 	fi
-
-.PHONY: remove-conflicting-packages
-remove-conflicting-packages:
-	@echo "Removing potentially conflicting debian packages ..."
-	@for package in $(CONFLICTING_PACKAGES); do \
-		if dpkg -l | grep -q $$package; then \
-		  echo "Removing $$package ..."; \
-			sudo apt remove -y $$package || echo "Failed to remove $$package (might not be installed)"; \
-		else \
-		  echo "$$package not installed, skipping"; \
-		fi; \
-	done
-	@echo "Conflicting packages removal completed"
 
 .PHONY: build
 build: repos
