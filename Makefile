@@ -5,6 +5,7 @@ ROBOT_CONFIGS = https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/raw/ma
 								https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/raw/main/welding_robot_configurations/nb55_v7_welding.yaml
 
 ROBOT_CONFIG_DIR = $(or $(NB_ROBOTS_CONFIGS),$(HOME)/NimblBot/nimblbot-robots/conf)
+LOCAL_CONFIG_SOURCE = ./welding_robot_configurations
 
 CONFLICTING_PACKAGES = ros-iron-control-msgs ros-iron-realtime-tools
 
@@ -172,19 +173,12 @@ robot-configs:
 		echo "Please create it first or set NB_ROBOTS_CONFIGS properly."; \
 		exit 1; \
 	fi
-	@echo "Downloading robot configuration files to $(ROBOT_CONFIG_DIR)..."
-	@for config in $(ROBOT_CONFIGS); do \
-		filename=$$(echo $$config | cut -d: -f1); \
-		url=$$(echo $$config | cut -d: -f2-); \
-		echo "Downloading $$filename..."; \
-		if wget -q "$$url" -O $(ROBOT_CONFIG_DIR)/$$filename; then \
-			echo "$$filename downloaded successfully"; \
-		else \
-			echo "Failed to download $$filename"; \
-			exit 1; \
-		fi; \
-	done
-	@echo "All robot configurations downloaded"
+	@echo "Copying robot configuration files from $(LOCAL_CONFIG_SOURCE) to $(ROBOT_CONFIG_DIR) ..."
+	@cp $(LOCAL_CONFIG_SOURCE)/*.yaml $(ROBOT_CONFIG_DIR) / 2>/dev/null || { \
+		echo "No .yaml files found in $(LOCAL_CONFIG_SOURCE)"; \
+		exit 1; \
+	}
+	@echo "Robot configuration files copied successfully:"
 
 .PHONY: repos
 repos: control_msgs realtime_tools gpio_controllers
