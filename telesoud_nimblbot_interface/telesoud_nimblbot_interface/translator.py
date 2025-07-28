@@ -258,9 +258,9 @@ class TranslatorNode(Node):
                 self._robot_data_msg.pose.position.x,
                 self._robot_data_msg.pose.position.y,
                 self._robot_data_msg.pose.position.z,
-                euler[0],  # Telesoud expects radians for the orientation
+                euler[2],  # Telesoud expects radians for the orientation
                 euler[1],
-                euler[2],
+                euler[0],
             ]
 
         except Exception as e:
@@ -286,7 +286,7 @@ class TranslatorNode(Node):
         with quaternion orientation.
 
         Args:
-            pose: List of 6 floats [x, y, z, roll, pitch, yaw]
+            pose: List of 6 floats [x, y, z, yaw, pitch, roll]
 
         Returns:
             Pose message with position and quaternion orientation
@@ -295,7 +295,7 @@ class TranslatorNode(Node):
             if len(pose) < 6:
                 raise ValueError(f"Pose array too short: {len(pose)} element, need 6")
 
-            x, y, z, roll, pitch, yaw = [float(val) for val in pose[:6]]
+            x, y, z, yaw, pitch, roll  = [float(val) for val in pose[:7]]
         except (ValueError, TypeError, IndexError) as e:
             raise ValueError(f"Invalid pose data: {e}")
 
@@ -303,7 +303,7 @@ class TranslatorNode(Node):
         self._command_msg.target_pose.position.y = pose[1]
         self._command_msg.target_pose.position.z = pose[2]
 
-        quaternion = quaternion_from_euler(pose[3], pose[4], pose[5])
+        quaternion = quaternion_from_euler(pose[5], pose[4], pose[3])
 
         self._command_msg.target_pose.orientation.x = quaternion[0]
         self._command_msg.target_pose.orientation.y = quaternion[1]
