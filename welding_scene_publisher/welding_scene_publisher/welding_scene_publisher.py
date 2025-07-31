@@ -20,8 +20,20 @@ CUVE_PATH = "file://" + os.path.join(
     get_package_share_directory("welding_scene_publisher"), "scene_meshes", "Cuve.stl"
 )
 
+SUPPORT_PATH = "file://" + os.path.join(
+    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "Support_NB120.stl"
+)
+
+SUPPORT_RIDEAUX_PATH = "file://" + os.path.join(
+    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "Support_NB120_Rideaux.stl"
+)
+
+TABLE_PATH = "file://" + os.path.join(
+    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "table_soudure_montage_soudure_plat.stl"
+)
+
 SCENES_CONFIG = {
-    "standard": [
+    "55_standard_V": [
         {
             "path": CYLINDRE_PATH,
             "id": 0,
@@ -39,7 +51,25 @@ SCENES_CONFIG = {
             "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
         },
     ],
-    "cuve": [
+    "120_standard_V": [
+        {
+            "path": CYLINDRE_PATH,
+            "id": 0,
+            "position": {"x": 1.0, "y": 0.0, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+            "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
+            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+        },
+        {
+            "path": SADDLE_PATH,
+            "id": 1,
+            "position": {"x": 0.0, "y": 1.0, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071, "w": 0.7071},
+            "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
+            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+        },
+    ],
+    "55_cuve_H": [
         {
             "path": CUVE_PATH,
             "id": 0,
@@ -48,6 +78,24 @@ SCENES_CONFIG = {
             "scale": {"x": 0.005, "y": 0.005, "z": 0.005},
             "color": {"r": 0.5, "g": 0.5, "b": 0.5, "a": 1.0},
         }
+    ],
+    "120_2025_H": [
+        {
+            "path": SUPPORT_RIDEAUX_PATH,
+            "id": 0,
+            "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071868, "w":0.7071868},
+            "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
+            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+        },
+        {
+            "path": TABLE_PATH,
+            "id": 1,
+            "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071868, "w": 0.7071868},
+            "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
+            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+        },
     ],
 }
 
@@ -79,7 +127,7 @@ class welding_mesh_publisher(Node):
         marker = Marker()
 
         # Header
-        marker.header.frame_id = "nb/base_link"
+        marker.header.frame_id = "world"
         marker.header.stamp = self.get_clock().now().to_msg()
 
         # Marker properties
