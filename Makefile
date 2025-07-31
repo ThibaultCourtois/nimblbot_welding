@@ -1,5 +1,11 @@
-NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS/download
-DEB_FILE = rpclib_2.3.0-1_amd64.deb
+ARCH := $(shell dpkg --print-architecture)
+ifeq ($(ARCH), arm64)
+	RPCLIB_SOURCE = https://github.com/rpclib/rpclib.git
+	RPCLIB_VERSION = v2.3.0
+else
+	NEXTCLOUD_SHARE_LINK = https://files.nimbl-bot.com/s/eASNJt3BtyMeADS/download
+	DEB_FILE = rpclib_2.3.0-1_amd64.deb
+endif
 
 ROBOT_CONFIGS = https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/raw/main/welding_robot_configurations/nb120_3m_welding.yaml \
 								https://gitlab.nimbl-bot.com/tcourtois/nimblbot-welding/-/raw/main/welding_robot_configurations/nb55_v7_welding.yaml
@@ -142,24 +148,30 @@ manual-deps:
 	@echo "Note: 'nimblpy' is a custom dependency and needs to be installed separately"
 
 .PHONY: deps
-deps: $(DEB_FILE)
-	@echo "RPC C++ library installation ..."
-	@if sudo dpkg -i $(DEB_FILE); then \
-		echo "Library installation succeed"; \
-	else \
-		echo "Error during C++ library installation"; \
-		exit 1; \
-	fi
-	@sudo apt-get install -f
-
-$(DEB_FILE):
-	@echo "Downloading $(DEB_FILE) ..."
-	@if wget -q "$(NEXTCLOUD_SHARE_LINK)" -O $(DEB_FILE); then \
-		echo "Downloading succeed"; \
-	else \
-		echo "Downloading failed"; \
-		exit 1; \
-	fi
+deps:
+	ifeq($(ARCH),arm64)
+		@echo "Installing rpclib from source for ARM64..."
+		@if [ ! -d "rpclib"]; then \
+			git clone $(RPCLIB_SOURCE) rpclib; \
+			cd rpclib && git checkout $(RPCLIB_VERSION); \
+		fi
+		@cd rpclib && mkdir -p build && cd build && \
+			cmake .. && \
+			make -j$$(nproc) && \
+			sudo make install
+		@sudo ldconfig
+		@echo "rpclib compiled and installed successfully"
+	else
+		@echo "Installing rpclib form package for AMD64..."
+		@$(MAKE) &(DEB_FILE)
+		@if sudo dpkg -i $(DEB_FILE); then \
+			echo "Library installation succeed"; \
+		else \
+			echo "Error during C++ library installation"; \
+			exit 1; \
+		fi
+		@sudo apt-get install -f
+	endif
 
 .PHONY: robot-configs
 robot-configs:
@@ -223,7 +235,11 @@ build: repos
 clean:
 	@echo "Cleaning cloned packages..."
 	@rm -rf ../control_msgs ../realtime_tools ../gpio_controllers
-	@rm -f $(DEB_FILE)
+	ifeq ($(ARCH), arm64)
+		@rm -rf rpclib
+	else 
+		@rm -f $(DEB_FILE)
+	endif
 	@echo "Cleaning done"
 
 .PHONY: help
