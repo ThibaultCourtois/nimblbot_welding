@@ -149,29 +149,29 @@ manual-deps:
 
 .PHONY: deps
 deps:
-	ifeq ($(ARCH),arm64)
-		@echo "Installing rpclib from source for ARM64..."
-		@if [ ! -d "rpclib"]; then \
-			git clone $(RPCLIB_SOURCE) rpclib; \
-			cd rpclib && git checkout $(RPCLIB_VERSION); \
-		fi
-		@cd rpclib && mkdir -p build && cd build && \
-			cmake .. && \
-			make -j$$(nproc) && \
-			sudo make install
-		@sudo ldconfig
-		@echo "rpclib compiled and installed successfully"
-	else
-		@echo "Installing rpclib form package for AMD64..."
-		@$(MAKE) &(DEB_FILE)
-		@if sudo dpkg -i $(DEB_FILE); then \
-			echo "Library installation succeed"; \
-		else \
-			echo "Error during C++ library installation"; \
-			exit 1; \
-		fi
-		@sudo apt-get install -f
-	endif
+ifeq ($(ARCH),arm64)
+	@echo "Installing rpclib from source for ARM64..."
+	@if [ ! -d "rpclib" ]; then \
+		git clone https://github.com/rpclib/rpclib.git rpclib; \
+		cd rpclib && git checkout v2.3.0; \
+	fi
+	@cd rpclib && mkdir -p build && cd build && \
+		cmake .. && \
+		make -j$$(nproc) && \
+		sudo make install
+	@sudo ldconfig
+	@echo "rpclib compiled and installed successfully"
+else
+	@echo "Installing rpclib from package for AMD64..."
+	@$(MAKE) $(DEB_FILE)
+	@if sudo dpkg -i $(DEB_FILE); then \
+		echo "Library installation succeed"; \
+	else \
+		echo "Error during C++ library installation"; \
+		exit 1; \
+	fi
+	@sudo apt-get install -f
+endif
 
 .PHONY: robot-configs
 robot-configs:
@@ -235,12 +235,12 @@ build: repos
 clean:
 	@echo "Cleaning cloned packages..."
 	@rm -rf ../control_msgs ../realtime_tools ../gpio_controllers
-	ifeq ($(ARCH), arm64)
-		@rm -rf rpclib
-	else 
-		@rm -f $(DEB_FILE)
-	endif
-	@echo "Cleaning done"
+ifeq ($(ARCH), arm64)
+	@rm -rf rpclib
+else 
+	@rm -f $(DEB_FILE)
+endif
+@echo "Cleaning done"
 
 .PHONY: help
 help:
