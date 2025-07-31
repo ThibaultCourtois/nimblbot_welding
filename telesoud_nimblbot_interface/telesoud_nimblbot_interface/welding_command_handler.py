@@ -143,6 +143,11 @@ class WeldingCommandHandlerNode(Node):
         self.current_target_pose = None
         self.declare_parameter("pos_gain", 1.0)
         self.declare_parameter("quat_gain", 1.0)
+        self.declare_parameter("welding_scene", "standard")
+        self.welding_scene = self.get_parameter("welding_scene").get_parameter_value().string_value
+        if self.welding_scene != "standard":
+            #self._motor_lock_msg.data=list(range(6))
+            pass
         self.current_speed_vector = self._twist_msg
         # Cartesian movement interpolation
         self.interpolated_line_poses = None
@@ -173,7 +178,8 @@ class WeldingCommandHandlerNode(Node):
         self.motor_lock_pub = self.create_publisher(
             Int8MultiArray, "/nb/motor_lock", 10
         )
-
+        self.motor_lock_pub.publish(self._motor_lock_msg)
+        
         self.desired_pose_pub = self.create_publisher(
             PoseStamped, "/nb/desired_pose", 10
         )
