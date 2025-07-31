@@ -149,7 +149,7 @@ manual-deps:
 
 .PHONY: deps
 deps:
-	ifeq($(ARCH),arm64)
+	ifeq ($(ARCH),arm64)
 		@echo "Installing rpclib from source for ARM64..."
 		@if [ ! -d "rpclib"]; then \
 			git clone $(RPCLIB_SOURCE) rpclib; \
