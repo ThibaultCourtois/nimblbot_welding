@@ -133,6 +133,13 @@ class TranslatorNode(Node):
                 case 0:
                     self._command_msg.command_type = Command.COMMAND_STOP
                     self.get_logger().debug("Instruction STOP")
+                
+                    self._command_msg.speed_vector.linear.x = 0.0
+                    self._command_msg.speed_vector.linear.y = 0.0
+                    self._command_msg.speed_vector.linear.z = 0.0
+                    self._command_msg.speed_vector.angular.x = 0.0
+                    self._command_msg.speed_vector.angular.y = 0.0
+                    self._command_msg.speed_vector.angular.z = 0.0
 
                 case 1:
                     self._command_msg.command_type = Command.COMMAND_GET_ROBOT_DATA
@@ -155,13 +162,13 @@ class TranslatorNode(Node):
                             self._command_msg.speed_vector.linear.z = tcp_speed_vector[
                                 2
                             ]
-                            self._command_msg.speed_vector.angular.x = tcp_speed_vector[
+                            self._command_msg.speed_vector.angular.z = tcp_speed_vector[
                                 3
                             ]
                             self._command_msg.speed_vector.angular.y = tcp_speed_vector[
                                 4
                             ]
-                            self._command_msg.speed_vector.angular.z = tcp_speed_vector[
+                            self._command_msg.speed_vector.angular.x = tcp_speed_vector[
                                 5
                             ]
                         else:
