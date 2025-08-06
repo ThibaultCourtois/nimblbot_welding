@@ -21,15 +21,25 @@ CUVE_PATH = "file://" + os.path.join(
 )
 
 SUPPORT_PATH = "file://" + os.path.join(
-    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "Support_NB120.stl"
+    get_package_share_directory("welding_scene_publisher"),
+    "scene_meshes",
+    "Support_NB120.stl",
 )
 
 SUPPORT_RIDEAUX_PATH = "file://" + os.path.join(
-    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "Support_NB120_Rideaux.stl"
+    get_package_share_directory("welding_scene_publisher"),
+    "scene_meshes",
+    "Support_NB120_Rideaux.stl",
 )
 
 TABLE_PATH = "file://" + os.path.join(
-    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "table_soudure_montage_soudure_plat.stl"
+    get_package_share_directory("welding_scene_publisher"),
+    "scene_meshes",
+    "table_soudure_montage_soudure_plat.stl",
+)
+
+BASE_PATH = "file://" + os.path.join(
+    get_package_share_directory("welding_scene_publisher"), "scene_meshes", "base.stl"
 )
 
 SCENES_CONFIG = {
@@ -37,7 +47,7 @@ SCENES_CONFIG = {
         {
             "path": CYLINDRE_PATH,
             "id": 0,
-            "position": {"x": 1.0, "y": 0.0, "z": 0.0},
+            "position": {"x": 0.0, "y": -0.3, "z": 0.0},
             "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
             "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
             "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
@@ -45,10 +55,18 @@ SCENES_CONFIG = {
         {
             "path": SADDLE_PATH,
             "id": 1,
-            "position": {"x": 0.0, "y": 1.0, "z": 0.0},
+            "position": {"x": 0.0, "y": 0.3, "z": 0.0},
             "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071, "w": 0.7071},
             "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
             "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+        },
+        {
+            "path": BASE_PATH,
+            "id": 2,
+            "position": {"x": -1.5, "y": -1.5, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+            "scale": {"x": 0.005, "y": 0.005, "z": 0.005},
+            "color": {"r": 0.7, "g": 1.0, "b": 0.7, "a": 0.7},
         },
     ],
     "120_standard_V": [
@@ -73,20 +91,36 @@ SCENES_CONFIG = {
         {
             "path": CUVE_PATH,
             "id": 0,
-            "position": {"x": 0.0, "y": 0.0, "z": 0.73},
-            "orientation": {"x": 0.7070268, "y": 0.0, "z": 0.0, "w": 0.7071868},
+            "position": {"x": 0.0, "y": 0.73, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+            "scale": {"x": 0.007, "y": 0.007, "z": 0.007},
+            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+        },
+        {
+            "path": BASE_PATH,
+            "id": 1,
+            "position": {"x": -1.5, "y": -0.8, "z": -0.45},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
             "scale": {"x": 0.005, "y": 0.005, "z": 0.005},
-            "color": {"r": 0.5, "g": 0.5, "b": 0.5, "a": 1.0},
-        }
+            "color": {"r": 0.7, "g": 1.0, "b": 0.7, "a": 0.7},
+        },
+        {
+            "path": CYLINDRE_PATH,
+            "id": 2,
+            "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "orientation": {"x": 0.7071, "y": 0.0, "z": 0.0, "w": 0.7071},
+            "scale": {"x": 0.0004, "y": 0.0004, "z": 0.005},
+            "color": {"r": 0.5, "g": 0.3, "b": 0.3, "a": 1.0},
+        },
     ],
     "120_2025_H": [
         {
             "path": SUPPORT_RIDEAUX_PATH,
             "id": 0,
             "position": {"x": 0.0, "y": 0.0, "z": 0.0},
-            "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071868, "w":0.7071868},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071868, "w": 0.7071868},
             "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
-            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+            "color": {"r": 0.5, "g": 0.5, "b": 0.5, "a": 1.0},
         },
         {
             "path": TABLE_PATH,
@@ -94,7 +128,15 @@ SCENES_CONFIG = {
             "position": {"x": 0.0, "y": 0.0, "z": 0.0},
             "orientation": {"x": 0.0, "y": 0.0, "z": 0.7071868, "w": 0.7071868},
             "scale": {"x": 0.001, "y": 0.001, "z": 0.001},
-            "color": {"r": 0.7, "g": 0.7, "b": 0.7, "a": 1.0},
+            "color": {"r": 0.5, "g": 0.5, "b": 0.5, "a": 1.0},
+        },
+        {
+            "path": BASE_PATH,
+            "id": 2,
+            "position": {"x": -3.5, "y": -2.2, "z": 0.0},
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+            "scale": {"x": 0.01, "y": 0.01, "z": 0.01},
+            "color": {"r": 0.7, "g": 1.0, "b": 0.7, "a": 0.7},
         },
     ],
 }
