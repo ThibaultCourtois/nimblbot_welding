@@ -38,7 +38,7 @@ DEFAULT_TCP_SPEED = 0.005
 
 ZERO_THRESHOLD = 1e-8
 
-SERVICE_TIMEOUT = 5.0
+SERVICE_TIMEOUT = 5
 
 
 class ControlMode:
@@ -81,13 +81,9 @@ class WeldingCommandHandlerNode(Node):
         self._create_publishers()
         self._create_subscriptions()
         self._create_clients()
-
-        self.__timer_state_machine = self.create_timer(
-            TIMER_PERIOD, self._update_state_machine
-        )
-        self.command_timer = self.create_timer(
-            TIMER_PERIOD, self.process_pending_command
-        )
+        self.create_timer(TIMER_PERIOD, self._update_state_machine)
+        self.create_timer(TIMER_PERIOD, self.process_pending_command)
+        self.motor_lock_pub.publish(self._motor_lock_msg)
 
     def _initialize_reusable_ros_msg_objects(self) -> None:
         """Initialize reusable ROS message objects to avoid repeated instantiation."""
@@ -103,15 +99,16 @@ class WeldingCommandHandlerNode(Node):
         self._twist_msg = Twist()
 
         self._pose_stamped_msg = PoseStamped()
-        self._pose_stamped_msg.header.frame_id = (
-            self.__base_frame_robot
-        )  # Frame constant
+        self._pose_stamped_msg.header.frame_id = self.__base_frame_robot
+        self._pose_stamped_msg.pose = Pose()
 
         self._target_pose_msg = PoseStamped()
         self._target_pose_msg.header.frame_id = self.__base_frame_robot
+        self._target_pose_msg.pose = Pose()
 
         self._current_pose_msg = PoseStamped()
         self._current_pose_msg.header.frame_id = self.__base_frame_robot
+        self._current_pose_msg.pose = Pose()
 
     def _initialize_basic_parameters(self) -> None:
         """Initialize basic node parameters and state variables.
@@ -142,13 +139,19 @@ class WeldingCommandHandlerNode(Node):
         # Movement  parameters
         self.tcp_pose = None
         self.tcp_speed = DEFAULT_TCP_SPEED
-        self.current_target_pose = None
+
+        default_pose = Pose()
+        default_pose.orientation.w = 1.0
+        self.current_target_pose = default_pose
+
         self.declare_parameter("pos_gain", 1.0)
         self.declare_parameter("quat_gain", 1.0)
         self.declare_parameter("welding_scene", "standard")
-        self.welding_scene = self.get_parameter("welding_scene").get_parameter_value().string_value
+        self.welding_scene = (
+            self.get_parameter("welding_scene").get_parameter_value().string_value
+        )
         if self.welding_scene != "standard":
-            #self._motor_lock_msg.data=list(range(6))
+            # self._motor_lock_msg.data=list(range(6))
             pass
         self.current_speed_vector = self._twist_msg
         # Cartesian movement interpolation
@@ -163,7 +166,7 @@ class WeldingCommandHandlerNode(Node):
         self.__ee_frame_robot: str = self.__ee_frame_mimic.replace("_mimic", "")
         # TF
         self.__tf_buffer = Buffer()
-        self.__tf_listener = TransformListener(self.__tf_buffer, self)
+        TransformListener(self.__tf_buffer, self)
 
     def _create_publishers(self) -> None:
         """Create ROS2 publishers for robot control and status communication.
@@ -181,7 +184,7 @@ class WeldingCommandHandlerNode(Node):
             Int8MultiArray, "/nb/motor_lock", 10
         )
         self.motor_lock_pub.publish(self._motor_lock_msg)
-        
+
         self.desired_pose_pub = self.create_publisher(
             PoseStamped, "/nb/desired_pose", 10
         )
@@ -283,7 +286,7 @@ class WeldingCommandHandlerNode(Node):
             + "/clear_path",
         )
 
-    def _get_param(self, node_name: str, parameters: str) -> ParameterValue:
+    def _get_param(self, node_name: str, parameters: str) -> Optional[ParameterValue]:
         """Retrieve parameter value from a specified ROS2 node.
 
         Args:
@@ -299,14 +302,14 @@ class WeldingCommandHandlerNode(Node):
             self.get_logger().info(f"Waiting for {node_name} to get parameter...")
 
         future = client.call_async(GetParameters.Request(names=[parameters]))
-
         rclpy.spin_until_future_complete(self, future)
-
-        if future.result() is not None:
+        result = future.result()
+        if result is not None:
             try:
-                response: GetParameters.Response = future.result()
-                if response.values:
-                    return response.values[0]
+                response: GetParameters.Response = result
+                if response.values and len(response.values) > 0:
+                    values_list = list(response.values)
+                    return values_list[0]
                 else:
                     self.get_logger().error("Parameter not found")
             except Exception as e:
@@ -577,7 +580,7 @@ class WeldingCommandHandlerNode(Node):
             self.tcp_pose_pub.publish(self.tcp_pose)
         self.robotState_pub.publish(self._robot_state_msg)
 
-    def _is_cartesian_trajectory_complete(self) -> None:
+    def _is_cartesian_trajectory_complete(self) -> bool:
         """Execute and check if cartesian trajectory execution is complete.
 
         Returns:
@@ -593,7 +596,7 @@ class WeldingCommandHandlerNode(Node):
                     return True
         return False
 
-    def _is_joint_trajectory_complete(self) -> None:
+    def _is_joint_trajectory_complete(self) -> bool:
         """Execute and check if joint trajectory execution is complete.
 
         Returns:
@@ -630,7 +633,7 @@ class WeldingCommandHandlerNode(Node):
                 self.get_logger().error(f"Error during joint trajectory execution {e}")
         return False
 
-    def _is_dynamic_movement_complete(self) -> None:
+    def _is_dynamic_movement_complete(self) -> bool:
         """Execute and check if dynamic cartesian movement should continue or stop.
 
         Returns:
@@ -683,7 +686,7 @@ class WeldingCommandHandlerNode(Node):
 
         return current_pose
 
-    def _get_position_error(self, current_pose: Pose, target_pose: Pose) -> float:
+    def _get_position_error(self, current_pose: Pose, target_pose: Pose) -> np.array:
         """Calculate euclidean distance between current and target positions.
 
         Args:
@@ -705,10 +708,10 @@ class WeldingCommandHandlerNode(Node):
 
         Integrates current speed vector to generate incremental pose updates
         for real-time cartesian control.
-        
-        Speed vectors orientation fields are interpreted following 
+
+        Speed vectors orientation fields are interpreted following
         axe-angle rotation coding convention.
-        
+
         Returns:
             Target pose message, or None if no movement commanded
         """
@@ -717,6 +720,10 @@ class WeldingCommandHandlerNode(Node):
 
         pos_gain = self.get_parameter("pos_gain").value
         quat_gain = self.get_parameter("quat_gain").value
+
+        if pos_gain is None or quat_gain is None:
+            self.get_logger().error("pos_gain or quat_gain parameter not set")
+            return None
 
         if not self.virtual_pose_initialized:
             current_pose = self._get_current_pose(mimic=False)
@@ -753,40 +760,40 @@ class WeldingCommandHandlerNode(Node):
 
         if omega_norm > ZERO_THRESHOLD:
             rotation_vector = np.array([rx, ry, rz]) * dt * quat_gain
-            
+
             try:
                 rotation = R.from_rotvec(rotation_vector)
                 dquat_scipy = rotation.as_quat()  # Format [x,y,z,w]
-                
+
                 current_quat_xyzw = [
                     working_pose.pose.orientation.x,
                     working_pose.pose.orientation.y,
                     working_pose.pose.orientation.z,
                     working_pose.pose.orientation.w,
                 ]
-                
+
                 new_quat_xyzw = quaternion_multiply(current_quat_xyzw, dquat_scipy)
-                
+
                 self.virtual_pose.pose.orientation = Quaternion(
-                    x=new_quat_xyzw[0], 
+                    x=new_quat_xyzw[0],
                     y=new_quat_xyzw[1],
                     z=new_quat_xyzw[2],
-                    w=new_quat_xyzw[3]
+                    w=new_quat_xyzw[3],
                 )
 
-            except Exception as e: 
+            except Exception as e:
                 self.get_logger().error(f"Error in rotation computation: {e}")
                 return None
-                
+
         target_pose_msg = self._target_pose_msg
         target_pose_msg.header.stamp = self.get_clock().now().to_msg()
         target_pose_msg.pose = Pose(
             position=Point(
-                x=self.virtual_pose.pose.position.x, 
+                x=self.virtual_pose.pose.position.x,
                 y=self.virtual_pose.pose.position.y,
                 z=self.virtual_pose.pose.position.z,
             ),
-            orientation=Quaternion( 
+            orientation=Quaternion(
                 x=self.virtual_pose.pose.orientation.x,
                 y=self.virtual_pose.pose.orientation.y,
                 z=self.virtual_pose.pose.orientation.z,
@@ -1018,7 +1025,7 @@ class WeldingCommandHandlerNode(Node):
             self.robot_in_fault_status = True
             return None
 
-    def on_clear_tcp_trace(self, msg: Empty) -> None:
+    def on_clear_tcp_trace(self, _: Empty) -> None:
         """Handle TCP trace clearing command from RViz plugin.
 
         Args:

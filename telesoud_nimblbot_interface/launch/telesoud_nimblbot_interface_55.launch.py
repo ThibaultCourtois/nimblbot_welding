@@ -50,7 +50,7 @@ def generate_launch_description():
 
     welding_scene_param = DeclareLaunchArgument(
         "welding_scene",
-        default_value="standard",
+        default_value="55_standard_V",
         description="Welding scene",
     )
 
@@ -139,7 +139,7 @@ def generate_launch_description():
             "0.03",
             "0.0",
             "-1.57057",
-            "-1.57057",
+            "3.14",
             "nb/wrist",
             "file://"
             + os.path.join(
@@ -257,7 +257,9 @@ def generate_launch_description():
             "--child-frame-id",
             "nb/base_link",
         ],
-        condition=IfCondition(PythonExpression(['"', welding_scene, '".endswith("H")'])),
+        condition=IfCondition(
+            PythonExpression(['"', welding_scene, '".endswith("H")'])
+        ),
     )
 
     welding_scene_publisher_node = Node(
@@ -270,13 +272,13 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            TimerAction(period=0.5, actions=[nb_nodes]),
-            tf2_world_node_horizontal,
-            tf2_world_node_vertical,
-            mesh_torche_soudure,
-            robot_moveit_nodes,
+            TimerAction(period=0.0, actions=[nb_nodes]),
+            TimerAction(period=1.0, actions=[robot_moveit_nodes]),
             TimerAction(
-                period=5.0,
+                period=2.0, actions=[tf2_world_node_horizontal, tf2_world_node_vertical]
+            ),
+            TimerAction(
+                period=3.0,
                 actions=[
                     telesoud_api,
                     translator,
@@ -284,9 +286,15 @@ def generate_launch_description():
                     welding_modular_control,
                 ],
             ),
-            usb_cam_node,
-            tf_path_trail_base_link_wrist,
-            tf_path_trail_base_link_wrist_mimic,
-            welding_scene_publisher_node,
+            TimerAction(
+                period=4.0,
+                actions=[
+                    tf_path_trail_base_link_wrist,
+                    tf_path_trail_base_link_wrist_mimic,
+                    mesh_torche_soudure,
+                    welding_scene_publisher_node,
+                ],
+            ),
+            TimerAction(period=5.0, actions=[usb_cam_node]),
         ]
     )

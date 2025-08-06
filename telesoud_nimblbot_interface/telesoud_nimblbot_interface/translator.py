@@ -133,7 +133,7 @@ class TranslatorNode(Node):
                 case 0:
                     self._command_msg.command_type = Command.COMMAND_STOP
                     self.get_logger().debug("Instruction STOP")
-                
+
                     self._command_msg.speed_vector.linear.x = 0.0
                     self._command_msg.speed_vector.linear.y = 0.0
                     self._command_msg.speed_vector.linear.z = 0.0
@@ -301,8 +301,7 @@ class TranslatorNode(Node):
         try:
             if len(pose) < 6:
                 raise ValueError(f"Pose array too short: {len(pose)} element, need 6")
-
-            x, y, z, yaw, pitch, roll  = [float(val) for val in pose[:7]]
+            [float(val) for val in pose[:7]]
         except (ValueError, TypeError, IndexError) as e:
             raise ValueError(f"Invalid pose data: {e}")
 

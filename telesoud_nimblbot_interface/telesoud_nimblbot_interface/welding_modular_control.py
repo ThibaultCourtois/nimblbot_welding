@@ -254,6 +254,9 @@ class WeldingModularControlNode(Node):
         - Command mode (azimuth/tilt)
         - Selection mode (module/section)
         """
+        if self.current_speed_vector is None:
+            return
+
         toggles, current_commands = self._detect_modular_command_toggle(
             self.current_speed_vector
         )
@@ -321,10 +324,18 @@ class WeldingModularControlNode(Node):
         Generates and publishes joint-level commands for selected modules
         based on current modular control state and velocity settings.
         """
+        if self.__q_desired is None:
+            return
+
         turn_module = self.current_modular_states["turn_module"]
         wrist_command = self.current_modular_states["wrist_command"]
 
         modular_gain = self.get_parameter("modular_gain").value
+
+        if modular_gain is None:
+            self.get_logger().error("modular_gain parameter not set")
+            return None
+
         self.amplified_modular_velocity = modular_gain * self.modular_velocity
 
         self.joints_trajectory = JointTrajectory()
@@ -455,7 +466,7 @@ class WeldingModularControlNode(Node):
             self.get_logger().error(f"Error toggling modular mode : {e}")
 
     def on_set_zeros(
-        self, request: Empty_srv.Request, response: Empty_srv.Response
+        self, _: Empty_srv.Request, response: Empty_srv.Response
     ) -> Empty_srv.Response:
         """Handle set zeros calibration service request.
 
@@ -474,7 +485,6 @@ class WeldingModularControlNode(Node):
                 self.get_logger().error(
                     "Cannot set zeros: robot must be in modular mode"
                 )
-                response.success = False
                 return response
 
             self._switch_mode_msg.data = ControlMode.PAUSE
@@ -518,7 +528,9 @@ class WeldingModularControlNode(Node):
     def on_desired_trajectory(self, msg: JointTrajectory) -> None:
         """Update current joint positions from trajectory feedback."""
         if msg.points:
-            self.__q_desired = list(msg.points[0].positions)
+            for point in msg.points:
+                self.__q_desired = list(point.positions)
+                break
 
 
 def main(args=None):
@@ -533,7 +545,6 @@ def main(args=None):
     except ShutdownException:
         welding_modular_control_node.get_logger().info("ShutdownException...")
     except Exception as e:
-        welding_modular_control_node.current_error = str(e)
         welding_modular_control_node.get_logger().error(f"Exception : {e}")
     finally:
         welding_modular_control_node.destroy_node()
