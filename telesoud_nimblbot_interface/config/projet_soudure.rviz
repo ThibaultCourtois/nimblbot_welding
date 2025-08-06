@@ -5,9 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /TCP_Path1
+        - /WeldingScene1
         - /Axes1
       Splitter Ratio: 0.49803921580314636
-    Tree Height: 418
+    Tree Height: 675
   - Class: rviz_common/Help
     Name: Help
   - Class: rviz_common/Views
@@ -29,7 +31,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -42,7 +44,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Class: rviz_common/Group
       Displays:
         - Acceleration_Scaling_Factor: 0.1
@@ -153,7 +155,43 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+            nb/ball_azimuth_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             nb/ball_azimuth_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_azimuth_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -165,7 +203,43 @@ Visualization Manager:
               Alpha: 1
               Show Axes: false
               Show Trail: false
+            nb/ball_tilt_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
             nb/ball_tilt_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            nb/ball_tilt_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -183,7 +257,52 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            nb/bride_link_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             nb/bride_link_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/bride_link_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -203,7 +322,52 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            nb/lower_end_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             nb/lower_end_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_end_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -218,7 +382,52 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            nb/lower_ring_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             nb/lower_ring_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/lower_ring_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -241,7 +450,52 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            nb/upper_end_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             nb/upper_end_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_end_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -256,7 +510,52 @@ Visualization Manager:
               Show Axes: false
               Show Trail: false
               Value: true
+            nb/upper_ring_10:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_11:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
             nb/upper_ring_2:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_3:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_4:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_5:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_6:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_7:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_8:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            nb/upper_ring_9:
               Alpha: 1
               Show Axes: false
               Show Trail: false
@@ -280,7 +579,7 @@ Visualization Manager:
       Enabled: true
       Name: TorcheLaser
       Namespaces:
-        {}
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -319,7 +618,7 @@ Visualization Manager:
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
-      Color: 25; 255; 0
+      Color: 248; 228; 92
       Enabled: true
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
@@ -373,22 +672,22 @@ Visualization Manager:
         Value: /tf_path_trail_nb_mimic_base_link_to_nb_mimic_tcp_wrist/path
       Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: WeldingScene
       Namespaces:
-        {}
+        stl_objects: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /welding_scene_publisher/welding_scene
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -398,16 +697,16 @@ Visualization Manager:
         Value: /TorchBracket_mesh
       Value: true
     - Class: rviz_default_plugins/Axes
-      Enabled: true
+      Enabled: false
       Length: 0.800000011920929
       Name: Axes
       Radius: 0.009999999776482582
       Reference Frame: nb/base_link
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
-    Background Color: 72; 72; 72
-    Fixed Frame: nb/base_link
+    Background Color: 153; 193; 241
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -422,30 +721,30 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.111107349395752
+      Distance: 0.28778621554374695
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.13194501399993896
-        Y: 0.1558154672384262
-        Z: 0.32405316829681396
+        X: 0.07876742631196976
+        Y: 0.4018094837665558
+        Z: -0.12227077782154083
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5953978300094604
+      Pitch: 0.7753977179527283
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 1.030392050743103
+      Yaw: 4.9254150390625
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 1403
   Help:
     collapsed: false
   Hide Left Dock: false
@@ -454,11 +753,11 @@ Window Geometry:
     collapsed: false
   MotionPlanning_NB55 - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000002720000039efc0200000009fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000fb000000100044006900730070006c006100790073010000003d000001df000000c900fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067000000028a000001c70000000000000000fb0000000800480065006c0070000000029a0000006e0000006e00fffffffb0000000a005600690065007700730000000333000000c3000000a400fffffffb0000004e004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e0042003500350020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb00000026004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e004200350035000000010c000001d40000017d00fffffffb0000000c004d00650073007500720065000000011b000002db0000000000000000fb0000001e00540065006c0065006f0070004700610069006e00500061006e0065006c0100000222000001b90000018400ffffff000004c20000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000022c00000521fc0200000009fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000fb000000100044006900730070006c006100790073010000003d000002e0000000c900fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067000000028a000001c70000000000000000fb0000000800480065006c0070000000029a0000006e0000006e00fffffffb0000000a005600690065007700730000000333000000c3000000a400fffffffb0000004e004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e0042003500350020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb00000026004d006f00740069006f006e0050006c0061006e006e0069006e0067005f004e004200350035000000010c000001d40000017d00fffffffb0000000c004d00650073007500720065000000011b000002db0000000000000000fb0000001e00540065006c0065006f0070004700610069006e00500061006e0065006c01000003230000023b0000018400ffffff000007ce0000052100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   TeleopGainPanel:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1850
-  X: 70
-  Y: 27
+  Width: 2560
+  X: 0
+  Y: 0

@@ -13,7 +13,7 @@ void ApiNode::initialize() {
   initialize_timer->cancel();
   telesoudTranslator_ = std::make_shared<DataFromAndToTelesoudTranslator>(shared_from_this());
 	
-  // ----------- Intructions publisher to NimblBot welding framework --------------
+  // ----------- Instructions publisher to NimblBot welding framework --------------
   instruction_publisher_ = this->create_publisher<interface_custom_msgs::msg::TelesoudInstruction>(
   		  "/telesoud/instructions"
 		  , 10

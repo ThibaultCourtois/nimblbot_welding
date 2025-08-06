@@ -15,7 +15,7 @@ from std_srvs.srv import Empty as Empty_srv
 from std_msgs.msg import Empty, Header, Float64, Bool, String, Int8MultiArray, Int8
 from moveit_msgs.srv import ServoCommandType
 from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Twist
-from tf_transformations import quaternion_from_euler, quaternion_multiply
+from tf_transformations import quaternion_multiply
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from scipy.spatial.transform import Rotation as R
@@ -35,6 +35,8 @@ POSITION_EPSILON = 0.001  # 1mm
 
 SPEED_CORRECTION_FACTOR = 1.0  # Correction factor for TCP_speed
 DEFAULT_TCP_SPEED = 0.005
+
+ZERO_THRESHOLD = 1e-8
 
 SERVICE_TIMEOUT = 5.0
 
@@ -703,7 +705,10 @@ class WeldingCommandHandlerNode(Node):
 
         Integrates current speed vector to generate incremental pose updates
         for real-time cartesian control.
-
+        
+        Speed vectors orientation fields are interpreted following 
+        axe-angle rotation coding convention.
+        
         Returns:
             Target pose message, or None if no movement commanded
         """
@@ -727,7 +732,6 @@ class WeldingCommandHandlerNode(Node):
                 ),
                 orientation=current_pose.pose.orientation,
             )
-
         self.virtual_pose_initialized = True
 
         working_pose = self.virtual_pose
@@ -737,38 +741,52 @@ class WeldingCommandHandlerNode(Node):
         dy = self.current_speed_vector.linear.y * dt * pos_gain
         dz = self.current_speed_vector.linear.z * dt * pos_gain
 
-        dquat = quaternion_from_euler(
-            self.current_speed_vector.angular.x * dt * quat_gain,
-            self.current_speed_vector.angular.y * dt * quat_gain,
-            self.current_speed_vector.angular.z * dt * quat_gain,
-            axes="sxyz",
-        )
-
-        current_quat = [
-            working_pose.pose.orientation.x,
-            working_pose.pose.orientation.y,
-            working_pose.pose.orientation.z,
-            working_pose.pose.orientation.w,
-        ]
-
-        new_quat = quaternion_multiply(current_quat, dquat)
-
-        target_pose_msg = self._target_pose_msg
-        target_pose_msg.header.stamp = self.get_clock().now().to_msg()
-
         self.virtual_pose.pose.position.x += dx
         self.virtual_pose.pose.position.y += dy
         self.virtual_pose.pose.position.z += dz
-        self.virtual_pose.pose.orientation = Quaternion(
-            x=new_quat[0], y=new_quat[1], z=new_quat[2], w=new_quat[3]
-        )
+
+        rx = self.current_speed_vector.angular.x
+        ry = self.current_speed_vector.angular.y
+        rz = self.current_speed_vector.angular.z
+
+        omega_norm = np.sqrt(rx**2 + ry**2 + rz**2)
+
+        if omega_norm > ZERO_THRESHOLD:
+            rotation_vector = np.array([rx, ry, rz]) * dt * quat_gain
+            
+            try:
+                rotation = R.from_rotvec(rotation_vector)
+                dquat_scipy = rotation.as_quat()  # Format [x,y,z,w]
+                
+                current_quat_xyzw = [
+                    working_pose.pose.orientation.x,
+                    working_pose.pose.orientation.y,
+                    working_pose.pose.orientation.z,
+                    working_pose.pose.orientation.w,
+                ]
+                
+                new_quat_xyzw = quaternion_multiply(current_quat_xyzw, dquat_scipy)
+                
+                self.virtual_pose.pose.orientation = Quaternion(
+                    x=new_quat_xyzw[0], 
+                    y=new_quat_xyzw[1],
+                    z=new_quat_xyzw[2],
+                    w=new_quat_xyzw[3]
+                )
+
+            except Exception as e: 
+                self.get_logger().error(f"Error in rotation computation: {e}")
+                return None
+                
+        target_pose_msg = self._target_pose_msg
+        target_pose_msg.header.stamp = self.get_clock().now().to_msg()
         target_pose_msg.pose = Pose(
             position=Point(
-                x=self.virtual_pose.pose.position.x,
+                x=self.virtual_pose.pose.position.x, 
                 y=self.virtual_pose.pose.position.y,
                 z=self.virtual_pose.pose.position.z,
             ),
-            orientation=Quaternion(
+            orientation=Quaternion( 
                 x=self.virtual_pose.pose.orientation.x,
                 y=self.virtual_pose.pose.orientation.y,
                 z=self.virtual_pose.pose.orientation.z,
