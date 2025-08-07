@@ -83,7 +83,6 @@ class WeldingCommandHandlerNode(Node):
         self._create_clients()
         self.create_timer(TIMER_PERIOD, self._update_state_machine)
         self.create_timer(TIMER_PERIOD, self.process_pending_command)
-        self.motor_lock_pub.publish(self._motor_lock_msg)
 
     def _initialize_reusable_ros_msg_objects(self) -> None:
         """Initialize reusable ROS message objects to avoid repeated instantiation."""
@@ -1015,8 +1014,10 @@ class WeldingCommandHandlerNode(Node):
 
             self.get_logger().info(f"Switched control mode to {mode}")
 
-            time.sleep(0.5)
-            self.motor_lock_pub.publish(self._motor_lock_msg)
+            for _ in range(2): 
+                time.sleep(0.5)
+                self.motor_lock_pub.publish(self._motor_lock_msg)
+
             return future
 
         except Exception as e:
