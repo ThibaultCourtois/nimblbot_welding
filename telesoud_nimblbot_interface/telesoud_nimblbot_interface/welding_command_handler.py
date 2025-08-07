@@ -1078,6 +1078,11 @@ class WeldingCommandHandlerNode(Node):
         self.emergency_stop = msg.data
         if self.emergency_stop:
             self.get_logger().info("EMERGENCY STOP")
+
+            self.virtual_pose_initialized = False
+            self.virtual_pose = None
+            self.current_speed_vector = self._twist_msg
+
             self.switch_control_mode(0)
             self.current_state = RobotState.PAUSE
         else:
