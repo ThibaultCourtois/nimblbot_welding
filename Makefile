@@ -153,12 +153,12 @@ ifeq ($(ARCH),arm64)
 	@echo "Installing rpclib from source for ARM64..."
 	@if [ ! -d "rpclib" ]; then \
 		git clone https://github.com/rpclib/rpclib.git rpclib; \
-		cd rpclib && git checkout v2.3.0; \
+		(cd rpclib && git checkout v2.3.0); \
 	fi
-	@cd rpclib && mkdir -p build && cd build && \
+	@(cd rpclib && mkdir -p build && cd build && \
 		cmake .. && \
 		make -j$$(nproc) && \
-		sudo make install
+		sudo make install)
 	@sudo ldconfig
 	@echo "rpclib compiled and installed successfully"
 else
