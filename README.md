@@ -76,11 +76,11 @@ firefox build/html/index.html
 
 ### Launch in simulation only with a NB-55
 
-    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=true
+    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_55.launch.py simulation:=true welding_scene:=55_standard_V
 
 ### Launch with a real NB-120 robot
 
-    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_120.launch.py simulation:=false
+    ros2 launch telesoud_nimblbot_interface telesoud_nimblbot_interface_120.launch.py simulation:=false welding_scene:=120_2025_H
 
 ## Rviz Plugin
 In Rviz if the custom panel don't show up directly go to `Panels`,  `Add New Panel` and select the panel inside the `interface_rviz_plugin directory`
