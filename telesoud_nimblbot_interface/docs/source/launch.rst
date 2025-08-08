@@ -48,6 +48,19 @@ Welding Meshes
           ├── NB55_torche_laser_low.stl    # Laser torch for NB55
           └── TorchBracket.stl             # Welding torch for NB120
 
+Torch Orientation Considerations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. warning::
+   The welding torch mesh orientations and TCP definitions in these launch files 
+   are configured for specific mounting configurations. When using with a real robot, 
+   you may need to adjust:
+   
+   * Torch mesh orientation parameters in the ``mesh_publisher`` node
+   * TCP position and orientation in the robot YAML configuration files
+   
+   Ensure the TCP frame aligns correctly with the physical torch tip for accurate 
+   welding operations.
+
 Launch Arguments
 ----------------
 
@@ -81,6 +94,9 @@ Core Parameters
    * - ``rviz_template``
      - ``projet_soudure.rviz``
      - RViz configuration file
+   * - ``welding_scene``
+     - ``55_standard_V``
+     - Welding scene configuration (see :doc:`welding_scene_publisher`)
 
 Key Launch Argument: simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -133,4 +149,14 @@ Visualization and Tools
 
 *USB Camera for NB55 setup* (``usb_cam_node``)
 
-*Welding Scene Publisher* (:doc:`welding_scene_publisher`)
+Welding Scene Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``welding_scene`` parameter selects the 3D welding environment:
+
+**Available scenes:**
+   * ``55_standard_V`` - Standard vertical setup for NB55
+   * ``120_standard_V`` - Standard vertical setup for NB120  
+   * ``55_cuve_H`` - Horizontal tank welding for NB55
+   * ``120_2025_H`` - Historical setup from June 2025 internship
+
+See :doc:`welding_scene_publisher` for complete scene descriptions.
